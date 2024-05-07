@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'firebase_options.dart';
 
-void main() {
+
+
+
+Future<void> main() async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -39,7 +45,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     Firebase.initializeApp().then((value) {
-      _nameRef = FirebaseDatabase.instance.reference().child('names');
+      _nameRef = FirebaseDatabase.instance.ref().child('names');
     });
   }
 

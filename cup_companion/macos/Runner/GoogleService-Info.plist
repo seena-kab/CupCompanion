@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyCFSbixM17-Ley9x1OincQoWSiUPBBJpyg</string>
+	<key>GCM_SENDER_ID</key>
+	<string>765764181076</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.cupCompanion</string>
+	<key>PROJECT_ID</key>
+	<string>cup-companion</string>
+	<key>STORAGE_BUCKET</key>
+	<string>cup-companion.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:765764181076:ios:7ac2bc09ba8a76de0f21c1</string>
+	<key>DATABASE_URL</key>
+	<string>https://cup-companion-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

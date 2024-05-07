@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "765764181076",
+    "firebase_url": "https://cup-companion-default-rtdb.firebaseio.com",
     "project_id": "cup-companion",
     "storage_bucket": "cup-companion.appspot.com"
   },
