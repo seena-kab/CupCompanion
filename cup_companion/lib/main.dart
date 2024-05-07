@@ -60,6 +60,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            IconButton(
+            icon: const Icon(Icons.file_download),
+            tooltip: 'Export',
+            onPressed: _exportData,
+          ),
             const Text(
               'Enter your name:',
             ),
@@ -82,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Save',
         child: const Icon(Icons.save),
       ),
+
     );
   }
 
@@ -105,27 +111,19 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Widget getData(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Firebase Database Retrieval'),
-        ),
-        body: Center(
-          child: FutureBuilder(
-            future: DatabaseHelper().fetchUserName('name1'),
-            builder: (context, AsyncSnapshot<String> snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else {
-                return Text(snapshot.data ?? 'No data');
-              }
-            },
-          ),
-          ),
-        ),
-      );
-  }
+  void _exportData() {
+    DatabaseHelper db = DatabaseHelper();
+    db.exportData('names', 'names.txt').then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Data exported successfully!'),
+      ));
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to export data: $error'),
+      ));
+    });
+}
+
 
   
 }
