@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "765764181076",
+    "project_id": "cup-companion",
+    "storage_bucket": "cup-companion.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:765764181076:android:d7e02caff36dcfbb0f21c1",
+        "android_client_info": {
+          "package_name": "com.example.cupcompanion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_MglMu-1oRrIPHDyhulXZtPgAZB4pcLA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
