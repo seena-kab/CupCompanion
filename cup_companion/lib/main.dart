@@ -39,7 +39,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late DatabaseReference _nameRef;
-  TextEditingController _nameController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.all(20.0),
               child: TextField(
                 controller: _nameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   hintText: 'Name',
                 ),
               ),
@@ -89,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
     String name = _nameController.text.trim();
     if (name.isNotEmpty) {
       _nameRef.push().set({'name': name}).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Name saved successfully!'),
         ));
         _nameController.clear();
@@ -99,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ));
       });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Please enter a name!'),
       ));
     }
