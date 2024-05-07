@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
-
+import 'firebase_retrieval.dart'; 
 
 
 
@@ -104,4 +104,28 @@ class _MyHomePageState extends State<MyHomePage> {
       ));
     }
   }
+
+  Widget getData(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Firebase Database Retrieval'),
+        ),
+        body: Center(
+          child: FutureBuilder(
+            future: DatabaseHelper().fetchUserName('name1'),
+            builder: (context, AsyncSnapshot<String> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else {
+                return Text(snapshot.data ?? 'No data');
+              }
+            },
+          ),
+          ),
+        ),
+      );
+  }
+
+  
 }
