@@ -10,7 +10,7 @@ class DatabaseHelper {
   final DatabaseReference _database = FirebaseDatabase.instance.ref();
 
   Future<String> fetchUserName(String userId) async {
-    DataSnapshot snapshot = await _database.child('users/$userId/name').once().then((snapshot) {
+    DataSnapshot snapshot = await _database.child('names/$userId/name').once().then((snapshot) {
       return snapshot as DataSnapshot; // Cast snapshot to DataSnapshot
     });
     return snapshot.value.toString();
