@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
-import 'firebase_retrieval.dart'; 
-
-
+import 'firebase_retrieval.dart';
 
 Future<void> main() async {
+  // Ensure that the Flutter framework is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform);
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 
@@ -61,10 +65,10 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             IconButton(
-            icon: const Icon(Icons.file_download),
-            tooltip: 'Export',
-            onPressed: _exportData,
-          ),
+              icon: const Icon(Icons.file_download),
+              tooltip: 'Export',
+              onPressed: _exportData,
+            ),
             const Text(
               'Enter your name:',
             ),
@@ -87,7 +91,6 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Save',
         child: const Icon(Icons.save),
       ),
-
     );
   }
 
@@ -122,8 +125,5 @@ class _MyHomePageState extends State<MyHomePage> {
         content: Text('Failed to export data: $error'),
       ));
     });
-}
-
-
-  
+  }
 }
