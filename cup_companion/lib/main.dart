@@ -5,6 +5,7 @@ import 'screens/start_page.dart';
 import 'screens/signup_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/survey_intro_screen.dart';
+import 'screens/forgot_password_screen.dart';
 import 'theme/theme.dart';
 
 Future<void> main() async{
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignUpScreen(),
         '/signin': (context) => const SignInScreen(),
         '/survey': (context) => const SurveyIntroScreen(),
+        '/forgot_password': (context) => const ForgotPasswordScreen(),
       },
     );
   } 
