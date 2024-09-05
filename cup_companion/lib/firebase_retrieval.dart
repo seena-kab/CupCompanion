@@ -2,8 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html' as html;
-
+import 'dart:io'; // For file operations
+import 'package:path_provider/path_provider.dart'; // For accessing the device's file system
 
 Future<void> initializeFirebase(FirebaseOptions options) async {
   await Firebase.initializeApp(options: options);
@@ -19,26 +19,18 @@ class DatabaseHelper {
       if (snapshot.value is Map<dynamic, dynamic>) {
         Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
 
-        // Convert the data to JSON and encode it as a blob
+        // Convert the data to JSON
         String jsonData = json.encode(data);
-        var blob = html.Blob([jsonData], 'application/json');
 
-        // Create a URL for the blob and make it downloadable
-        var url = html.Url.createObjectUrlFromBlob(blob);
-        var anchor = html.document.createElement('a') as html.AnchorElement
-          ..href = url
-          ..style.display = 'none'
-          ..download = fileName;
-        html.document.body!.children.add(anchor);
+        // Get the directory to save the file
+        Directory directory = await getApplicationDocumentsDirectory();
+        String filePath = '${directory.path}/$fileName';
 
-        // Simulate a click on the anchor to start the download
-        anchor.click();
+        // Write the JSON data to the file
+        File file = File(filePath);
+        await file.writeAsString(jsonData);
 
-        // Clean up: remove the anchor from the document and revoke the blob URL
-        html.document.body!.children.remove(anchor);
-        html.Url.revokeObjectUrl(url);
-
-        print('Data exported successfully to $fileName');
+        print('Data exported successfully to $filePath');
       } else {
         print('Data is not a map');
       }
@@ -47,12 +39,3 @@ class DatabaseHelper {
     }
   }
 }
-
-
-
-
-
-
-
-
-
