@@ -53,7 +53,7 @@ class SignInScreen extends StatelessWidget{
               const SizedBox(height: 16.0),
               TextButton(
                 onPressed: () {
-                  //Handle Forgot Password Logic
+                  Navigator.pushNamed(context, '/forgot_password');
                 },
                 child: const Text('Forgot Password?'),
               ),
