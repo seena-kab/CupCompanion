@@ -20,6 +20,9 @@ class SignUpScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset('assets/images/logo.png',
+            height: 200,),
+            const SizedBox(height: 30.0),
             const TextField(
               decoration: InputDecoration(
                 labelText: 'Enter Username',
