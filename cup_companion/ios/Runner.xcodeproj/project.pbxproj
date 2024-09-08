@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		083FA81538702FF87015FCF6 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0C4BE3F60DCFD89616171D2A /* Pods_RunnerTests.framework */; };
 		0E3308B6CA8088A768D357C2 /* BuildFile in Frameworks */ = {isa = PBXBuildFile; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -16,6 +17,7 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		B154BA3D56AF2063869FB0F0 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C6D9F76A40A4FED7E09D59FB /* Pods_RunnerTests.framework */; };
+		C948FF06CF735D7FF661B3EA /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D4BB20725F4F9A694CBB96C /* Pods_Runner.framework */; };
 		F5BABE203E48200FDFA8DB31 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5E28550D8F42FE4F01F43C0 /* Pods_Runner.framework */; };
 /* End PBXBuildFile section */
 
@@ -43,6 +45,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0C4BE3F60DCFD89616171D2A /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D4BB20725F4F9A694CBB96C /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -74,6 +78,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F5BABE203E48200FDFA8DB31 /* Pods_Runner.framework in Frameworks */,
+				C948FF06CF735D7FF661B3EA /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -83,6 +88,7 @@
 			files = (
 				0E3308B6CA8088A768D357C2 /* BuildFile in Frameworks */,
 				B154BA3D56AF2063869FB0F0 /* Pods_RunnerTests.framework in Frameworks */,
+				083FA81538702FF87015FCF6 /* Pods_RunnerTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +109,15 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		8F15BE4BF830B6E0B3BAE479 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0D4BB20725F4F9A694CBB96C /* Pods_Runner.framework */,
+				0C4BE3F60DCFD89616171D2A /* Pods_RunnerTests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		9740EEB11CF90186004384FC /* Flutter */ = {
 			isa = PBXGroup;
 			children = (
@@ -121,7 +136,8 @@
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
 				3BDB8923FB79801A4A00BC19 /* Pods */,
-				B248CBCE4A10A24142CB2571 /* Frameworks */,
+				B248CBCE4A10A24142CB2571 /* Pods */,
+				8F15BE4BF830B6E0B3BAE479 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -149,7 +165,7 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
-		B248CBCE4A10A24142CB2571 /* Frameworks */ = {
+		B248CBCE4A10A24142CB2571 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
 				D5E28550D8F42FE4F01F43C0 /* Pods_Runner.framework */,

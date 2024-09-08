@@ -40,7 +40,7 @@ class StartPage extends StatelessWidget {
                 const SizedBox(height: 40.0),
                 ElevatedButton (
                   onPressed: (){
-                    Navigator.pushNamed(context, '/signup');
+                    Navigator.pushNamed(context, '/coffee_selection'); // changed this for testing to bypass signin
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
