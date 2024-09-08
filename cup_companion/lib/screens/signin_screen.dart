@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class SignInScreen extends StatelessWidget{
   const SignInScreen({Key? key}) : super(key: key);
   @override
@@ -19,6 +19,11 @@ class SignInScreen extends StatelessWidget{
         child: Column (
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset(
+              'assets/images/logo.png',
+              height: 200, //Adjust the logo size
+            ),
+            const SizedBox(height: 30.0),
             const TextField(
               decoration: InputDecoration(
                 labelText: 'Email address',
