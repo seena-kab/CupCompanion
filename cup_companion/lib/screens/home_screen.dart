@@ -370,6 +370,10 @@ class HomeScreenState extends State<HomeScreen> {
           label: 'Favorites',
         ),
         BottomNavigationBarItem(
+          icon: Icon(Icons.map),
+          label: 'Maps',
+        ),
+        BottomNavigationBarItem(
           icon: Icon(Icons.shopping_bag),
           label: 'Marketplace',
         ),
