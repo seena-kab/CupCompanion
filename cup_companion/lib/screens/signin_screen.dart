@@ -1,13 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:cup_companion/services/auth_services.dart'; //Import AuthService class
-class SignInScreen extends StatefulWidget{
+import 'package:cup_companion/services/auth_services.dart'; // Import AuthService class
+
+class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
 
   @override
   SignInScreenState createState() => SignInScreenState();
 }
 
-class SignInScreenState extends State<SignInScreen>{
+class SignInScreenState extends State<SignInScreen> {
   final AuthService _authService = AuthService(); // Instance of your AuthService class
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -20,43 +22,47 @@ class SignInScreenState extends State<SignInScreen>{
       _errorMessage = null;
     });
 
-  final String email = _emailController.text.trim();
-  final String password = _passwordController.text.trim();
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
 
-
-  if (email.isEmpty || password.isEmpty) {
-    setState(() {
-      _errorMessage = 'Please enter both email and password.';
-      _isLoading = false;
-    });
-    return;
-  }
-
-  try {
-    // Call the AuthService to create a user with email and password
-    await _authService.signIn(email, password);
-
-    //Ensure widget is still mounted before navigating or showing a snackbar
-    if (mounted) {
-    // Navigate to a different screen (e.g., home page) after successful sign-up
-    Navigator.pushReplacementNamed(context, '/home');
-    }
-    } catch (e) {
-      if (mounted) {
-      // Catch and display any errors during the sign-up process
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
-        _errorMessage = e.toString(); // Show error message
-      });
-      }
-    } finally {
-      if (mounted) {
-      setState(() {
+        _errorMessage = 'Please enter both email and password.';
         _isLoading = false;
       });
+      return;
+    }
+
+    try {
+      final UserCredential userCredential = await _authService.signIn(email, password);
+      final String uid = userCredential.user!.uid;
+
+      // Check if the user has completed the survey
+      bool hasCompletedSurvey = await _authService.hasCompletedSurvey(uid);
+
+      if (!hasCompletedSurvey) {
+        // Redirect to the survey screen if the survey is not completed
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/survey');
+        }
+      } else {
+        // Redirect to home screen if survey is already completed
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -72,12 +78,12 @@ class SignInScreenState extends State<SignInScreen>{
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column (
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
               'assets/images/logo.png',
-              height: 200, //Adjust the logo size
+              height: 200, // Adjust the logo size
             ),
             const SizedBox(height: 30.0),
             TextField(
@@ -101,42 +107,42 @@ class SignInScreenState extends State<SignInScreen>{
               obscureText: true,
             ),
             const SizedBox(height: 24.0),
-              _isLoading
-                ? const CircularProgressIndicator() // Show loader while signin in
+            _isLoading
+                ? const CircularProgressIndicator() // Show loader while signing in
                 : ElevatedButton(
-                  onPressed: _signIn, //Trigger sing-in logic 
-                  child: const Icon(Icons.arrow_forward),
-                ),
-              const SizedBox(height: 24.0),
-              if (_errorMessage != null)
+                    onPressed: _signIn, // Trigger sign-in logic
+                    child: const Icon(Icons.arrow_forward),
+                  ),
+            const SizedBox(height: 24.0),
+            if (_errorMessage != null)
               Text(
                 _errorMessage!,
                 style: const TextStyle(color: Colors.red),
               ),
-              const SizedBox(height: 24.0),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/signup');
-                },
-                child: const Text('New member? Sign up'),
-              ),
-              const SizedBox(height: 16.0),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/forgot_password');
-                },
-                child: const Text('Forgot Password?'),
-              ),
+            const SizedBox(height: 24.0),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/signup');
+              },
+              child: const Text('New member? Sign up'),
+            ),
+            const SizedBox(height: 16.0),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/forgot_password');
+              },
+              child: const Text('Forgot Password?'),
+            ),
           ],
-        )
+        ),
       ),
     );
   }
 
-  @override 
-void dispose() {
-  _emailController.dispose();
-  _passwordController.dispose();
-  super.dispose();
-}
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 }

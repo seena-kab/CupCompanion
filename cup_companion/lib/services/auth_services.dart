@@ -1,14 +1,22 @@
 // auth_service.dart
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 //import 'package:google_maps_flutter/google_maps_flutter.dart';
 //import 'dart:convert';
 //import 'package:http/http.dart' as http;
 //import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AuthService {
-  // API call for creating a User
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref().child('users');
 
+  // Public getters for accessing _auth and _databaseRef
+  FirebaseAuth get auth => _auth; // Expose _auth as a public getter
+  DatabaseReference get databaseRef => _databaseRef; // Expose _databaseRef as a public getter
+
+  // API call for creating a User
   Future<UserCredential> createUser(String email, String password) async {
     try{
     final UserCredential userCredential =
@@ -16,7 +24,15 @@ class AuthService {
       email: email,
       password: password,
     );
+
+    //Save user data in the database and set surveryCompleted to false
+    await _databaseRef.child(userCredential.user!.uid).set({
+      'email': email,
+      'surveyCompleted': false, //New user must complete the survey
+    });
+
     return userCredential;
+    
     } on FirebaseAuthException catch (e) {
       throw Exception(_handleFirebaseAuthException(e));
     }
@@ -130,6 +146,17 @@ class AuthService {
   //     return [];
   //   }
   // }
+
+  //Check is the user has complete the survey
+  Future<bool> hasCompletedSurvey(String uid) async {
+    DataSnapshot snapshot = await _databaseRef.child(uid).child('surveyCompleted').get();
+    return snapshot.value == true;
+  }
+
+  //Mark the survey as completed
+  Future<void> completeSurvey(String uid) async {
+    await _databaseRef.child(uid).update({'surveyCompleted':true});
+  }
 
   String _handleFirebaseAuthException(FirebaseAuthException e) {
     switch (e.code) {
