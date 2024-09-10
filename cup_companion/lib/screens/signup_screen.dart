@@ -89,7 +89,7 @@ class SignUpScreenState extends State<SignUpScreen> {
 
     // Navigate to a different screen (e.g., home page) after successful sign-up
     if (mounted) {
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushReplacementNamed(context, '/signin');
     }
     } catch (e) {
       // Catch and display any errors during the sign-up process
