@@ -5,10 +5,10 @@ class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  SignUpScreenState createState() => SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class SignUpScreenState extends State<SignUpScreen> {
   final AuthService _authService = AuthService(); // Instance of your AuthService class
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -17,6 +17,90 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _isLoading = false;
   String? _errorMessage;
+
+  //Method to validate email format
+  bool _isValidEmail(String email) {
+    final RegExp emailRegex = RegExp(
+      r"^[a-zA-Z0-9,a-zA-Z0-9,!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    );
+
+    return emailRegex.hasMatch(email);
+  }
+
+  //Method to show a simple alert dialog
+  void _showDialog(String message) {
+    showDialog(
+      context: context, 
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('OK'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _signUp() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+  //Trim and validate the input
+  final String email = _emailController.text.trim();
+  final String password = _passwordController.text.trim();
+  final String username = _usernameController.text.trim();
+  final String mobileNumber = _mobileNumberController.text.trim();
+
+  if (email.isEmpty || password.isEmpty || username.isEmpty || mobileNumber.isEmpty) {
+    _showDialog('All fields are required');
+    setState(() {
+      _isLoading = false;
+    });
+    return;
+  }
+
+  if (!_isValidEmail(email)) {
+    _showDialog('PLease entert a valid email address');
+    setState(() {
+      _isLoading = false;
+    });
+    return;
+  }
+
+  try {
+    // Call the AuthService to create a user with email and password
+    await _authService.createUser(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    // Navigate to a different screen (e.g., home page) after successful sign-up
+    Navigator.pushReplacementNamed(context, '/home');
+    } catch (e) {
+      // Catch and display any errors during the sign-up process
+      setState(() {
+        _errorMessage = e.toString(); // Show error message
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _usernameController.dispose();
+    _mobileNumberController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +144,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 labelText: 'Email address',
                 border: OutlineInputBorder(),
               ),
+              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16.0),
             TextField(
@@ -95,41 +180,5 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _signUp() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      // Call the AuthService to create a user with email and password
-      await _authService.createUser(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-
-      // Navigate to a different screen (e.g., home page) after successful sign-up
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      // Catch and display any errors during the sign-up process
-      setState(() {
-        _errorMessage = e.toString(); // Show error message
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _usernameController.dispose();
-    _mobileNumberController.dispose();
-    super.dispose();
   }
 }

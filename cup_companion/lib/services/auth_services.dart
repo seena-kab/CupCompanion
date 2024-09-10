@@ -10,33 +10,42 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<UserCredential> createUser(String email, String password) async {
+    try{
     final UserCredential userCredential =
         await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
     return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_handleFirebaseAuthException(e));
+    }
   }
 
   // API call for signing in a User
   Future<UserCredential> signIn(String email, String password) async {
+    try{
     final UserCredential userCredential =
         await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
     return userCredential;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_handleFirebaseAuthException(e));
+    }
   }
 
   Future<void> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      print('Password reset email sent');
+      //print('Password reset email sent');
       // On successful email dispatch, you might want to notify the user
       // You can use a dialog, snackbar, or another method to communicate this
     } on FirebaseAuthException catch (e) {
       // Handle errors, such as invalid email format or no user corresponding to the email
-      print('Failed to send password reset email: ${e.message}');
+      throw Exception(_handleFirebaseAuthException(e));
+      //print('Failed to send password reset email: ${e.message}');
       // Handle the error further if needed
     }
   }
@@ -121,4 +130,21 @@ class AuthService {
   //     return [];
   //   }
   // }
+
+  String _handleFirebaseAuthException(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'email-already-in-use':
+        return 'The email address is alreaduyin use by another account';
+      case 'invalid-email':
+        return 'The email address is not valid';
+      case 'weak-password':
+        return 'The password provided is too weak';
+      case 'wrong-password':
+        return 'The password is incorrect';
+      case 'user-not-found':
+        return 'No user found with this email';
+      default:
+        return 'An unknown error occurred: ${e.message}';
+    }
+  }
 }
