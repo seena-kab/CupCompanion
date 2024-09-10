@@ -1,6 +1,63 @@
 import 'package:flutter/material.dart';
-class SignInScreen extends StatelessWidget{
+import 'package:cup_companion/services/auth_services.dart'; //Import AuthService class
+class SignInScreen extends StatefulWidget{
   const SignInScreen({Key? key}) : super(key: key);
+
+  @override
+  SignInScreenState createState() => SignInScreenState();
+}
+
+class SignInScreenState extends State<SignInScreen>{
+  final AuthService _authService = AuthService(); // Instance of your AuthService class
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  Future<void> _signIn() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+  final String email = _emailController.text.trim();
+  final String password = _passwordController.text.trim();
+
+
+  if (email.isEmpty || password.isEmpty) {
+    setState(() {
+      _errorMessage = 'Please enter both email and password.';
+      _isLoading = false;
+    });
+    return;
+  }
+
+  try {
+    // Call the AuthService to create a user with email and password
+    await _authService.signIn(email, password);
+
+    //Ensure widget is still mounted before navigating or showing a snackbar
+    if (mounted) {
+    // Navigate to a different screen (e.g., home page) after successful sign-up
+    Navigator.pushReplacementNamed(context, '/home');
+    }
+    } catch (e) {
+      if (mounted) {
+      // Catch and display any errors during the sign-up process
+      setState(() {
+        _errorMessage = e.toString(); // Show error message
+      });
+      }
+    } finally {
+      if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+      }
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,16 +80,19 @@ class SignInScreen extends StatelessWidget{
               height: 200, //Adjust the logo size
             ),
             const SizedBox(height: 30.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(
                 labelText: 'Email address',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.email),
               ),
+              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16.0),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(
                 labelText: 'Password',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.lock),
@@ -41,11 +101,17 @@ class SignInScreen extends StatelessWidget{
               obscureText: true,
             ),
             const SizedBox(height: 24.0),
-            ElevatedButton(
-              onPressed: () {
-                //Handle Sign in Logic
-              },
-              child: const Icon(Icons.arrow_forward),
+              _isLoading
+                ? const CircularProgressIndicator() // Show loader while signin in
+                : ElevatedButton(
+                  onPressed: _signIn, //Trigger sing-in logic 
+                  child: const Icon(Icons.arrow_forward),
+                ),
+              const SizedBox(height: 24.0),
+              if (_errorMessage != null)
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
               ),
               const SizedBox(height: 24.0),
               TextButton(
@@ -66,4 +132,11 @@ class SignInScreen extends StatelessWidget{
       ),
     );
   }
+
+  @override 
+void dispose() {
+  _emailController.dispose();
+  _passwordController.dispose();
+  super.dispose();
+}
 }
