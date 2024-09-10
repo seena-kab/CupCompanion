@@ -21,7 +21,7 @@ class SignUpScreenState extends State<SignUpScreen> {
   //Method to validate email format
   bool _isValidEmail(String email) {
     final RegExp emailRegex = RegExp(
-      r"^[a-zA-Z0-9,a-zA-Z0-9,!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+$",
     );
 
     return emailRegex.hasMatch(email);
@@ -65,7 +65,15 @@ class SignUpScreenState extends State<SignUpScreen> {
   }
 
   if (!_isValidEmail(email)) {
-    _showDialog('PLease entert a valid email address');
+    _showDialog('Please enter a valid email address');
+    setState(() {
+      _isLoading = false;
+    });
+    return;
+  }
+
+  if (password.length < 6) {
+    _showDialog('Password must be at least 6 characters');
     setState(() {
       _isLoading = false;
     });
@@ -75,21 +83,25 @@ class SignUpScreenState extends State<SignUpScreen> {
   try {
     // Call the AuthService to create a user with email and password
     await _authService.createUser(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
+      email,
+      password,
     );
 
     // Navigate to a different screen (e.g., home page) after successful sign-up
+    if (mounted) {
     Navigator.pushReplacementNamed(context, '/home');
+    }
     } catch (e) {
       // Catch and display any errors during the sign-up process
       setState(() {
         _errorMessage = e.toString(); // Show error message
       });
     } finally {
+      if (mounted) {
       setState(() {
         _isLoading = false;
       });
+      }
     }
   }
 
