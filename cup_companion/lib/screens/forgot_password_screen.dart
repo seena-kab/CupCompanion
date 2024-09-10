@@ -52,6 +52,11 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset(
+              'assets/images/logo.png',
+              height: 200,
+            ),
+            const SizedBox(height: 30.0),
             const Text(
               'Enter your email to reset your password:',
               textAlign: TextAlign.center,
