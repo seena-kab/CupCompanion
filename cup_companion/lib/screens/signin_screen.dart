@@ -16,6 +16,8 @@ class SignInScreenState extends State<SignInScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  bool isPasswordVisible = false; // Password visibility tracker
+
   Future<void> _signIn() async {
     setState(() {
       _isLoading = true;
@@ -98,13 +100,24 @@ class SignInScreenState extends State<SignInScreen> {
             const SizedBox(height: 16.0),
             TextField(
               controller: _passwordController,
-              decoration: const InputDecoration(
+              obscureText: !isPasswordVisible, // Controls password visibility
+              decoration: InputDecoration(
                 labelText: 'Password',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
-                suffixIcon: Icon(Icons.visibility),
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    isPasswordVisible
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      isPasswordVisible = !isPasswordVisible; // Toggle visibility
+                    });
+                  },
+                ),
               ),
-              obscureText: true,
             ),
             const SizedBox(height: 24.0),
             _isLoading
