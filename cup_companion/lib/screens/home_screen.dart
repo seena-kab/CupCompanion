@@ -434,42 +434,64 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Search Bar widget
+/// Search Bar widget
 class SearchBar extends StatelessWidget {
   final bool isNightMode;
   final VoidCallback onFilterTap;
 
   const SearchBar({
+    Key? key, // Added key parameter
     required this.isNightMode,
     required this.onFilterTap,
-  });
+  }) : super(key: key); // Passing key to the super constructor
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isNightMode ? Colors.grey[800] : Colors.grey[300],
-        borderRadius: BorderRadius.circular(12),
+        color: isNightMode ? Colors.grey[900] : Colors.grey[300], // Background for the entire search bar
+        borderRadius: BorderRadius.circular(30), // Rounded corners for the whole container
       ),
       child: Row(
         children: [
           Icon(
             Icons.search,
-            color: isNightMode ? Colors.white70 : Colors.black45,
+            color: isNightMode ? Colors.white70 : Colors.black45, // Search icon color
           ),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search coffee',
+                hintText: 'Search for a beverage',
                 hintStyle: TextStyle(
-                  color: isNightMode ? Colors.white70 : Colors.black45,
+                  color: isNightMode ? Colors.white70 : Colors.black45, // Hint text color
                 ),
-                border: InputBorder.none,
+                border: OutlineInputBorder( // Here we explicitly control the border
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide(
+                    color: isNightMode ? Colors.grey[900]! : Colors.grey[300]!, // Same as the background color
+                    width: 0.0, // Set border width to 0
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder( // For when the TextField is focused
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide(
+                    color: isNightMode ? Colors.grey[900]! : Colors.grey[300]!, // Same as the background color
+                    width: 0.0,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder( // For when the TextField is not focused
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide(
+                    color: isNightMode ? Colors.grey[900]! : Colors.grey[300]!, // Same as the background color
+                    width: 0.0,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10), // Adjust height of the TextField
               ),
               style: TextStyle(
-                color: isNightMode ? Colors.white : Colors.black,
+                color: isNightMode ? Colors.white : Colors.black, // Text color
               ),
             ),
           ),
@@ -479,11 +501,11 @@ class SearchBar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.amberAccent,
-                borderRadius: BorderRadius.circular(12),
+                color: Colors.amberAccent, // Filter button background
+                borderRadius: BorderRadius.circular(15), // Rounded corners for filter button
               ),
               child: const Icon(
-                Icons.filter_alt,
+                Icons.tune, // Filter button icon
                 color: Colors.black,
               ),
             ),
