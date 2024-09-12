@@ -141,7 +141,7 @@ class HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   flex: 1,
                   child: Container(
-                    color: Colors.black,
+                    color: const Color.fromARGB(255, 130,200,211),
                   ),
                 ),
                 Expanded(
