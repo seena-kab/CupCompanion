@@ -378,8 +378,8 @@ class HomeScreenState extends State<HomeScreen> {
           label: 'Marketplace',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.notifications),
-          label: 'Notifications',
+          icon: Icon(Icons.chat),
+          label: 'Chat',
         ),
       ],
       selectedItemColor: Colors.amberAccent,
