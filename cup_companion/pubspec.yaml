@@ -31,10 +31,13 @@ dependencies:
   flutter:
     sdk: flutter
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+
+  # Add the image_picker dependency
+  image_picker: ^0.8.7+3  # You can use the latest version available
+
   firebase_core: ^2.30.1
   firebase_auth: ^4.20.0
   firebase_database: ^10.5.4
@@ -62,12 +65,12 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/logo.png # Reference your logo image
     - assets/images/cappuccino_oat.png
     - assets/images/cappuccino.png
+    - assets/images/default_avatar.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -80,14 +83,13 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  #fonts:
-  #  - family: Roboto
-  #   fonts:
-  #      -asset: assets/fonts/Roboto-Regular.ttf
-  #      -asset: assets/fonts/Roboto-Bold.ttf
-  #      weight: 700
-  #     - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: assets/fonts/Roboto-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Roboto-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:
