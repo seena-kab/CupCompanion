@@ -44,19 +44,20 @@ class AuthService {
     }
   }
 
-  // API call for signing in a User
-  Future<UserCredential> signIn(String email, String password) async {
-    try {
-      final UserCredential userCredential =
-          await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw Exception(_handleFirebaseAuthException(e));
-    }
+Future<UserCredential> signIn(String email, String password) async {
+  try {
+    return await _auth.signInWithEmailAndPassword(email: email, password: password);
+  } on FirebaseAuthException catch (e) {
+    // Handle specific FirebaseAuth exceptions
+    print('FirebaseAuthException: ${e.code} - ${e.message}');
+    rethrow; // Rethrow to be handled by the caller if needed
+  } catch (e) {
+    // Handle other exceptions
+    print('General exception during sign-in: $e');
+    rethrow;
   }
+}
+
 
   // Fetch user data (username, location, and mobile number)
   Future<Map<String, String>> fetchUserData() async {
@@ -96,6 +97,49 @@ class AuthService {
       throw Exception(_handleFirebaseAuthException(e));
     }
   }
+
+  // Sign-out method
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      print('Error signing out: $e');
+      throw Exception('Failed to sign out. Please try again.');
+    }
+  }
+
+
+  // Method to get the current user with error handling
+  User? getCurrentUser() {
+    try {
+      return _auth.currentUser;
+    } catch (e) {
+      // Log the error or handle it appropriately
+      print('Error getting current user: $e');
+      return null;
+    }
+  }
+
+  // Method to get the current user's ID with error handling
+  String? getCurrentUserId() {
+    try {
+      return _auth.currentUser?.uid;
+    } catch (e) {
+      print('Error getting current user ID: $e');
+      return null;
+    }
+  }
+
+  // Method to get the current user's display name with error handling
+  String? getCurrentUserDisplayName() {
+    try {
+      return _auth.currentUser?.displayName;
+    } catch (e) {
+      print('Error getting current user display name: $e');
+      return null;
+    }
+  }
+
 
   // API CALL FOR SEARCHING ADDRESS
   /*

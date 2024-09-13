@@ -1,8 +1,11 @@
-// profile_screen.dart
+// lib/screens/profile_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:provider/provider.dart';
+import '../theme/theme_notifier.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -19,7 +22,6 @@ class ProfileScreenState extends State<ProfileScreen> {
   String mobileNumber = 'Mobile Number';
   String location = 'Location';
   File? _profileImage;
-  bool isNightMode = false; // Retrieve this from your app's settings if available
 
   @override
   void initState() {
@@ -39,6 +41,8 @@ class ProfileScreenState extends State<ProfileScreen> {
       });
     } catch (e) {
       // Handle errors
+      print('Error fetching user data: $e');
+      // Optionally, set default values or show an error message to the user
     }
   }
 
@@ -53,16 +57,19 @@ class ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _profileImage = File(pickedFile.path);
       });
+      // Optionally, upload the image to your backend or Firebase Storage
+      // and update the user's profile picture URL in the database
     }
   }
 
   // Build the profile header with profile picture and user info
   Widget buildProfileHeader() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: isNightMode
+          colors: themeNotifier.isNightMode
               ? [Colors.black87, Colors.black54]
               : [Colors.blueAccent, Colors.lightBlueAccent],
           begin: Alignment.topCenter,
@@ -71,31 +78,90 @@ class ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          // Profile Picture
+          // Profile Picture with PopupMenuButton
           Stack(
             children: [
               CircleAvatar(
                 radius: 60,
-                backgroundColor: Colors.white,
+                backgroundColor:
+                    themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
                 backgroundImage: _profileImage != null
                     ? FileImage(_profileImage!)
-                    : const AssetImage('images/default_avatar.png')
+                    : const AssetImage('assets/images/default_avatar.png')
                         as ImageProvider,
               ),
               Positioned(
                 bottom: 0,
                 right: 4,
-                child: GestureDetector(
-                  onTap: pickImage,
-                  child: Container(
+                child: PopupMenuButton<String>(
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      // Handle Edit Profile
+                      // Navigate to EditProfileScreen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EditProfileScreen(),
+                        ),
+                      );
+                    } else if (value == 'signout') {
+                      // Handle Sign Out
+                      _authService.signOut().then((_) {
+                        Navigator.pushReplacementNamed(context, '/signin');
+                      }).catchError((error) {
+                        // Handle sign out error
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error signing out: $error'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      });
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.edit,
+                            color: themeNotifier.isNightMode
+                                ? Colors.white
+                                : Colors.black87,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('Edit Profile'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'signout',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.logout,
+                            color: themeNotifier.isNightMode
+                                ? Colors.white
+                                : Colors.black87,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text('Sign Out'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  icon: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.edit,
-                      color: isNightMode ? Colors.black : Colors.blueAccent,
+                      Icons.more_vert,
+                      color: themeNotifier.isNightMode
+                          ? Colors.black
+                          : Colors.blueAccent,
                     ),
                   ),
                 ),
@@ -106,9 +172,9 @@ class ProfileScreenState extends State<ProfileScreen> {
           // Username
           Text(
             username,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 28,
-              color: Colors.white,
+              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -117,17 +183,19 @@ class ProfileScreenState extends State<ProfileScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.location_on,
-                color: Colors.white70,
+                color:
+                    themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
                 size: 18,
               ),
               const SizedBox(width: 5),
               Text(
                 location,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: Colors.white70,
+                  color:
+                      themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
                 ),
               ),
             ],
@@ -139,8 +207,9 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // Build the statistics section (e.g., posts, followers, following)
   Widget buildStatisticsSection() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      color: isNightMode ? Colors.black : Colors.white,
+      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -155,6 +224,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // Helper method to build a single statistic item
   Widget buildStatisticItem(String label, String count) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Column(
       children: [
         Text(
@@ -162,7 +232,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: isNightMode ? Colors.white : Colors.black87,
+            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
           ),
         ),
         const SizedBox(height: 5),
@@ -170,7 +240,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           label,
           style: TextStyle(
             fontSize: 16,
-            color: isNightMode ? Colors.white70 : Colors.grey,
+            color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
           ),
         ),
       ],
@@ -179,14 +249,15 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // Build the user's bio or description
   Widget buildBioSection() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      color: isNightMode ? Colors.black : Colors.white,
+      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
       padding: const EdgeInsets.all(16),
       child: Text(
         'This is the user bio or description. You can update it to reflect your personality or share something about yourself.',
         style: TextStyle(
           fontSize: 16,
-          color: isNightMode ? Colors.white70 : Colors.black87,
+          color: themeNotifier.isNightMode ? Colors.white70 : Colors.black87,
         ),
         textAlign: TextAlign.center,
       ),
@@ -195,33 +266,36 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // Build the user's contact information
   Widget buildContactInfo() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      color: isNightMode ? Colors.black : Colors.white,
+      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           ListTile(
             leading: Icon(
               Icons.email,
-              color: isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
             ),
             title: Text(
               email,
               style: TextStyle(
-                color: isNightMode ? Colors.white : Colors.black87,
+                color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
               ),
             ),
           ),
-          Divider(color: isNightMode ? Colors.white12 : Colors.grey[300]),
+          Divider(
+              color:
+                  themeNotifier.isNightMode ? Colors.white12 : Colors.grey[300]),
           ListTile(
             leading: Icon(
               Icons.phone,
-              color: isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
             ),
             title: Text(
               mobileNumber,
               style: TextStyle(
-                color: isNightMode ? Colors.white : Colors.black87,
+                color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
               ),
             ),
           ),
@@ -232,16 +306,22 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // Build the Edit Profile button
   Widget buildEditProfileButton() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      color: isNightMode ? Colors.black : Colors.white,
+      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Center(
         child: ElevatedButton(
           onPressed: () {
             // Navigate to Edit Profile screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+            );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: isNightMode ? Colors.amberAccent : Colors.blueAccent,
+            backgroundColor:
+                themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
@@ -250,7 +330,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           child: Text(
             'Edit Profile',
             style: TextStyle(
-              color: isNightMode ? Colors.black : Colors.white,
+              color: themeNotifier.isNightMode ? Colors.black : Colors.white,
               fontSize: 18,
             ),
           ),
@@ -261,6 +341,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // Build the user's posts grid
   Widget buildUserPosts() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     // Placeholder for user posts
     List<Map<String, String>> userPosts = [
       {'image': 'assets/images/logo.png'},
@@ -272,7 +353,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     ];
 
     return Container(
-      color: isNightMode ? Colors.black : Colors.white,
+      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
       padding: const EdgeInsets.all(8),
       child: GridView.builder(
         physics: const NeverScrollableScrollPhysics(),
@@ -314,17 +395,18 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Scaffold(
-      backgroundColor: isNightMode ? Colors.black : Colors.grey[100],
+      backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: isNightMode ? Colors.black : Colors.white,
+        backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.white,
         iconTheme: IconThemeData(
-          color: isNightMode ? Colors.white : Colors.black87,
+          color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
         ),
         title: Text(
           'Profile',
           style: TextStyle(
-            color: isNightMode ? Colors.white : Colors.black87,
+            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
           ),
         ),
         centerTitle: true,
@@ -332,15 +414,48 @@ class ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: Icon(
               Icons.logout,
-              color: isNightMode ? Colors.white : Colors.black87,
+              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
             ),
             onPressed: () {
               // Handle logout
+              _authService.signOut().then((_) {
+                Navigator.pushReplacementNamed(context, '/signin');
+              }).catchError((error) {
+                // Handle sign out error
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error signing out: $error'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              });
             },
           ),
         ],
       ),
       body: buildProfileContent(),
+    );
+  }
+}
+
+// Placeholder for EditProfileScreen
+class EditProfileScreen extends StatelessWidget {
+  const EditProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Profile'),
+        backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.blueAccent,
+      ),
+      body: const Center(
+        child: Text(
+          'Edit Profile Screen',
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
     );
   }
 }
