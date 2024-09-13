@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cup_companion/services/auth_services.dart'; // Corrected import
+import 'package:cup_companion/screens/profile_screen.dart';
+import 'package:cup_companion/screens/settings_screen.dart';
+import 'package:cup_companion/screens/notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -8,12 +12,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  final AuthService _authService = AuthService();
+
   bool isNightMode = false; // Controls day/night mode
   String username = "Username";
   String location = "Location";
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
-  bool _isNavBarVisible = true;
+  int _notificationCount = 3; // Number of notifications
 
   // Stores the favorite drinks
   List<Map<String, String>> favoriteDrinks = [];
@@ -24,7 +30,7 @@ class HomeScreenState extends State<HomeScreen> {
     'Tea',
     'Juice',
     'Smoothies',
-    'Alcoholic Selections', // Add Alcoholic Selections at the end for day mode
+    'Alcoholic Selections',
   ];
 
   // Categories for night mode (Alcoholic Selections)
@@ -39,37 +45,46 @@ class HomeScreenState extends State<HomeScreen> {
   // Mock data for drink cards
   final List<Map<String, String>> drinkList = [
     {
-      'image': 'assets/images/logo.png', // Placeholder image
+      'image': 'assets/images/logo.png',
       'name': 'Cappuccino',
       'details': 'with Oat Milk',
       'price': '3.90',
     },
     {
-      'image': 'assets/images/logo.png', // Placeholder image
+      'image': 'assets/images/logo.png',
       'name': 'Latte',
       'details': 'with Soy Milk',
       'price': '4.50',
     },
     {
-      'image': 'assets/images/logo.png', // Placeholder image
+      'image': 'assets/images/logo.png',
       'name': 'Espresso',
       'details': 'double shot',
       'price': '2.80',
     },
     {
-      'image': 'assets/images/logo.png', // Placeholder image
+      'image': 'assets/images/logo.png',
       'name': 'Mocha',
       'details': 'with Chocolate',
       'price': '4.20',
     },
   ];
 
-  // Simulating fetching username and location from the database
-  void fetchUserData() {
-    setState(() {
-      username = "John Doe";
-      location = "New York, NY";
-    });
+  // Fetch user data (username and location)
+  void fetchUserData() async {
+    try {
+      Map<String, String> userData = await _authService.fetchUserData();
+      setState(() {
+        username = userData['username'] ?? 'Username';
+        location = userData['location'] ?? 'Location';
+      });
+    } catch (e) {
+      // Handle any errors here
+      setState(() {
+        username = 'Username';
+        location = 'Location';
+      });
+    }
   }
 
   void toggleNightMode(bool value) {
@@ -84,11 +99,13 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext context) {
         return Container(
           height: 200,
-          color: Colors.grey[800],
-          child: const Center(
+          color: isNightMode ? Colors.grey[850] : Colors.white,
+          child: Center(
             child: Text(
               'Filter options here',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: isNightMode ? Colors.white : Colors.black,
+              ),
             ),
           ),
         );
@@ -112,144 +129,53 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: NotificationListener<ScrollNotification>(
-        onNotification: (scrollNotification) {
-          if (scrollNotification is ScrollUpdateNotification) {
-            if (scrollNotification.scrollDelta! > 0) {
-              // User scrolled down, hide bottom navigation bar
-              if (_isNavBarVisible) {
-                setState(() {
-                  _isNavBarVisible = false;
-                });
-              }
-            } else if (scrollNotification.scrollDelta! < 0) {
-              // User scrolled up, show bottom navigation bar
-              if (!_isNavBarVisible) {
-                setState(() {
-                  _isNavBarVisible = true;
-                });
-              }
-            }
-          }
-          return true;
-        },
-        child: Stack(
-          children: [
-            // Background with two colors: black on top and white below
-            Column(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    color: isNightMode ? const Color.fromARGB(200, 53, 43, 59):const Color.fromARGB(215, 130,200,211),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-            _selectedIndex == 0
-                ? buildHomeScreenContent()
-                : _selectedIndex == 1
-                    ? buildFavoritesScreen()
-                    : buildPlaceholderScreen('Coming Soon!'),
-          ],
-        ),
+      backgroundColor: isNightMode ? Colors.black : Colors.grey[50],
+      body: Stack(
+        children: [
+          _selectedIndex == 0
+              ? buildHomeScreenContent()
+              : _selectedIndex == 1
+                  ? buildFavoritesScreen()
+                  : buildPlaceholderScreen('Coming Soon!'),
+        ],
       ),
-      bottomNavigationBar: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: _isNavBarVisible ? kBottomNavigationBarHeight : 0.0,
-        child: Wrap(
-          children: [
-            buildBottomNavigationBar(),
-          ],
-        ),
-      ),
+      bottomNavigationBar: buildBottomNavigationBar(),
     );
   }
 
   // Builds the main home screen content
   Widget buildHomeScreenContent() {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.only(top: 40, left: 16, right: 16),
+            padding: const EdgeInsets.only(top: 60, left: 16, right: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: isNightMode
+                    ? [Colors.black87, Colors.black54]
+                    : [Colors.blueAccent, Colors.lightBlueAccent],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // Location and Username
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          location,
-                          style: TextStyle(
-                            fontSize: 12.0,
-                            color:
-                                isNightMode ? Colors.white70 : Colors.white70,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              username,
-                              style: TextStyle(
-                                fontSize: 18.0,
-                                color: isNightMode ? Colors.white : Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Icon(
-                              Icons.arrow_drop_down,
-                              color: isNightMode ? Colors.white70 : Colors.white70,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 50,
-                    ),
-                  ],
-                ),
+                buildHeader(),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Day',
-                      style: TextStyle(
-                          color: isNightMode ? Colors.white70 : Colors.white70),
-                    ),
-                    Switch(
-                      value: isNightMode,
-                      onChanged: toggleNightMode,
-                      activeColor: Colors.yellow,
-                      inactiveThumbColor: Colors.black,
-                      inactiveTrackColor: Colors.grey[300],
-                    ),
-                    Text(
-                      'Night',
-                      style: TextStyle(
-                          color: isNightMode ? Colors.white70 : Colors.white70),
-                    ),
-                  ],
-                ),
+                buildDayNightSwitch(),
                 const SizedBox(height: 20),
                 SearchBar(isNightMode: isNightMode, onFilterTap: onFilterTap),
                 const SizedBox(height: 20),
               ],
             ),
           ),
-          RewardsSection(points: rewardPoints),
+          RewardsSection(points: rewardPoints, isNightMode: isNightMode),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.only(left: 16.0),
@@ -258,9 +184,9 @@ class HomeScreenState extends State<HomeScreen> {
               child: Text(
                 'For You:',
                 style: TextStyle(
-                  fontSize: 18.0,
+                  fontSize: 24.0,
                   fontWeight: FontWeight.bold,
-                  color: isNightMode ? Colors.white : Colors.white,
+                  color: isNightMode ? Colors.white : Colors.black87,
                 ),
               ),
             ),
@@ -269,79 +195,217 @@ class HomeScreenState extends State<HomeScreen> {
           isNightMode
               ? buildNightModeCategoryList()
               : buildDayModeCategoryList(),
-          const SizedBox(height: 10),
-          // Drink Cards List with Vertical Scrolling
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(), // Ensures proper scrolling
-              itemCount: drinkList.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // Two slides per row
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 0.9, // Controls the height-to-width ratio
-              ),
-              itemBuilder: (context, index) {
-                final drink = drinkList[index];
-                return DrinkCard(
-                  imageUrl: drink['image']!,
-                  name: drink['name']!,
-                  details: drink['details']!,
-                  price: drink['price']!,
-                  onAddToFavorites: () {
-                    setState(() {
-                      favoriteDrinks.add(drink); // Add to favorites
-                    });
-                  },
-                );
-              },
-            ),
-          ),
+          const SizedBox(height: 20),
+          buildDrinkSlider(),
+          const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  // Build the header with username and notification icons
+  Widget buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // Location and Username
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              location,
+              style: TextStyle(
+                fontSize: 14.0,
+                color: isNightMode ? Colors.white70 : Colors.white70,
+              ),
+            ),
+            Row(
+              children: [
+                Text(
+                  username,
+                  style: TextStyle(
+                    fontSize: 22.0,
+                    color: isNightMode ? Colors.white : Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  color: isNightMode ? Colors.white70 : Colors.white70,
+                ),
+              ],
+            ),
+          ],
+        ),
+        // Row for Notification Bell and Profile Icon
+        Row(
+          children: [
+            // Notification Bell Icon with Badge
+            Stack(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.notifications_none,
+                    color: Colors.white,
+                  ),
+                  onPressed: () {
+                    // Navigate to Notifications
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen()),
+                    );
+                  },
+                ),
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$_notificationCount',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 8),
+            // Profile Icon with Dropdown
+            PopupMenuButton<String>(
+              icon: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.person,
+                  color: isNightMode ? Colors.black : Colors.blueAccent,
+                ),
+              ),
+              onSelected: (value) {
+                if (value == 'profile') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ProfileScreen()),
+                  );
+                } else if (value == 'settings') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const SettingsScreen()),
+                  );
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem(
+                  value: 'profile',
+                  child: Text('Profile'),
+                ),
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: Text('Settings'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Build the day/night switch
+  Widget buildDayNightSwitch() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.wb_sunny, color: Colors.white),
+        Switch(
+          value: isNightMode,
+          onChanged: toggleNightMode,
+          activeColor: Colors.yellow,
+          inactiveThumbColor: Colors.white,
+          inactiveTrackColor: Colors.white70,
+        ),
+        const Icon(Icons.nights_stay, color: Colors.white),
+      ],
+    );
+  }
+
+  // Build the drink slider
+  Widget buildDrinkSlider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: drinkList.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.75,
+        ),
+        itemBuilder: (context, index) {
+          final drink = drinkList[index];
+          return DrinkCard(
+            imageUrl: drink['image']!,
+            name: drink['name']!,
+            details: drink['details']!,
+            price: drink['price']!,
+            isNightMode: isNightMode,
+            onAddToFavorites: () {
+              setState(() {
+                favoriteDrinks.add(drink);
+              });
+            },
+          );
+        },
       ),
     );
   }
 
   // Build the Favorites screen content
   Widget buildFavoritesScreen() {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: favoriteDrinks.isNotEmpty
-            ? GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: favoriteDrinks.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.7,
-                ),
-                itemBuilder: (context, index) {
-                  final drink = favoriteDrinks[index];
-                  return DrinkCard(
-                    imageUrl: drink['image']!,
-                    name: drink['name']!,
-                    details: drink['details']!,
-                    price: drink['price']!,
-                    onAddToFavorites: null, // Disable adding to favorites
-                  );
-                },
-              )
-            : const Center(
-                child: Text(
-                  'No favorite drinks yet!',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white
-                    ),
-                ),
+    return favoriteDrinks.isNotEmpty
+        ? Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: GridView.builder(
+              physics: const BouncingScrollPhysics(),
+              itemCount: favoriteDrinks.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
               ),
-      ),
-    );
+              itemBuilder: (context, index) {
+                final drink = favoriteDrinks[index];
+                return DrinkCard(
+                  imageUrl: drink['image']!,
+                  name: drink['name']!,
+                  details: drink['details']!,
+                  price: drink['price']!,
+                  isNightMode: isNightMode,
+                  onAddToFavorites: null, // Disable adding to favorites
+                );
+              },
+            ),
+          )
+        : Center(
+            child: Text(
+              'No favorite drinks yet!',
+              style: TextStyle(
+                fontSize: 20,
+                color: isNightMode ? Colors.white : Colors.black54,
+              ),
+            ),
+          );
   }
 
   // Build a placeholder screen for non-implemented tabs
@@ -349,7 +413,11 @@ class HomeScreenState extends State<HomeScreen> {
     return Center(
       child: Text(
         message,
-        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: isNightMode ? Colors.white : Colors.black87,
+        ),
       ),
     );
   }
@@ -378,30 +446,33 @@ class HomeScreenState extends State<HomeScreen> {
           label: 'Marketplace',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.chat),
-          label: 'Chat',
+          icon: Icon(Icons.notifications),
+          label: 'Notifications',
         ),
       ],
-      selectedItemColor: Colors.amberAccent,
-      unselectedItemColor: Colors.black,
-      backgroundColor: Colors.white,
+      selectedItemColor: Colors.blueAccent,
+      unselectedItemColor: Colors.grey,
+      backgroundColor: isNightMode ? Colors.black87 : Colors.white,
     );
   }
 
   // Build Categories List for day mode
   Widget buildDayModeCategoryList() {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.only(left: 16, right: 16),
+    return SizedBox(
+      height: 40,
       child: ListView.builder(
+        padding: const EdgeInsets.only(left: 16),
         scrollDirection: Axis.horizontal,
         itemCount: categoriesDayMode.length,
         itemBuilder: (context, index) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Chip(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ChoiceChip(
               label: Text(categoriesDayMode[index]),
-              backgroundColor: Colors.amberAccent,
+              selected: false,
+              onSelected: (bool selected) {},
+              backgroundColor: Colors.grey[200],
+              labelStyle: const TextStyle(color: Colors.black),
             ),
           );
         },
@@ -411,21 +482,21 @@ class HomeScreenState extends State<HomeScreen> {
 
   // Build Categories List for Night Mode
   Widget buildNightModeCategoryList() {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.only(left: 16, right: 16),
+    return SizedBox(
+      height: 40,
       child: ListView.builder(
+        padding: const EdgeInsets.only(left: 16),
         scrollDirection: Axis.horizontal,
         itemCount: categoriesNightMode.length,
         itemBuilder: (context, index) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Chip(
-              label: Text(
-                categoriesNightMode[index],
-                style: const TextStyle(color: Colors.black),
-              ),
-              backgroundColor: Colors.amberAccent,
+            padding: const EdgeInsets.only(right: 8.0),
+            child: ChoiceChip(
+              label: Text(categoriesNightMode[index]),
+              selected: false,
+              onSelected: (bool selected) {},
+              backgroundColor: Colors.grey[800],
+              labelStyle: const TextStyle(color: Colors.white),
             ),
           );
         },
@@ -434,30 +505,40 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Search Bar widget
+// Search Bar widget
 class SearchBar extends StatelessWidget {
   final bool isNightMode;
   final VoidCallback onFilterTap;
 
   const SearchBar({
-    Key? key, // Added key parameter
+    Key? key,
     required this.isNightMode,
     required this.onFilterTap,
-  }) : super(key: key); // Passing key to the super constructor
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isNightMode ? Colors.grey[900] : Colors.grey[300], // Background for the entire search bar
-        borderRadius: BorderRadius.circular(30), // Rounded corners for the whole container
+        color: isNightMode ? Colors.grey[900] : Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color:
+                isNightMode ? Colors.transparent : Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 8,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
+          const SizedBox(width: 16),
           Icon(
             Icons.search,
-            color: isNightMode ? Colors.white70 : Colors.black45, // Search icon color
+            color: isNightMode ? Colors.white70 : Colors.grey,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -465,50 +546,21 @@ class SearchBar extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: 'Search for a beverage',
                 hintStyle: TextStyle(
-                  color: isNightMode ? Colors.white70 : Colors.black45, // Hint text color
+                  color: isNightMode ? Colors.white70 : Colors.grey,
                 ),
-                border: OutlineInputBorder( // Here we explicitly control the border
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: isNightMode ? Colors.grey[900]! : Colors.grey[300]!, // Same as the background color
-                    width: 0.0, // Set border width to 0
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder( // For when the TextField is focused
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: isNightMode ? Colors.grey[900]! : Colors.grey[300]!, // Same as the background color
-                    width: 0.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder( // For when the TextField is not focused
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(
-                    color: isNightMode ? Colors.grey[900]! : Colors.grey[300]!, // Same as the background color
-                    width: 0.0,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10), // Adjust height of the TextField
+                border: InputBorder.none,
               ),
               style: TextStyle(
-                color: isNightMode ? Colors.white : Colors.black, // Text color
+                color: isNightMode ? Colors.white : Colors.black,
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onFilterTap,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.amberAccent, // Filter button background
-                borderRadius: BorderRadius.circular(15), // Rounded corners for filter button
-              ),
-              child: const Icon(
-                Icons.tune, // Filter button icon
-                color: Colors.black,
-              ),
+          IconButton(
+            icon: Icon(
+              Icons.tune,
+              color: isNightMode ? Colors.white : Colors.grey,
             ),
+            onPressed: onFilterTap,
           ),
         ],
       ),
@@ -519,62 +571,63 @@ class SearchBar extends StatelessWidget {
 // Rewards section implementation
 class RewardsSection extends StatelessWidget {
   final int points;
+  final bool isNightMode;
 
   const RewardsSection({
+    Key? key,
     required this.points,
-  });
+    required this.isNightMode,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isNightMode ? Colors.grey[850] : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color:
+                isNightMode ? Colors.black26 : Colors.grey.withOpacity(0.2),
             blurRadius: 8,
-            offset: Offset(0, 5),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            color: Colors.amberAccent, // Change this to modify the background color of the text
-            child: const Text(
-            'Rewards',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+          Icon(
+            Icons.card_giftcard,
+            color: isNightMode ? Colors.amberAccent : Colors.blueAccent,
+            size: 40,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              '$points points available',
+              style: TextStyle(
+                fontSize: 18,
+                color: isNightMode ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Center(
-            child: Column(
-              children: [
-                Text(
-                  '$points',
-                  style: const TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                const Text(
-                  'points available',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
+          ElevatedButton(
+            onPressed: () {},
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  isNightMode ? Colors.amberAccent : Colors.blueAccent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: Text(
+              'Redeem',
+              style: TextStyle(
+                color: isNightMode ? Colors.black : Colors.white,
+              ),
             ),
           ),
         ],
@@ -589,95 +642,112 @@ class DrinkCard extends StatelessWidget {
   final String name;
   final String details;
   final String price;
+  final bool isNightMode;
   final VoidCallback? onAddToFavorites; // To handle adding to favorites
 
   const DrinkCard({
+    Key? key,
     required this.imageUrl,
     required this.name,
     required this.details,
     required this.price,
+    required this.isNightMode,
     this.onAddToFavorites,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Ensuring that the image takes up the upper half
-          Expanded(
-            flex: 5, // Half of the available space
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.asset(
-                imageUrl, // Replace this with local asset path
-                fit: BoxFit.cover,
+    return GestureDetector(
+      onTap: () {
+        // Navigate to drink details page
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: isNightMode ? Colors.grey[850] : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  isNightMode ? Colors.black26 : Colors.grey.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Image section
+            Expanded(
+              flex: 5,
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.asset(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                  ),
+            // Details section
+            Expanded(
+              flex: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isNightMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      details,
+                      style: TextStyle(
+                        color: isNightMode ? Colors.white70 : Colors.grey,
+                      ),
+                    ),
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Price
+                        Text(
+                          '\$$price',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isNightMode
+                                ? Colors.amberAccent
+                                : Colors.blueAccent,
+                          ),
+                        ),
+                        // Add to favorites button
+                        IconButton(
+                          icon: Icon(
+                            onAddToFavorites != null
+                                ? Icons.favorite_border
+                                : Icons.favorite,
+                            color: isNightMode
+                                ? Colors.white
+                                : Colors.redAccent,
+                          ),
+                          onPressed: onAddToFavorites,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  details,
-                  style: const TextStyle(
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          const Spacer(), // To push price and plus icon to the bottom
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Price at the bottom left
-                Text(
-                  '\$$price',
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                // Plus icon at the bottom right
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.amberAccent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: onAddToFavorites,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8), // Add spacing at the bottom
-        ],
+          ],
+        ),
       ),
     );
   }
