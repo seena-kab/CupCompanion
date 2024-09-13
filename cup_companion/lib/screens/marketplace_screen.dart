@@ -18,7 +18,7 @@ class MarketplaceScreen extends StatelessWidget {
             themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
       ),
       body: const Center(
-        child: Text('Map view will be here.'),
+        child: Text('Marketplace view will be here.'),
       ),
     );
   }
