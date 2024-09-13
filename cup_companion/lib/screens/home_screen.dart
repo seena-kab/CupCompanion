@@ -2,10 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart';
-import 'package:cup_companion/screens/chat_screen.dart'; // Import ChatScreen
-import 'package:cup_companion/screens/profile_screen.dart'; // Import ProfileScreen
-import 'package:provider/provider.dart'; // Import Provider
-import '../theme/theme_notifier.dart'; // Import ThemeNotifier
+import 'package:cup_companion/screens/chat_screen.dart';
+import 'package:cup_companion/screens/profile_screen.dart';
+import 'package:cup_companion/screens/map_screen.dart';
+import 'package:cup_companion/screens/marketplace_screen.dart';
+import 'package:cup_companion/screens/favorites_screen.dart';
+import 'package:cup_companion/screens/notifications_screen.dart';
+import 'package:provider/provider.dart';
+import '../theme/theme_notifier.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -47,29 +51,30 @@ class HomeScreenState extends State<HomeScreen> {
   // Mock data for drink cards
   final List<Map<String, String>> drinkList = [
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/logo.png', // Updated to use logo.png
       'name': 'Cappuccino',
       'details': 'with Oat Milk',
       'price': '3.90',
     },
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/logo.png', // Updated to use logo.png
       'name': 'Latte',
       'details': 'with Soy Milk',
       'price': '4.50',
     },
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/logo.png', // Updated to use logo.png
       'name': 'Espresso',
       'details': 'double shot',
       'price': '2.80',
     },
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/logo.png', // Updated to use logo.png
       'name': 'Mocha',
       'details': 'with Chocolate',
       'price': '4.20',
     },
+    // Add more drinks as needed
   ];
 
   // Fetch user data (username and location)
@@ -124,7 +129,7 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Builds the bottom navigation bar
+  // Builds the bottom navigation bar with 6 items
   Widget buildBottomNavigationBar() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return BottomNavigationBar(
@@ -135,21 +140,30 @@ class HomeScreenState extends State<HomeScreen> {
           themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
       currentIndex: _selectedIndex,
       onTap: _onTabSelected,
-      items: [
+      type: BottomNavigationBarType.fixed, // To show all items
+      items: const [
         BottomNavigationBarItem(
-          icon: const Icon(Icons.home),
+          icon: Icon(Icons.home),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: const Icon(Icons.favorite),
+          icon: Icon(Icons.favorite),
           label: 'Favorites',
         ),
         BottomNavigationBarItem(
-          icon: const Icon(Icons.chat_bubble_outline), // Changed icon to chat
-          label: 'Chat', // Updated label to Chat
+          icon: Icon(Icons.map),
+          label: 'Map',
         ),
         BottomNavigationBarItem(
-          icon: const Icon(Icons.person),
+          icon: Icon(Icons.store),
+          label: 'Marketplace',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat_bubble_outline),
+          label: 'Chat',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
           label: 'Profile',
         ),
       ],
@@ -169,73 +183,90 @@ class HomeScreenState extends State<HomeScreen> {
               : _selectedIndex == 1
                   ? buildFavoritesScreen()
                   : _selectedIndex == 2
-                      ? const ChatScreen() // ChatScreen no longer needs isNightMode
-                      : const ProfileScreen(), // ProfileScreen no longer needs isNightMode
+                      ? const MapScreen()
+                      : _selectedIndex == 3
+                          ? const MarketplaceScreen()
+                          : _selectedIndex == 4
+                              ? const ChatScreen()
+                              : const ProfileScreen(),
         ],
       ),
       bottomNavigationBar: buildBottomNavigationBar(),
     );
   }
 
-  // Builds the main home screen content
+  // Builds the main home screen content with GridView for drinks
   Widget buildHomeScreenContent() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.only(top: 60, left: 16, right: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: themeNotifier.isNightMode
-                    ? [Colors.black87, Colors.black54]
-                    : [Colors.blueAccent, Colors.lightBlueAccent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.only(top: 60, left: 16, right: 16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: themeNotifier.isNightMode
+                  ? [Colors.black87, Colors.black54]
+                  : [Colors.blueAccent, Colors.lightBlueAccent],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            child: Column(
-              children: [
-                buildHeader(),
-                const SizedBox(height: 20),
-                buildDayNightSwitch(),
-                const SizedBox(height: 20),
-                SearchBar(onFilterTap: onFilterTap), // Provide valid callback
-                const SizedBox(height: 20),
-              ],
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
             ),
           ),
-          RewardsSection(points: rewardPoints),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'For You:',
-                style: TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                  color:
-                      themeNotifier.isNightMode ? Colors.white : Colors.black87,
-                ),
+          child: Column(
+            children: [
+              buildHeader(),
+              const SizedBox(height: 20),
+              buildDayNightSwitch(),
+              const SizedBox(height: 20),
+              SearchBar(onFilterTap: onFilterTap), // Provide valid callback
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+        RewardsSection(points: rewardPoints), // Updated RewardsSection
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'For You:',
+              style: TextStyle(
+                fontSize: 24.0,
+                fontWeight: FontWeight.bold,
+                color:
+                    themeNotifier.isNightMode ? Colors.white : Colors.black87,
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          themeNotifier.isNightMode
-              ? buildNightModeCategoryList()
-              : buildDayModeCategoryList(),
-          const SizedBox(height: 20),
-          buildDrinkSlider(),
-          const SizedBox(height: 20),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        themeNotifier.isNightMode
+            ? buildNightModeCategoryList()
+            : buildDayModeCategoryList(),
+        const SizedBox(height: 20),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: GridView.builder(
+              itemCount: drinkList.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // 2 per row
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+                childAspectRatio: 3 / 4, // Adjust as needed
+              ),
+              itemBuilder: (context, index) {
+                return buildDrinkCard(drinkList[index]);
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
     );
   }
 
@@ -323,15 +354,72 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        // Settings Icon
+        // Notification Icon and Settings Icon with Drop-down Menu
         Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.settings),
-              color: Colors.white,
-              onPressed: () {
-                // Navigate to Settings Screen
-                Navigator.pushNamed(context, '/settings');
+            Stack(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.notifications,
+                    color:
+                        themeNotifier.isNightMode ? Colors.white : Colors.black,
+                  ),
+                  onPressed: () {
+                    // Handle notification icon press
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen()),
+                    );
+                  },
+                ),
+                if (_notificationCount > 0)
+                  Positioned(
+                    right: 11,
+                    top: 11,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Text(
+                        '$_notificationCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+              ],
+            ),
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.settings,
+                color: themeNotifier.isNightMode ? Colors.white : Colors.black,
+              ),
+              onSelected: (String value) {
+                if (value == 'Settings') {
+                  Navigator.pushNamed(context, '/settings');
+                } else if (value == 'Sign Out') {
+                  _authService.signOut();
+                  Navigator.pushReplacementNamed(context, '/signin');
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return {'Settings', 'Sign Out'}.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
               },
             ),
           ],
@@ -415,93 +503,82 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the drink slider
-  Widget buildDrinkSlider() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return SizedBox(
-      height: 250,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: drinkList.length,
-        itemBuilder: (context, index) {
-          return buildDrinkCard(drinkList[index]);
-        },
-      ),
-    );
-  }
-
-  // Builds individual drink cards
+  // Builds individual drink cards in a grid
   Widget buildDrinkCard(Map<String, String> drink) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: themeNotifier.isNightMode
-                ? Colors.black26
-                : Colors.grey.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Drink Image
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-              child: Image.asset(
-                drink['image']!,
-                fit: BoxFit.cover,
-                width: double.infinity,
+    return GestureDetector(
+      onTap: () {
+        // Handle drink card tap, e.g., navigate to drink details
+        // Navigator.push(context, MaterialPageRoute(builder: (context) => DrinkDetailsScreen(drink: drink)));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: themeNotifier.isNightMode
+                  ? Colors.black26
+                  : Colors.grey.withOpacity(0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Drink Image
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                child: Image.asset(
+                  drink['image']!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
               ),
             ),
-          ),
-          // Drink Details
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Text(
-                  drink['name']!,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color:
-                        themeNotifier.isNightMode ? Colors.white : Colors.black87,
+            // Drink Details
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Text(
+                    drink['name']!,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                    ),
                   ),
-                ),
-                Text(
-                  drink['details']!,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: themeNotifier.isNightMode
-                        ? Colors.white70
-                        : Colors.grey[600],
+                  Text(
+                    drink['details']!,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: themeNotifier.isNightMode
+                          ? Colors.white70
+                          : Colors.grey[600],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '\$${drink['price']}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: themeNotifier.isNightMode
-                        ? Colors.amberAccent
-                        : Colors.blueAccent,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 8),
+                  Text(
+                    '\$${drink['price']}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: themeNotifier.isNightMode
+                          ? Colors.amberAccent
+                          : Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -590,26 +667,87 @@ class RewardsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Container(
-      color: themeNotifier.isNightMode ? Colors.grey[900] : Colors.white,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Icon(
-            Icons.stars,
-            color: themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
-            size: 40,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            '$points Reward Points',
-            style: TextStyle(
-              fontSize: 18,
-              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Container(
+        height: 60, // Adjust height as needed
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
+          borderRadius: BorderRadius.circular(30), // Rounded corners for a skinny rectangle
+          boxShadow: [
+            BoxShadow(
+              color: themeNotifier.isNightMode
+                  ? Colors.black54
+                  : Colors.grey.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Rewards Information
+            Expanded(
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.stars,
+                    color: Colors.amberAccent,
+                    size: 30,
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Rewards Points',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      Text(
+                        '$points Points',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: themeNotifier.isNightMode
+                              ? Colors.amberAccent
+                              : Colors.blueAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Redeem Button
+            ElevatedButton(
+              onPressed: () {
+                // Handle Redeem button tap
+                Navigator.pushNamed(context, '/redeem'); // Example navigation
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeNotifier.isNightMode
+                    ? Colors.amberAccent
+                    : Colors.blueAccent, // Updated parameter
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Redeem',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

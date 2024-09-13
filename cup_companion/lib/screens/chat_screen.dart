@@ -3,10 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Added import for FirebaseAuth
+import 'package:firebase_auth/firebase_auth.dart'; // Ensure FirebaseAuth is imported
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
@@ -18,19 +17,11 @@ class ChatScreen extends StatefulWidget {
 class ChatScreenState extends State<ChatScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController _messageController = TextEditingController();
-  bool _isEmojiVisible = false;
 
   @override
   void dispose() {
     _messageController.dispose();
     super.dispose();
-  }
-
-  // Toggle emoji keyboard visibility
-  void toggleEmojiKeyboard() {
-    setState(() {
-      _isEmojiVisible = !_isEmojiVisible;
-    });
   }
 
   // Build the chat messages list
@@ -118,14 +109,7 @@ class ChatScreenState extends State<ChatScreen> {
       color: themeNotifier.isNightMode ? Colors.grey[900] : Colors.white,
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(
-              Icons.emoji_emotions,
-              color:
-                  themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
-            ),
-            onPressed: toggleEmojiKeyboard,
-          ),
+          // Removed Emoji IconButton
           Expanded(
             child: TextField(
               controller: _messageController,
@@ -158,57 +142,6 @@ class ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  // Build the emoji picker
-  Widget buildEmojiPicker() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    if (!_isEmojiVisible) return const SizedBox.shrink();
-
-    return SizedBox(
-      height: 250,
-      child: EmojiPicker(
-        onEmojiSelected: (category, emoji) {
-          _messageController.text += emoji.emoji;
-          _messageController.selection = TextSelection.fromPosition(
-            TextPosition(offset: _messageController.text.length),
-          );
-        },
-        config: Config(
-          verticalSpacing: 0,
-          horizontalSpacing: 0,
-          gridPadding: EdgeInsets.zero,
-          initCategory: Category.SMILEYS,
-          bgColor:
-              themeNotifier.isNightMode ? Colors.grey[900]! : Colors.white,
-          indicatorColor: themeNotifier.isNightMode
-              ? Colors.amberAccent
-              : Colors.blueAccent,
-          iconColor: themeNotifier.isNightMode ? Colors.white : Colors.black,
-          iconColorSelected: themeNotifier.isNightMode
-              ? Colors.amberAccent
-              : Colors.blueAccent,
-          backspaceColor: themeNotifier.isNightMode
-              ? Colors.amberAccent
-              : Colors.blueAccent,
-          skinToneDialogBgColor:
-              themeNotifier.isNightMode ? Colors.grey[900]! : Colors.white,
-          skinToneIndicatorColor: themeNotifier.isNightMode
-              ? Colors.amberAccent
-              : Colors.blueAccent,
-          enableSkinTones: true,
-          showRecents: true, // Corrected parameter name
-          recentsLimit: 28,
-          noRecents: const Text(
-            'No Recents',
-            style: TextStyle(fontSize: 20, color: Colors.black26),
-            textAlign: TextAlign.center,
-          ),
-          categoryIcons: const CategoryIcons(),
-          buttonMode: ButtonMode.MATERIAL,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
@@ -222,7 +155,7 @@ class ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(child: buildMessagesList()),
           buildMessageInput(),
-          buildEmojiPicker(),
+          // Removed buildEmojiPicker()
         ],
       ),
     );

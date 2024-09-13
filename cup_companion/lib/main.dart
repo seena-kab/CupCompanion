@@ -12,6 +12,7 @@ import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/home_screen.dart'; // Import HomeScreen
+import 'screens/redeem_points_screen.dart'; // Import RedeemPointsScreen
 import 'theme/theme.dart';
 import 'theme/theme_notifier.dart'; // Import ThemeNotifier
 import 'package:provider/provider.dart'; // Import Provider
@@ -51,6 +52,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(), // No need to pass isNightMode
         '/settings': (context) => const SettingsScreen(),
         '/notifications': (context) => const NotificationsScreen(),
+        '/redeem': (context) => const RedeemPointsScreen(), 
       },
     );
   }
