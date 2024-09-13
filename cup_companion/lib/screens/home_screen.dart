@@ -505,7 +505,7 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Search Bar widget
+// Updated SearchBar widget with more rounded corners and modern styling
 class SearchBar extends StatelessWidget {
   final bool isNightMode;
   final VoidCallback onFilterTap;
@@ -519,50 +519,56 @@ class SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isNightMode ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color:
-                isNightMode ? Colors.transparent : Colors.grey.withOpacity(0.2),
-            spreadRadius: 2,
+            color: isNightMode ? Colors.black26 : Colors.grey.withOpacity(0.2),
             blurRadius: 8,
-            offset: const Offset(0, 5),
+            offset: const Offset(0, 4),
           ),
         ],
+        borderRadius: BorderRadius.circular(50), // More rounded corners
       ),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          const SizedBox(width: 16),
-          Icon(
+      child: TextField(
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: isNightMode ? Colors.grey[850] : Colors.white,
+          hintText: 'Search for a beverage',
+          hintStyle: TextStyle(
+            color: isNightMode ? Colors.white70 : Colors.grey,
+          ),
+          prefixIcon: Icon(
             Icons.search,
             color: isNightMode ? Colors.white70 : Colors.grey,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search for a beverage',
-                hintStyle: TextStyle(
-                  color: isNightMode ? Colors.white70 : Colors.grey,
-                ),
-                border: InputBorder.none,
-              ),
-              style: TextStyle(
-                color: isNightMode ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-          IconButton(
+          suffixIcon: IconButton(
             icon: Icon(
               Icons.tune,
-              color: isNightMode ? Colors.white : Colors.grey,
+              color: isNightMode ? Colors.white70 : Colors.grey,
             ),
             onPressed: onFilterTap,
           ),
-        ],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50), // Increased from 30 to 50
+            borderSide: BorderSide.none, // Removes the border
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(
+              color: isNightMode ? Colors.white70 : Colors.blueAccent,
+              width: 1.5,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+        ),
+        style: TextStyle(
+          color: isNightMode ? Colors.white : Colors.black,
+        ),
       ),
     );
   }
