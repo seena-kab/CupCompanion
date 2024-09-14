@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   HomeScreenState createState() => HomeScreenState();
@@ -25,7 +25,7 @@ class HomeScreenState extends State<HomeScreen> {
   String location = "Location";
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
-  int _notificationCount = 3; // Number of notifications
+  final int _notificationCount = 3; // Number of notifications
 
   // Stores the favorite drinks
   List<Map<String, String>> favoriteDrinks = [];
@@ -313,11 +313,11 @@ class HomeScreenState extends State<HomeScreen> {
                 // Navigate to Profile Screen
                 Navigator.pushNamed(context, '/profile');
               },
-              child: CircleAvatar(
+              child: const CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.white,
                 backgroundImage:
-                    const AssetImage('assets/images/default_avatar.png'),
+                    AssetImage('assets/images/default_avatar.png'),
               ),
             ),
             const SizedBox(width: 10),
@@ -589,9 +589,9 @@ class SearchBar extends StatelessWidget {
   final VoidCallback onFilterTap;
 
   const SearchBar({
-    Key? key,
+    super.key,
     required this.onFilterTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -660,9 +660,9 @@ class RewardsSection extends StatelessWidget {
   final int points;
 
   const RewardsSection({
-    Key? key,
+    super.key,
     required this.points,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

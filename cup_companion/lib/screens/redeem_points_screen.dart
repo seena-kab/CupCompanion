@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 
 class RedeemPointsScreen extends StatelessWidget {
-  const RedeemPointsScreen({Key? key}) : super(key: key);
+  const RedeemPointsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

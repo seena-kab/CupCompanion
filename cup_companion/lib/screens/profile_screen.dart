@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   ProfileScreenState createState() => ProfileScreenState();
@@ -440,7 +440,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
 // Placeholder for EditProfileScreen
 class EditProfileScreen extends StatelessWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
