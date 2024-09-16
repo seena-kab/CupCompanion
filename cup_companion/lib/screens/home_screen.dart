@@ -6,7 +6,6 @@ import 'package:cup_companion/screens/chat_screen.dart';
 import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
-import 'package:cup_companion/screens/favorites_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
