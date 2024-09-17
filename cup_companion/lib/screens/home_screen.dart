@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'events.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -153,10 +154,13 @@ class HomeScreenState extends State<HomeScreen> {
               ],
             ),
             _selectedIndex == 0
-                ? buildHomeScreenContent()
-                : _selectedIndex == 1
-                    ? buildFavoritesScreen()
-                    : buildPlaceholderScreen('Coming Soon!'),
+    ? buildHomeScreenContent()
+    : _selectedIndex == 1
+        ? buildFavoritesScreen()
+        : _selectedIndex == 5 // Assuming index 2 is for Events
+            ? const EventScreen() // Display EventScreen when "Events" tab is selected
+            : buildPlaceholderScreen('Coming Soon!')
+,
           ],
         ),
       ),
@@ -381,6 +385,10 @@ class HomeScreenState extends State<HomeScreen> {
           icon: Icon(Icons.chat),
           label: 'Chat',
         ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.event),
+          label: 'Events',
+        )
       ],
       selectedItemColor: Colors.amberAccent,
       unselectedItemColor: Colors.black,
