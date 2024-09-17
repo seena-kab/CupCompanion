@@ -723,30 +723,30 @@ class RewardsSection extends StatelessWidget {
                 ],
               ),
             ),
-            // Redeem Button
-            ElevatedButton(
-              onPressed: () {
-                // Handle Redeem button tap
-                Navigator.pushNamed(context, '/redeem'); // Example navigation
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: themeNotifier.isNightMode
-                    ? Colors.amberAccent
-                    : Colors.blueAccent, // Updated parameter
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              child: const Text(
-                'Redeem',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
+             Flexible(
+      child: ElevatedButton(
+        onPressed: () {
+          // Handle Redeem button tap
+          Navigator.pushNamed(context, '/redeem'); // Example navigation
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: themeNotifier.isNightMode
+              ? Colors.amberAccent
+              : Colors.blueAccent, // Updated parameter
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        child: const Text(
+          'Redeem',
+        ),
+      ),
+    ),
+  ],
+),
       ),
     );
   }
