@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 
 class MarketplaceScreen extends StatelessWidget {
-  const MarketplaceScreen({Key? key}) : super(key: key);
+  const MarketplaceScreen({super.key});
 
   // Placeholder for MapScreen
   @override

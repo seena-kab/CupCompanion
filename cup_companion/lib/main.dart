@@ -10,11 +10,8 @@ import 'screens/signup_screen.dart';
 import 'screens/signin_screen.dart';
 import 'screens/survey_screen.dart';
 import 'screens/forgot_password_screen.dart';
-import 'screens/profile_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/notifications_screen.dart';
 import 'screens/home_screen.dart'; // Import HomeScreen
-import 'screens/redeem_points_screen.dart'; // Import RedeemPointsScreen
+// Import RedeemPointsScreen
 import 'theme/theme.dart';
 
 Future<void> main() async {
@@ -32,7 +29,7 @@ Future<void> main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {

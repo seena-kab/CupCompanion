@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart'; // Correct path
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({Key? key}) : super(key: key);
+  const SignUpScreen({super.key});
 
   @override
   SignUpScreenState createState() => SignUpScreenState();

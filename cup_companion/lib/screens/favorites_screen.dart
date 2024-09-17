@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 
 class FavoritesScreen extends StatelessWidget {
-  const FavoritesScreen({Key? key}) : super(key: key);
+  const FavoritesScreen({super.key});
 
   // Placeholder for MapScreen
   @override

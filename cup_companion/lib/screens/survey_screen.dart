@@ -3,7 +3,7 @@ import 'dart:developer' as developer;
 import 'package:cup_companion/services/auth_services.dart'; // Import AuthService for Firebase interactions
 
 class SurveyScreen extends StatefulWidget {
-  const SurveyScreen({Key? key}) : super(key: key);
+  const SurveyScreen({super.key});
 
   @override
   SurveyScreenState createState() => SurveyScreenState();
