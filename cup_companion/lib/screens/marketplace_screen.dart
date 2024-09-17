@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 
-class MapScreen extends StatelessWidget {
-  const MapScreen({Key? key}) : super(key: key);
+class MarketplaceScreen extends StatelessWidget {
+  const MarketplaceScreen({Key? key}) : super(key: key);
 
   // Placeholder for MapScreen
   @override
@@ -18,7 +18,7 @@ class MapScreen extends StatelessWidget {
             themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
       ),
       body: const Center(
-        child: Text('Map view will be here.'),
+        child: Text('Marketplace view will be here.'),
       ),
     );
   }

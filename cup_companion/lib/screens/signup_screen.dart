@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cup_companion/services/auth_services.dart';  // Correct path  // Import your AuthService class
+import 'package:cup_companion/services/auth_services.dart'; // Correct path
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -17,20 +17,20 @@ class SignUpScreenState extends State<SignUpScreen> {
 
   bool _isLoading = false;
   String? _errorMessage;
+  bool isPasswordVisible = false; // Password visibility tracker
 
-  //Method to validate email format
+  // Method to validate email format
   bool _isValidEmail(String email) {
     final RegExp emailRegex = RegExp(
-      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]+\.[a-zA-Z]+$",
+      r"^[a-zA-Z0-9.+_-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]+$",
     );
-
     return emailRegex.hasMatch(email);
   }
 
-  //Method to show a simple alert dialog
+  // Method to show a simple alert dialog
   void _showDialog(String message) {
     showDialog(
-      context: context, 
+      context: context,
       builder: (context) => AlertDialog(
         title: const Text('Error'),
         content: Text(message),
@@ -50,47 +50,61 @@ class SignUpScreenState extends State<SignUpScreen> {
       _errorMessage = null;
     });
 
-  //Trim and validate the input
-  final String email = _emailController.text.trim();
-  final String password = _passwordController.text.trim();
-  final String username = _usernameController.text.trim();
-  final String mobileNumber = _mobileNumberController.text.trim();
+    // Trim and validate the input
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+    final String username = _usernameController.text.trim();
+    final String mobileNumber = _mobileNumberController.text.trim();
 
-  if (email.isEmpty || password.isEmpty || username.isEmpty || mobileNumber.isEmpty) {
-    _showDialog('All fields are required');
-    setState(() {
-      _isLoading = false;
-    });
-    return;
-  }
-
-  if (!_isValidEmail(email)) {
-    _showDialog('Please enter a valid email address');
-    setState(() {
-      _isLoading = false;
-    });
-    return;
-  }
-
-  if (password.length < 6) {
-    _showDialog('Password must be at least 6 characters');
-    setState(() {
-      _isLoading = false;
-    });
-    return;
-  }
-
-  try {
-    // Call the AuthService to create a user with email and password
-    await _authService.createUser(
-      email,
-      password,
-    );
-
-    // Navigate to a different screen (e.g., home page) after successful sign-up
-    if (mounted) {
-    Navigator.pushReplacementNamed(context, '/signin');
+    if (email.isEmpty ||
+        password.isEmpty ||
+        username.isEmpty ||
+        mobileNumber.isEmpty) {
+      _showDialog('All fields are required');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
     }
+
+    if (!_isValidEmail(email)) {
+      _showDialog('Please enter a valid email address');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      _showDialog('Password must be at least 6 characters');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // Validate mobile number (assuming 10-digit numbers)
+    if (!RegExp(r'^\d{10}$').hasMatch(mobileNumber)) {
+      _showDialog('Please enter a valid 10-digit mobile number');
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      // Call the AuthService to create a user with email, password, username, and mobile number
+      await _authService.createUser(
+        email,
+        password,
+        username,
+        mobileNumber,
+      );
+
+      // Navigate to a different screen (e.g., sign-in page) after successful sign-up
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/signin');
+      }
     } catch (e) {
       // Catch and display any errors during the sign-up process
       setState(() {
@@ -98,9 +112,9 @@ class SignUpScreenState extends State<SignUpScreen> {
       });
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -126,69 +140,83 @@ class SignUpScreenState extends State<SignUpScreen> {
           },
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('assets/images/logo.png',
-            height: 200,),
-            const SizedBox(height: 30.0),
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Enter Username',
-                border: OutlineInputBorder(),
+      body: SingleChildScrollView( // Added SingleChildScrollView to prevent overflow
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            // Removed center alignment to allow scrolling
+            children: [
+              Image.asset(
+                'assets/images/logo.png',
+                height: 200,
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _mobileNumberController,
-              decoration: const InputDecoration(
-                labelText: 'Mobile Number',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 30.0),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Enter Username',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email address',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: _mobileNumberController,
+                decoration: const InputDecoration(
+                  labelText: 'Mobile Number',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.phone,
               ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.visibility),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email address',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
-              obscureText: true,
-            ),
-            const SizedBox(height: 24.0),
-            _isLoading
-                ? const CircularProgressIndicator() // Show a loader while waiting
-                : ElevatedButton(
-                    onPressed: _signUp, // Trigger sign up logic
-                    child: const Text('Sign Up'),
+              const SizedBox(height: 16.0),
+              TextField(
+                controller: _passwordController,
+                obscureText: !isPasswordVisible, // Controls password visibility
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        isPasswordVisible = !isPasswordVisible; // Toggle visibility
+                      });
+                    },
                   ),
-            const SizedBox(height: 24.0),
-            if (_errorMessage != null) // Display error message if present
-              Text(
-                _errorMessage!,
-                style: const TextStyle(color: Colors.red),
+                ),
               ),
-            const SizedBox(height: 24.0),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/signin');
-              },
-              child: const Text('Already a member? Sign in'),
-            ),
-          ],
+              const SizedBox(height: 24.0),
+              _isLoading
+                  ? const CircularProgressIndicator() // Show a loader while waiting
+                  : ElevatedButton(
+                      onPressed: _signUp, // Trigger sign up logic
+                      child: const Text('Sign Up'),
+                    ),
+              const SizedBox(height: 24.0),
+              if (_errorMessage != null) // Display error message if present
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 24.0),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/signin');
+                },
+                child: const Text('Already a member? Sign in'),
+              ),
+            ],
+          ),
         ),
       ),
     );
