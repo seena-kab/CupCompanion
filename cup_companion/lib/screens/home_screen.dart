@@ -9,6 +9,8 @@ import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
+import 'events.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -189,6 +191,65 @@ class HomeScreenState extends State<HomeScreen> {
                               ? const ChatScreen()
                               : const ProfileScreen(),
         ],
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (scrollNotification) {
+          if (scrollNotification is ScrollUpdateNotification) {
+            if (scrollNotification.scrollDelta! > 0) {
+              // User scrolled down, hide bottom navigation bar
+              if (_isNavBarVisible) {
+                setState(() {
+                  _isNavBarVisible = false;
+                });
+              }
+            } else if (scrollNotification.scrollDelta! < 0) {
+              // User scrolled up, show bottom navigation bar
+              if (!_isNavBarVisible) {
+                setState(() {
+                  _isNavBarVisible = true;
+                });
+              }
+            }
+          }
+          return true;
+        },
+        child: Stack(
+          children: [
+            // Background with two colors: black on top and white below
+            Column(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    color: Colors.black,
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            _selectedIndex == 0
+    ? buildHomeScreenContent()
+    : _selectedIndex == 1
+        ? buildFavoritesScreen()
+        : _selectedIndex == 5 // Assuming index 2 is for Events
+            ? const EventScreen() // Display EventScreen when "Events" tab is selected
+            : buildPlaceholderScreen('Coming Soon!')
+,
+          ],
+        ),
+      ),
+      bottomNavigationBar: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        height: _isNavBarVisible ? kBottomNavigationBarHeight : 0.0,
+        child: Wrap(
+          children: [
+            buildBottomNavigationBar(),
+          ],
+        ),
       ),
       bottomNavigationBar: buildBottomNavigationBar(),
     );
@@ -450,6 +511,10 @@ class HomeScreenState extends State<HomeScreen> {
           Icons.nightlight_round,
           color: Colors.white70,
         ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.event),
+          label: 'Events',
+        )
       ],
     );
   }

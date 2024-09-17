@@ -16,6 +16,9 @@ import 'screens/redeem_points_screen.dart'; // Import RedeemPointsScreen
 import 'theme/theme.dart';
 import 'theme/theme_notifier.dart'; // Import ThemeNotifier
 import 'package:provider/provider.dart'; // Import Provider
+import 'screens/events.dart';
+
+
 
 Future<void> main() async {
   // Ensure Firebase is initialized before running the application
@@ -53,6 +56,8 @@ class MyApp extends StatelessWidget {
         '/settings': (context) => const SettingsScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/redeem': (context) => const RedeemPointsScreen(), 
+        '/events':(context) => const EventScreen(),
+
       },
     );
   }
