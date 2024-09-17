@@ -8,6 +8,7 @@ import 'screens/survey_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/home_screen.dart'; // Import HomeScreen
 import 'theme/theme.dart';
+import 'screens/map_screen.dart';
 
 Future<void> main() async {
   // Ensure Firebase is initialized before running the application
@@ -34,6 +35,7 @@ class MyApp extends StatelessWidget {
         '/survey': (context) => const SurveyScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
         '/home': (context) => const HomeScreen(), // Add HomeScreen route
+        '/map': (context) =>  const MapScreen(),
       },
     );
   }

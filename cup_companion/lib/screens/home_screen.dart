@@ -369,6 +369,10 @@ class HomeScreenState extends State<HomeScreen> {
           icon: Icon(Icons.favorite),
           label: 'Favorites',
         ),
+         BottomNavigationBarItem(
+          icon: Icon(Icons.map),
+          label: 'Map',
+        ),
         BottomNavigationBarItem(
           icon: Icon(Icons.shopping_bag),
           label: 'Marketplace',
