@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart'; // Import AuthService class
 
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({Key? key}) : super(key: key);
+  const SignInScreen({super.key});
 
   @override
   SignInScreenState createState() => SignInScreenState();

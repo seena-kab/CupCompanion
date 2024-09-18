@@ -8,7 +8,7 @@ import '../theme/theme_notifier.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Ensure FirebaseAuth is imported
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  const ChatScreen({super.key});
 
   @override
   ChatScreenState createState() => ChatScreenState();
@@ -33,7 +33,7 @@ class ChatScreenState extends State<ChatScreen> {
           .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Center(child: Text('Error loading messages.'));
+          return const Center(child: Text('Error loading messages.'));
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

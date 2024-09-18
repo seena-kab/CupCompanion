@@ -6,9 +6,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
+import 'favorites_screen.dart';
+import 'edit_profile_screen.dart'; // Import the new EditProfileScreen
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   ProfileScreenState createState() => ProfileScreenState();
@@ -43,6 +45,12 @@ class ProfileScreenState extends State<ProfileScreen> {
       // Handle errors
       print('Error fetching user data: $e');
       // Optionally, set default values or show an error message to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load user data: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
@@ -53,12 +61,30 @@ class ProfileScreenState extends State<ProfileScreen> {
         await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // Upload the image to the database or storage here
-      setState(() {
-        _profileImage = File(pickedFile.path);
-      });
-      // Optionally, upload the image to your backend or Firebase Storage
-      // and update the user's profile picture URL in the database
+      // Convert XFile to File
+      File imageFile = File(pickedFile.path);
+
+      // Upload the image and update profile
+      try {
+        await _authService.updateProfileImage(imageFile);
+        setState(() {
+          _profileImage = imageFile;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile picture updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } catch (e) {
+        // Handle upload errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile picture: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
@@ -81,14 +107,20 @@ class ProfileScreenState extends State<ProfileScreen> {
           // Profile Picture with PopupMenuButton
           Stack(
             children: [
-              CircleAvatar(
-                radius: 60,
-                backgroundColor:
-                    themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
-                backgroundImage: _profileImage != null
-                    ? FileImage(_profileImage!)
-                    : const AssetImage('assets/images/default_avatar.png')
-                        as ImageProvider,
+              GestureDetector(
+                onTap: () {
+                  // Allow users to pick a new profile image
+                  pickImage();
+                },
+                child: CircleAvatar(
+                  radius: 60,
+                  backgroundColor:
+                      themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
+                  backgroundImage: _profileImage != null
+                      ? FileImage(_profileImage!)
+                      : const AssetImage('assets/images/default_avatar.png')
+                          as ImageProvider,
+                ),
               ),
               Positioned(
                 bottom: 0,
@@ -411,50 +443,26 @@ class ProfileScreenState extends State<ProfileScreen> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.logout,
-              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
-            ),
-            onPressed: () {
-              // Handle logout
-              _authService.signOut().then((_) {
-                Navigator.pushReplacementNamed(context, '/signin');
-              }).catchError((error) {
-                // Handle sign out error
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error signing out: $error'),
-                    backgroundColor: Colors.redAccent,
-                  ),
-                );
-              });
-            },
-          ),
+          // Optional: Add action buttons if needed
+          // Currently, the logout button is handled within the PopupMenuButton in the profile header
         ],
       ),
       body: buildProfileContent(),
-    );
-  }
-}
-
-// Placeholder for EditProfileScreen
-class EditProfileScreen extends StatelessWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.blueAccent,
-      ),
-      body: const Center(
-        child: Text(
-          'Edit Profile Screen',
-          style: TextStyle(fontSize: 24),
-        ),
+      // Add navigation to Favorites via FloatingActionButton or another method
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to FavoritesScreen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FavoritesScreen(),
+            ),
+          );
+        },
+        backgroundColor:
+            themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
+        child: const Icon(Icons.favorite),
+        tooltip: 'Favorites',
       ),
     );
   }
