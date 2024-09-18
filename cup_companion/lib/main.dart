@@ -1,4 +1,4 @@
-// main.dart
+// lib/main.dart
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -16,9 +16,9 @@ import 'screens/redeem_points_screen.dart'; // Import RedeemPointsScreen
 import 'theme/theme.dart';
 import 'theme/theme_notifier.dart'; // Import ThemeNotifier
 import 'package:provider/provider.dart'; // Import Provider
-import 'screens/events.dart';
-
-
+import 'screens/favorites_screen.dart';
+import 'screens/edit_profile_screen.dart';
+import 'screens/events_screen.dart';
 
 Future<void> main() async {
   // Ensure Firebase is initialized before running the application
@@ -55,9 +55,10 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(), // No need to pass isNightMode
         '/settings': (context) => const SettingsScreen(),
         '/notifications': (context) => const NotificationsScreen(),
-        '/redeem': (context) => const RedeemPointsScreen(), 
-        '/events':(context) => const EventScreen(),
-
+        '/redeem': (context) => const RedeemPointsScreen(),
+        '/events': (context) => const EventScreen(),
+        '/favorites': (context) => const FavoritesScreen(),
+        '/edit_profile': (context) => const EditProfileScreen(),
       },
     );
   }
