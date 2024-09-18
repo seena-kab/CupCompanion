@@ -154,10 +154,6 @@ class HomeScreenState extends State<HomeScreen> {
           label: 'Map',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.map),
-          label: 'Map',
-        ),
-        BottomNavigationBarItem(
           icon: Icon(Icons.store),
           label: 'Marketplace',
         ),
