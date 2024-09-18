@@ -1,121 +1,52 @@
 // lib/screens/favorites_screen.dart
-
+ 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../providers/favorites_provider.dart';
 import '../theme/theme_notifier.dart';
-import '../services/auth_services.dart'; // Ensure correct import path
-
-class FavoritesScreen extends StatefulWidget {
+import '../widgets/drink_card.dart';
+ 
+class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
-
-  @override
-  _FavoritesScreenState createState() => _FavoritesScreenState();
-}
-
-class _FavoritesScreenState extends State<FavoritesScreen> {
-  final AuthService _authService = AuthService();
-
-  // List to store favorite drinks
-  List<Map<String, String>> favoriteDrinks = [];
-
-  @override
-  void initState() {
-    super.initState();
-    fetchFavoriteDrinks();
-  }
-
-  // Fetch favorite drinks from the AuthService
-  void fetchFavoriteDrinks() async {
-    try {
-      List<Map<String, String>> fetchedFavorites =
-          await _authService.getFavoriteDrinks();
-      setState(() {
-        favoriteDrinks = fetchedFavorites;
-      });
-    } catch (e) {
-      setState(() {
-        favoriteDrinks = [];
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load favorites: $e')),
-      );
-    }
-  }
-
+ 
   @override
   Widget build(BuildContext context) {
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-
+    final favorites = favoritesProvider.favorites;
+ 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Favorites'),
+        title: const Text('Your Favorites'),
         backgroundColor:
             themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
       ),
-      body: favoriteDrinks.isEmpty
+      body: favorites.isEmpty
           ? Center(
               child: Text(
-                'No favorites added yet!',
+                'You have no favorite drinks.',
                 style: TextStyle(
-                  color:
-                      themeNotifier.isNightMode ? Colors.white : Colors.black87,
                   fontSize: 18,
+                  color:
+                      themeNotifier.isNightMode ? Colors.white70 : Colors.grey[700],
                 ),
               ),
             )
-          : ListView.builder(
-              itemCount: favoriteDrinks.length,
-              itemBuilder: (context, index) {
-                final drink = favoriteDrinks[index];
-                return ListTile(
-                  leading: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: drink['image']!.startsWith('http')
-                        ? Image.network(
-                            drink['image']!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.asset(
-                            drink['image']!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                  title: Text(
-                    drink['name']!,
-                    style: TextStyle(
-                      color: themeNotifier.isNightMode
-                          ? Colors.white
-                          : Colors.black87,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(
-                    drink['details']!,
-                    style: TextStyle(
-                      color: themeNotifier.isNightMode
-                          ? Colors.white70
-                          : Colors.grey[600],
-                    ),
-                  ),
-                  trailing: Text(
-                    '\$${drink['price']}',
-                    style: TextStyle(
-                      color: themeNotifier.isNightMode
-                          ? Colors.amberAccent
-                          : Colors.blueAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  onTap: () {
-                    // Handle tap, e.g., navigate to drink details
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => DrinkDetailsScreen(drink: drink)));
-                  },
-                );
-              },
+          : Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GridView.builder(
+                itemCount: favorites.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.75,
+                ),
+                itemBuilder: (context, index) {
+                  final drink = favorites[index];
+                  return DrinkCard(drink: drink);
+                },
+              ),
             ),
     );
   }
