@@ -48,10 +48,14 @@ dependencies:
   firebase_database: ^11.1.2
   path_provider: ^2.1.4
   provider: ^6.0.5
+  hive: ^2.2.3
+  hive_flutter: ^1.0.0-nullsafety.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  hive_generator: ^2.0.0
+  build_runner: ^2.3.3
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -77,6 +81,10 @@ flutter:
     - assets/images/cappuccino_oat.png
     - assets/images/cappuccino.png
     - assets/images/default_avatar.png
+    - assets/images/margarita.jpg
+    - assets/images/green_tea.jpg
+    - assets/images/espresso.jpg
+    - assets/images/craft_beer.jpg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
