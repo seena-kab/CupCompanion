@@ -233,17 +233,11 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        height: _isNavBarVisible
-            ? kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom
-            : 0.0,
-        child: _isNavBarVisible
-            ? SafeArea(
-                top: false,
-                child: buildBottomNavigationBar(),
-              )
-            : const SizedBox.shrink(),
+      bottomNavigationBar: Visibility(
+        visible: _isNavBarVisible,
+        child: SafeArea(
+          child: buildBottomNavigationBar(),
+        ),
       ),
     );
   }
@@ -343,7 +337,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the header with profile picture, username, and location
+  // Builds the header with profile picture, username, location, and notification bell
   Widget buildHeader() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Row(
@@ -404,29 +398,52 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        // Settings Icon with Drop-down Menu
-        PopupMenuButton<String>(
-          icon: Icon(
-            Icons.settings,
-            color:
-                themeNotifier.isNightMode ? Colors.white : Colors.black,
-          ),
-          onSelected: (String value) {
-            if (value == 'Settings') {
-              Navigator.pushNamed(context, '/settings');
-            } else if (value == 'Sign Out') {
-              _authService.signOut();
-              Navigator.pushReplacementNamed(context, '/signin');
-            }
-          },
-          itemBuilder: (BuildContext context) {
-            return {'Settings', 'Sign Out'}.map((String choice) {
-              return PopupMenuItem<String>(
-                value: choice,
-                child: Text(choice),
-              );
-            }).toList();
-          },
+        // Notification Bell and Settings Icon
+        Row(
+          children: [
+            // Notification Bell Icon
+            IconButton(
+              icon: Icon(
+                Icons.notifications,
+                color:
+                    themeNotifier.isNightMode ? Colors.white : Colors.black,
+              ),
+              onPressed: () {
+                // Navigate to Notifications Screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Notifications',
+            ),
+            // Settings Icon with Drop-down Menu
+            PopupMenuButton<String>(
+              icon: Icon(
+                Icons.settings,
+                color:
+                    themeNotifier.isNightMode ? Colors.white : Colors.black,
+              ),
+              onSelected: (String value) {
+                if (value == 'Settings') {
+                  Navigator.pushNamed(context, '/settings');
+                } else if (value == 'Sign Out') {
+                  _authService.signOut();
+                  Navigator.pushReplacementNamed(context, '/signin');
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return {'Settings', 'Sign Out'}.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            ),
+          ],
         ),
       ],
     );
