@@ -442,7 +442,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         centerTitle: true,
-        actions: [
+        actions: const [
           // Optional: Add action buttons if needed
           // Currently, the logout button is handled within the PopupMenuButton in the profile header
         ],
@@ -461,8 +461,8 @@ class ProfileScreenState extends State<ProfileScreen> {
         },
         backgroundColor:
             themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
-        child: const Icon(Icons.favorite),
         tooltip: 'Favorites',
+        child: const Icon(Icons.favorite),
       ),
     );
   }

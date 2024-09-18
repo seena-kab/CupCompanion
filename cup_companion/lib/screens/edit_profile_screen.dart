@@ -80,7 +80,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         updatedMobileNumber.isEmpty ||
         updatedLocation.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('All fields are required.'),
           backgroundColor: Colors.redAccent,
         ),
@@ -165,7 +165,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                               : Colors.blueAccent,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.camera_alt,
                           color: Colors.white,
                           size: 20,
