@@ -42,9 +42,11 @@ dependencies:
   image_picker: ^1.1.2  # You can use the latest version available
   intl: ^0.17.0
   shared_preferences: ^2.3.2
+  flutter_config: ^2.0.2 # For storing API keys securely
   firebase_storage: ^12.3.0
   firebase_core: ^3.4.1
   firebase_auth: ^5.2.1
+  google_maps_webservice: ^0.0.20-nullsafety.5
   firebase_database: ^11.1.2
   geolocator: ^9.0.2
   geocoding: ^2.0.5
@@ -95,7 +97,7 @@ flutter:
     - assets/images/green_tea.jpg
     - assets/images/espresso.jpg
     - assets/images/craft_beer.jpg
-
+    - assets/.env
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
