@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../theme/theme_notifier.dart';
 import 'favorites_screen.dart';
 import 'edit_profile_screen.dart'; // Import the new EditProfileScreen
