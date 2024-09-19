@@ -7,6 +7,7 @@ import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
+import 'package:cup_companion/screens/forum_screen.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 import 'events_screen.dart';
@@ -163,8 +164,13 @@ class HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.event),
           label: 'Events',
+        ),                
+        BottomNavigationBarItem(
+            icon: Icon(Icons.forum),
+            label: 'Forum', // Add Forum tab
         ),
       ],
+
     );
   }
 
@@ -179,6 +185,7 @@ class HomeScreenState extends State<HomeScreen> {
       const MarketplaceScreen(), // Marketplace
       const ChatScreen(), // Chat
       const EventScreen(), // Events
+      ForumScreen(), // Forum
     ];
 
     return Scaffold(
