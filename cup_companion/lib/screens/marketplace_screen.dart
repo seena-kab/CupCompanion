@@ -135,6 +135,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         title: const Text('Marketplace'),
         backgroundColor:
             themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
+            automaticallyImplyLeading: false, 
         actions: [
           IconButton(
             icon: Icon(

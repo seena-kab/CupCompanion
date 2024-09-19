@@ -16,6 +16,7 @@ class MapScreen extends StatelessWidget {
         title: const Text('Map'),
         backgroundColor:
             themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
+            automaticallyImplyLeading: false, 
       ),
       body: const Center(
         child: Text('Map view will be here.'),
