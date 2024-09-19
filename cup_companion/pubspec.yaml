@@ -40,7 +40,7 @@ dependencies:
 
   # Add the image_picker dependency
   image_picker: ^1.1.2  # You can use the latest version available
-
+  intl: ^0.17.0
   shared_preferences: ^2.3.2
   firebase_storage: ^12.3.0
   firebase_core: ^3.4.1
