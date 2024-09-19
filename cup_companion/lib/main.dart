@@ -16,8 +16,6 @@ import 'screens/notifications_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/redeem_points_screen.dart';
 import 'theme/theme.dart';
-import 'theme/theme_notifier.dart';
-import 'package:provider/provider.dart';
 import 'screens/favorites_screen.dart';
 import 'screens/edit_profile_screen.dart';
 import 'screens/events_screen.dart';

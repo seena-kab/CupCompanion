@@ -113,7 +113,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.star,
                     color: Colors.amber,
                   ),

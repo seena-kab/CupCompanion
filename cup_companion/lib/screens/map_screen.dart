@@ -21,7 +21,7 @@ class _MapScreenState extends State<MapScreen> {
   // Current zoom level
   double _currentZoom = 12.0;
 
-  // Map type (Normal or Satellite)
+  // Initial map type
   MapType _currentMapType = MapType.normal;
 
   // Set of markers (e.g., sample marker in Portland)
@@ -35,6 +35,25 @@ class _MapScreenState extends State<MapScreen> {
       ),
     ),
   };
+
+  // List of map types for the dropdown menu
+  final List<MapType> _mapTypes = [
+    MapType.normal,
+    MapType.satellite,
+    MapType.terrain,
+    MapType.hybrid,
+  ];
+
+  // Map type names for the dropdown menu display
+  final List<String> _mapTypeNames = [
+    'Normal',
+    'Satellite',
+    'Terrain',
+    'Hybrid',
+  ];
+
+  // Selected map type name
+  String _selectedMapType = 'Normal';
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +75,7 @@ class _MapScreenState extends State<MapScreen> {
             mapType: _currentMapType,
             markers: _markers,
           ),
-          // Layer button and zoom controls
+          // Layer button, zoom controls, and map type dropdown
           Positioned(
             top: 100,
             right: 10,
@@ -66,22 +85,17 @@ class _MapScreenState extends State<MapScreen> {
                   heroTag: 'zoomIn',
                   onPressed: () => _zoomIn(),
                   child: const Icon(Icons.zoom_in),
-                  backgroundColor: Colors.orange[700],
+                  backgroundColor: Colors.blue[700],
                 ),
                 const SizedBox(height: 10),
                 FloatingActionButton(
                   heroTag: 'zoomOut',
                   onPressed: () => _zoomOut(),
                   child: const Icon(Icons.zoom_out),
-                  backgroundColor: Colors.orange[700],
+                  backgroundColor: Colors.blue[700],
                 ),
                 const SizedBox(height: 10),
-                FloatingActionButton(
-                  heroTag: 'changeMapType',
-                  onPressed: _changeMapType,
-                  child: const Icon(Icons.layers),
-                  backgroundColor: Colors.orange[700],
-                ),
+                _buildMapTypeDropdown(),
               ],
             ),
           ),
@@ -130,13 +144,24 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // Change the map type (normal/satellite)
-  void _changeMapType() {
-    setState(() {
-      _currentMapType = _currentMapType == MapType.normal
-          ? MapType.satellite
-          : MapType.normal;
-    });
+  // Build dropdown menu for selecting map type
+  Widget _buildMapTypeDropdown() {
+    return DropdownButton<String>(
+      value: _selectedMapType,
+      icon: Icon(Icons.map, color: Colors.blue[700]),
+      items: _mapTypeNames.map((String mapTypeName) {
+        return DropdownMenuItem<String>(
+          value: mapTypeName,
+          child: Text(mapTypeName),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          _selectedMapType = newValue!;
+          _currentMapType = _mapTypes[_mapTypeNames.indexOf(_selectedMapType)];
+        });
+      },
+    );
   }
 
   // Zoom in
