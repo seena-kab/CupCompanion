@@ -1,17 +1,8 @@
 // ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
 import 'package:cup_companion/services/auth_services.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:uuid/uuid.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:csv/csv.dart';
-import 'dart:io';
-import 'dart:convert';
-import 'package:cup_companion/screens/home_screen.dart';
-import 'package:cup_companion/screens/settings_screen.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 import 'dart:async';
@@ -25,61 +16,121 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   Completer<GoogleMapController> _controller = Completer();
+  static const LatLng _center = LatLng(45.5231, -122.6765); // Center on Portland
 
-  // Default center position (e.g., San Francisco)
-  static const LatLng _center = LatLng(37.7749, -122.4194);
+  // Current zoom level
+  double _currentZoom = 12.0;
 
-  // Initial map type
+  // Map type (Normal or Satellite)
   MapType _currentMapType = MapType.normal;
 
-  // Set of markers on the map
+  // Set of markers (e.g., sample marker in Portland)
   Set<Marker> _markers = {
     Marker(
-      markerId: MarkerId('_center'),
+      markerId: MarkerId('portland'),
       position: _center,
       infoWindow: InfoWindow(
-        title: 'San Francisco',
-        snippet: 'An interesting city!',
+        title: 'Portland',
+        snippet: 'A nice place to visit!',
       ),
     ),
   };
 
   @override
   Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map'),
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
+        backgroundColor: Colors.blueAccent,
       ),
-      body: GoogleMap(
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-        initialCameraPosition: const CameraPosition(
-          target: _center,
-          zoom: 11.0,
-        ),
-        mapType: _currentMapType,
-        markers: _markers,
-        onTap: _handleTap,
-        // Apply dark or light map styles based on the theme
-        mapToolbarEnabled: false,
-        zoomControlsEnabled: true,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _changeMapType,
-        label: const Text('Change Map Type'),
-        icon: const Icon(Icons.map),
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.grey[700] : Colors.blue,
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: (GoogleMapController controller) {
+              _controller.complete(controller);
+            },
+            initialCameraPosition: CameraPosition(
+              target: _center,
+              zoom: _currentZoom,
+            ),
+            mapType: _currentMapType,
+            markers: _markers,
+          ),
+          // Layer button and zoom controls
+          Positioned(
+            top: 100,
+            right: 10,
+            child: Column(
+              children: [
+                FloatingActionButton(
+                  heroTag: 'zoomIn',
+                  onPressed: () => _zoomIn(),
+                  child: const Icon(Icons.zoom_in),
+                  backgroundColor: Colors.orange[700],
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: 'zoomOut',
+                  onPressed: () => _zoomOut(),
+                  child: const Icon(Icons.zoom_out),
+                  backgroundColor: Colors.orange[700],
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: 'changeMapType',
+                  onPressed: _changeMapType,
+                  child: const Icon(Icons.layers),
+                  backgroundColor: Colors.orange[700],
+                ),
+              ],
+            ),
+          ),
+          // Bottom search/filter bar
+          Positioned(
+            bottom: 20,
+            left: 10,
+            right: 10,
+            child: Container(
+              height: 60,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 5,
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Search here',
+                        border: InputBorder.none,
+                        icon: Icon(Icons.search, color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    color: Colors.grey,
+                    onPressed: () {
+                      // Filter button action
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Change the map type between normal and satellite
+  // Change the map type (normal/satellite)
   void _changeMapType() {
     setState(() {
       _currentMapType = _currentMapType == MapType.normal
@@ -88,19 +139,21 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  // Add a marker where the map is tapped
-  void _handleTap(LatLng tappedPoint) {
+  // Zoom in
+  void _zoomIn() async {
+    final GoogleMapController controller = await _controller.future;
     setState(() {
-      _markers.add(
-        Marker(
-          markerId: MarkerId(tappedPoint.toString()),
-          position: tappedPoint,
-          infoWindow: InfoWindow(
-            title: 'New Marker',
-            snippet: '${tappedPoint.latitude}, ${tappedPoint.longitude}',
-          ),
-        ),
-      );
+      _currentZoom++;
     });
+    controller.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  // Zoom out
+  void _zoomOut() async {
+    final GoogleMapController controller = await _controller.future;
+    setState(() {
+      _currentZoom--;
+    });
+    controller.animateCamera(CameraUpdate.zoomOut());
   }
 }
