@@ -173,7 +173,7 @@ class HomeScreenState extends State<HomeScreen> {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
 
     // Initialize the list of screens once
-    final List<Widget> _screens = [
+    final List<Widget> screens = [
       buildHomeScreenContent(), // Home
       const MapScreen(), // Map
       const MarketplaceScreen(), // Marketplace
@@ -226,8 +226,8 @@ class HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               // Main Content
-              _selectedIndex < _screens.length
-                  ? _screens[_selectedIndex]
+              _selectedIndex < screens.length
+                  ? screens[_selectedIndex]
                   : buildPlaceholderScreen('Coming Soon!'),
             ],
           ),
