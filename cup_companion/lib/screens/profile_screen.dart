@@ -5,6 +5,8 @@ import 'package:cup_companion/services/auth_services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../theme/theme_notifier.dart';
 import 'favorites_screen.dart';
 import 'edit_profile_screen.dart'; // Import the new EditProfileScreen
@@ -20,6 +22,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
 
   String username = 'Username';
+  String zipCode = "00000";
   String email = 'Email';
   String mobileNumber = 'Mobile Number';
   String location = 'Location';
@@ -31,28 +34,32 @@ class ProfileScreenState extends State<ProfileScreen> {
     fetchUserData();
   }
 
-  // Fetch user data from the database
-  void fetchUserData() async {
-    try {
-      Map<String, String> userData = await _authService.fetchUserData();
-      setState(() {
-        username = userData['username'] ?? 'Username';
-        email = userData['email'] ?? 'Email';
-        mobileNumber = userData['mobileNumber'] ?? 'Mobile Number';
-        location = userData['location'] ?? 'Location';
-      });
-    } catch (e) {
-      // Handle errors
-      print('Error fetching user data: $e');
-      // Optionally, set default values or show an error message to the user
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to load user data: $e'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-    }
+ // Fetch user data from the database
+void fetchUserData() async {
+  try {
+    Map<String, String> userData = await _authService.fetchUserData();
+    setState(() {
+      username = userData['username'] ?? 'Username';
+      email = userData['email'] ?? 'Email';
+      mobileNumber = userData['mobileNumber'] ?? 'Mobile Number';
+      zipCode = userData['zipCode'] ?? '00000'; // Fetch the zip code
+    });
+    // After fetching user data, get the location
+    getUserLocation();
+  } catch (e) {
+    // Handle errors
+    print('Error fetching user data: $e');
+    // Optionally, set default values or show an error message to the user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to load user data: $e'),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+    // Attempt to get user location even if fetching user data fails
+    getUserLocation();
   }
+}
 
   // Pick an image from the gallery
   Future<void> pickImage() async {
@@ -88,22 +95,81 @@ class ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Build the profile header with profile picture and user info
-  Widget buildProfileHeader() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: themeNotifier.isNightMode
-              ? [Colors.black87, Colors.black54]
-              : [Colors.blueAccent, Colors.lightBlueAccent],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
+ void getUserLocation() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // Check if location services are enabled.
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    print('Location services are disabled.');
+    setState(() {
+      location = 'Zip Code: $zipCode';
+    });
+    return;
+  }
+
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    print('Location permission is denied. Requesting permission...');
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      print('User denied location permission.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+  }
+
+  if (permission == LocationPermission.deniedForever) {
+    print('Location permission is permanently denied.');
+    setState(() {
+      location = 'Zip Code: $zipCode';
+    });
+    return;
+  }
+
+  print('Location permission granted. Fetching position...');
+  try {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    print('Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
+
+    // Update the location variable with latitude and longitude
+    setState(() {
+      location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
+          'Lng: ${position.longitude.toStringAsFixed(6)}';
+    });
+    print('Location updated to: $location');
+  } catch (e, stacktrace) {
+    print('Error in getUserLocation(): $e');
+    print('Stacktrace: $stacktrace');
+    setState(() {
+      location = 'Zip Code: $zipCode';
+    });
+  }
+}
+
+ // Build the profile header with profile picture and user info
+// Build the profile header with profile picture and user info
+Widget buildProfileHeader() {
+  final themeNotifier = Provider.of<ThemeNotifier>(context);
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: themeNotifier.isNightMode
+            ? [Colors.black87, Colors.black54]
+            : [Colors.blueAccent, Colors.lightBlueAccent],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
       ),
-      child: Column(
-        children: [
+    ),
+    child: Column(
+      children: [
           // Profile Picture with PopupMenuButton
           Stack(
             children: [
@@ -200,42 +266,40 @@ class ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          // Username
-          Text(
-            username,
-            style: TextStyle(
-              fontSize: 28,
-              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.bold,
+           const SizedBox(height: 20),
+        // Username
+        Text(
+          username,
+          style: TextStyle(
+            fontSize: 28,
+            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        // Location
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.location_on,
+              color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
+              size: 18,
             ),
-          ),
-          const SizedBox(height: 5),
-          // Location
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.location_on,
-                color:
-                    themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
-                size: 18,
+            const SizedBox(width: 5),
+            Text(
+              location,
+              style: TextStyle(
+                fontSize: 16,
+                color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
               ),
-              const SizedBox(width: 5),
-              Text(
-                location,
-                style: TextStyle(
-                  fontSize: 16,
-                  color:
-                      themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
   // Build the statistics section (e.g., posts, followers, following)
   Widget buildStatisticsSection() {

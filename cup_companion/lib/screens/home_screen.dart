@@ -7,6 +7,8 @@ import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 import 'events_screen.dart';
@@ -22,6 +24,7 @@ class HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
 
   String username = "Username";
+  String zipCode = "00000";
   String location = "Location";
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
@@ -76,22 +79,84 @@ class HomeScreenState extends State<HomeScreen> {
     // Add more drinks as needed
   ];
 
-  // Fetch user data (username and location)
-  void fetchUserData() async {
-    try {
-      Map<String, String> userData = await _authService.fetchUserData();
+void fetchUserData() async {
+  try {
+    Map<String, String> userData = await _authService.fetchUserData();
+    setState(() {
+      username = userData['username'] ?? 'Username';
+      zipCode = userData['zipCode'] ?? '00000'; // Default zip code
+    });
+    // After fetching user data, get the location
+    print('User data fetched. Username: $username, Zip Code: $zipCode');
+    getUserLocation();
+  } catch (e) {
+    print('Error fetching user data: $e');
+    setState(() {
+      username = 'Username';
+      zipCode = '00000';
+    });
+    // Attempt to get user location even if fetching user data fails
+    getUserLocation();
+  }
+}
+
+void getUserLocation() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // Check if location services are enabled.
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    print('Location services are disabled.');
+    setState(() {
+      location = 'Zip Code: $zipCode';
+    });
+    return;
+  }
+
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    print('Location permission is denied. Requesting permission...');
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      print('User denied location permission.');
       setState(() {
-        username = userData['username'] ?? 'Username';
-        location = userData['location'] ?? 'Location';
+        location = 'Zip Code: $zipCode';
       });
-    } catch (e) {
-      // Handle any errors here
-      setState(() {
-        username = 'Username';
-        location = 'Location';
-      });
+      return;
     }
   }
+
+  if (permission == LocationPermission.deniedForever) {
+    print('Location permission is permanently denied.');
+    setState(() {
+      location = 'Zip Code: $zipCode';
+    });
+    return;
+  }
+
+  print('Location permission granted. Fetching position...');
+  try {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    print('Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
+
+    // Update the location variable with latitude and longitude
+    setState(() {
+      location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
+          'Lng: ${position.longitude.toStringAsFixed(6)}';
+    });
+    print('Location updated to: $location');
+  } catch (e, stacktrace) {
+    print('Error in getUserLocation(): $e');
+    print('Stacktrace: $stacktrace');
+    setState(() {
+      location = 'Zip Code: $zipCode';
+    });
+  }
+}
 
   // Callback for filter button in SearchBar
   void onFilterTap() {
@@ -214,13 +279,13 @@ class HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     flex: 1,
                     child: Container(
-                      color: Colors.black,
+                      color: themeNotifier.isNightMode ? Colors.black: Colors.lightBlueAccent,
                     ),
                   ),
                   Expanded(
                     flex: 1,
                     child: Container(
-                      color: Colors.white,
+                      color: themeNotifier.isNightMode ? Colors.black: Colors.lightBlueAccent,
                     ),
                   ),
                 ],
@@ -338,66 +403,65 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   // Builds the header with profile picture, username, location, and notification bell
-  Widget buildHeader() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Profile Picture and Username
-        Row(
-          children: [
-            // Profile Picture Placeholder
-            GestureDetector(
-              onTap: () {
-                // Navigate to Profile Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-              child: const CircleAvatar(
-                radius: 25,
-                backgroundColor: Colors.white,
-                backgroundImage:
-                    AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
+Widget buildHeader() {
+  final themeNotifier = Provider.of<ThemeNotifier>(context);
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      // Profile Picture and Username
+      Row(
+        children: [
+          // Profile Picture Placeholder
+          GestureDetector(
+            onTap: () {
+              // Navigate to Profile Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
+            },
+            child: const CircleAvatar(
+              radius: 25,
+              backgroundColor: Colors.white,
+              backgroundImage: AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Username and Location
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hello, $username',
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            // Username and Location
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello, $username',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.location_on,
+                    color: Colors.white70,
+                    size: 16,
                   ),
-                ),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.location_on,
+                  const SizedBox(width: 4),
+                  Text(
+                    location,
+                    style: const TextStyle(
+                      fontSize: 14,
                       color: Colors.white70,
-                      size: 16,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      location,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
         // Notification Bell and Settings Icon
         Row(
           children: [
