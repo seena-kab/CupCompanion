@@ -7,6 +7,10 @@ import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:async';
+
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -14,7 +18,7 @@ class MapScreen extends StatefulWidget {
   _MapScreenState createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> {
+class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin {
   Completer<GoogleMapController> _controller = Completer();
   static const LatLng _center = LatLng(45.5231, -122.6765); // Center on Portland
 
@@ -24,17 +28,30 @@ class _MapScreenState extends State<MapScreen> {
   // Initial map type
   MapType _currentMapType = MapType.normal;
 
-  // Set of markers (e.g., sample marker in Portland)
-  Set<Marker> _markers = {
-    Marker(
-      markerId: MarkerId('portland'),
-      position: _center,
-      infoWindow: InfoWindow(
-        title: 'Portland',
-        snippet: 'A nice place to visit!',
-      ),
-    ),
-  };
+  // Set of markers
+  Set<Marker> _markers = {};
+
+  // Tab controller for switching between Map and Favorites
+  late TabController _tabController;
+
+  // List of sample coffee locations
+  final List<Map<String, dynamic>> _coffeePlaces = [
+    {
+      'name': 'Stumptown Coffee Roasters',
+      'address': '123 Coffee St, Portland, OR',
+      'position': LatLng(45.521563, -122.677433),
+    },
+    {
+      'name': 'Heart Coffee Roasters',
+      'address': '456 Bean Ave, Portland, OR',
+      'position': LatLng(45.523751, -122.681507),
+    },
+    {
+      'name': 'Coava Coffee Roasters',
+      'address': '789 Roast Rd, Portland, OR',
+      'position': LatLng(45.526424, -122.675485),
+    },
+  ];
 
   // List of map types for the dropdown menu
   final List<MapType> _mapTypes = [
@@ -56,92 +73,163 @@ class _MapScreenState extends State<MapScreen> {
   String _selectedMapType = 'Normal';
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _addInitialMarkers(); // Add markers for coffee places when the map loads
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map'),
         backgroundColor: Colors.blueAccent,
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(icon: Icon(Icons.map), text: "Map"),
+            Tab(icon: Icon(Icons.favorite), text: "Favorites"),
+          ],
+        ),
       ),
-      body: Stack(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          GoogleMap(
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
-            initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: _currentZoom,
-            ),
-            mapType: _currentMapType,
-            markers: _markers,
-          ),
-          // Layer button, zoom controls, and map type dropdown
-          Positioned(
-            top: 100,
-            right: 10,
-            child: Column(
-              children: [
-                FloatingActionButton(
-                  heroTag: 'zoomIn',
-                  onPressed: () => _zoomIn(),
-                  child: const Icon(Icons.zoom_in),
-                  backgroundColor: Colors.blue[700],
-                ),
-                const SizedBox(height: 10),
-                FloatingActionButton(
-                  heroTag: 'zoomOut',
-                  onPressed: () => _zoomOut(),
-                  child: const Icon(Icons.zoom_out),
-                  backgroundColor: Colors.blue[700],
-                ),
-                const SizedBox(height: 10),
-                _buildMapTypeDropdown(),
-              ],
-            ),
-          ),
-          // Bottom search/filter bar
-          Positioned(
-            bottom: 20,
-            left: 10,
-            right: 10,
-            child: Container(
-              height: 60,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 5,
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Search here',
-                        border: InputBorder.none,
-                        icon: Icon(Icons.search, color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    color: Colors.grey,
-                    onPressed: () {
-                      // Filter button action
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildMapView(), // Display the map in the "Map" tab
+          _buildCoffeeListView(), // Display the coffee list in the "Favorites" tab
         ],
       ),
     );
+  }
+
+  // Build the Map View
+  Widget _buildMapView() {
+    return Stack(
+      children: [
+        GoogleMap(
+          onMapCreated: (GoogleMapController controller) {
+            _controller.complete(controller);
+          },
+          initialCameraPosition: CameraPosition(
+            target: _center,
+            zoom: _currentZoom,
+          ),
+          mapType: _currentMapType,
+          markers: _markers,
+        ),
+        Positioned(
+          top: 100,
+          right: 10,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                heroTag: 'zoomIn',
+                onPressed: () => _zoomIn(),
+                child: const Icon(Icons.zoom_in),
+                backgroundColor: Colors.blue[700],
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                heroTag: 'zoomOut',
+                onPressed: () => _zoomOut(),
+                child: const Icon(Icons.zoom_out),
+                backgroundColor: Colors.blue[700],
+              ),
+              const SizedBox(height: 10),
+              _buildMapTypeDropdown(),
+            ],
+          ),
+        ),
+        Positioned(
+          bottom: 20,
+          left: 10,
+          right: 10,
+          child: Container(
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search here',
+                      border: InputBorder.none,
+                      icon: Icon(Icons.search, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  color: Colors.grey,
+                  onPressed: () {
+                    // Filter button action
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Build the Coffee List View for the "Favorites" tab
+  Widget _buildCoffeeListView() {
+    return ListView.builder(
+      itemCount: _coffeePlaces.length,
+      itemBuilder: (context, index) {
+        final coffeePlace = _coffeePlaces[index];
+        return ListTile(
+          title: Text(coffeePlace['name']),
+          subtitle: Text(coffeePlace['address']),
+          trailing: Icon(Icons.coffee, color: Colors.brown),
+          onTap: () {
+            _goToLocation(coffeePlace['position']); // Navigate to location on map when clicked
+          },
+        );
+      },
+    );
+  }
+
+  // Navigate to the selected coffee place on the map
+  void _goToLocation(LatLng position) async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newLatLngZoom(position, 15.0));
+  }
+
+  // Add markers for the sample coffee places
+  void _addInitialMarkers() {
+    setState(() {
+      for (var place in _coffeePlaces) {
+        _markers.add(
+          Marker(
+            markerId: MarkerId(place['name']),
+            position: place['position'],
+            infoWindow: InfoWindow(
+              title: place['name'],
+              snippet: place['address'],
+            ),
+          ),
+        );
+      }
+    });
   }
 
   // Build dropdown menu for selecting map type
