@@ -119,7 +119,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: isSelected
                     ? [
-                        BoxShadow(
+                        const BoxShadow(
                           color: Colors.black26,
                           offset: Offset(0, 4),
                           blurRadius: 10,
@@ -198,7 +198,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               ? Colors.grey[800]
                               : Colors.white,
                           borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                               color: Colors.black12,
                               offset: Offset(0, 3),

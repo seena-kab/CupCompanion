@@ -14,10 +14,10 @@ class DrinkDetailScreen extends StatefulWidget {
   final String heroTag; // Add this line
 
   const DrinkDetailScreen({
-    Key? key,
+    super.key,
     required this.drink,
     required this.heroTag, // Add this line
-  }) : super(key: key);
+  });
 
   @override
   State<DrinkDetailScreen> createState() => _DrinkDetailScreenState();
