@@ -99,6 +99,8 @@ flutter:
     - assets/images/green_tea.jpg
     - assets/images/espresso.jpg
     - assets/images/craft_beer.jpg
+
+    #- assets/.env
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
