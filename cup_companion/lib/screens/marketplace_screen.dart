@@ -28,6 +28,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     'All',
     'Alcoholic',
     'Non-Alcoholic',
+    'Cocktails',
+    'Smoothies',
+    'Sodas',
+    'Juices',
   ];
 
   @override
@@ -84,7 +88,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget buildCategoryFilters() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      height: 50,
+      height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -99,14 +103,29 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                 filterDrinks();
               });
             },
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (themeNotifier.isNightMode ? Colors.blueAccent : Colors.blueAccent)
-                    : (themeNotifier.isNightMode ? Colors.grey[800] : Colors.grey[300]),
-                borderRadius: BorderRadius.circular(20),
+                    ? (themeNotifier.isNightMode
+                        ? Colors.tealAccent[700]
+                        : Colors.teal)
+                    : (themeNotifier.isNightMode
+                        ? Colors.grey[800]
+                        : Colors.grey[200]),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.black26,
+                          offset: Offset(0, 4),
+                          blurRadius: 10,
+                        ),
+                      ]
+                    : [],
               ),
               child: Center(
                 child: Text(
@@ -114,8 +133,11 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   style: TextStyle(
                     color: isSelected
                         ? Colors.white
-                        : (themeNotifier.isNightMode ? Colors.white70 : Colors.black87),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        : (themeNotifier.isNightMode
+                            ? Colors.white70
+                            : Colors.black87),
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ),
@@ -131,16 +153,22 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Scaffold(
+      backgroundColor:
+          themeNotifier.isNightMode ? Colors.grey[900] : Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Marketplace'),
+        title: const Text(
+          'Marketplace',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor:
-            themeNotifier.isNightMode ? Colors.grey[900] : Colors.blueAccent,
-            automaticallyImplyLeading: false, 
+            themeNotifier.isNightMode ? Colors.grey[900] : Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(
-              Icons.shopping_cart,
-              color: themeNotifier.isNightMode ? Colors.white : Colors.white,
+              Icons.shopping_cart_outlined,
+              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
             ),
             onPressed: () {
               // Navigate to Cart Screen
@@ -163,27 +191,53 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                   children: [
                     // Search Bar
                     Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: TextField(
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search for drinks...',
-                          prefixIcon: const Icon(Icons.search),
-                          suffixIcon: searchController.text.isNotEmpty
-                              ? IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    searchController.clear();
-                                  },
-                                )
-                              : null,
-                          filled: true,
-                          fillColor: themeNotifier.isNightMode
+                      padding: const EdgeInsets.all(16.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: themeNotifier.isNightMode
                               ? Colors.grey[800]
-                              : Colors.grey[200],
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide.none,
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              offset: Offset(0, 3),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search for drinks...',
+                            hintStyle: TextStyle(
+                              color: themeNotifier.isNightMode
+                                  ? Colors.white70
+                                  : Colors.grey[400],
+                            ),
+                            prefixIcon: Icon(
+                              Icons.search,
+                              color: themeNotifier.isNightMode
+                                  ? Colors.white70
+                                  : Colors.grey[600],
+                            ),
+                            suffixIcon: searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    color: themeNotifier.isNightMode
+                                        ? Colors.white70
+                                        : Colors.grey[600],
+                                    onPressed: () {
+                                      searchController.clear();
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                          ),
+                          style: TextStyle(
+                            color: themeNotifier.isNightMode
+                                ? Colors.white
+                                : Colors.black87,
                           ),
                         ),
                       ),
@@ -192,8 +246,8 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                     buildCategoryFilters(),
                     // Displayed Drinks Count
                     Padding(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 4),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
@@ -202,6 +256,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                             color: themeNotifier.isNightMode
                                 ? Colors.white70
                                 : Colors.grey[700],
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -221,19 +276,25 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                               ),
                             )
                           : Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12.0),
                               child: GridView.builder(
+                                physics: const BouncingScrollPhysics(),
                                 itemCount: displayedDrinks.length,
                                 gridDelegate:
                                     const SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: 2, // Number of columns
-                                  mainAxisSpacing: 10,
-                                  crossAxisSpacing: 10,
-                                  childAspectRatio: 0.75, // Width / Height ratio
+                                  mainAxisSpacing: 20,
+                                  crossAxisSpacing: 20,
+                                  childAspectRatio: 0.7, // Width / Height ratio
                                 ),
                                 itemBuilder: (context, index) {
                                   Drink drink = displayedDrinks[index];
-                                  return DrinkCard(drink: drink);
+                                  return DrinkCard(
+  drink: drink,
+  index: index,
+  heroTagPrefix: 'marketplace_', // Use a unique prefix
+);
                                 },
                               ),
                             ),
