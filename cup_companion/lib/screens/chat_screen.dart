@@ -140,8 +140,8 @@ class ChatScreenState extends State<ChatScreen> {
                         isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
                     children: [
                       if (!isMe)
-                        CircleAvatar(
-                          backgroundImage: const AssetImage(
+                        const CircleAvatar(
+                          backgroundImage: AssetImage(
                               'assets/images/default_avatar.png'),
                           radius: 20,
                         ),
