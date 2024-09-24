@@ -212,8 +212,9 @@ class ChatScreenState extends State<ChatScreen> {
                                         width: 210,
                                         loadingBuilder: (context, child,
                                             loadingProgress) {
-                                          if (loadingProgress == null)
+                                          if (loadingProgress == null) {
                                             return child;
+                                          }
                                           return const Center(
                                               child:
                                                   CircularProgressIndicator());
@@ -249,8 +250,8 @@ class ChatScreenState extends State<ChatScreen> {
                       ),
                       if (isMe) const SizedBox(width: 8),
                       if (isMe)
-                        CircleAvatar(
-                          backgroundImage: const AssetImage(
+                        const CircleAvatar(
+                          backgroundImage: AssetImage(
                               'assets/images/default_avatar.png'),
                           radius: 20,
                         ),
@@ -325,7 +326,7 @@ class ChatScreenState extends State<ChatScreen> {
         });
 
         final file = File(pickedFile.path);
-        final fileName = Uuid().v4();
+        final fileName = const Uuid().v4();
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('chat_images')
@@ -428,7 +429,7 @@ class ChatScreenState extends State<ChatScreen> {
                         : Colors.blueAccent,
                   ),
                   child: IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.send,
                       color: Colors.white,
                       size: 24,

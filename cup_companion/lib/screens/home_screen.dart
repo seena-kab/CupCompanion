@@ -8,7 +8,6 @@ import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:provider/provider.dart';
 import '../theme/theme_notifier.dart';
 import 'events_screen.dart';
