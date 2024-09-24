@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
 
+//this is just a start page that will be used to allow acces into our app, no need to learn the functionality
+//as it is just a page for asthetiocs and themeing. 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
