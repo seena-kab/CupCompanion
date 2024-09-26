@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class JoinEventScreen extends StatelessWidget {
+  const JoinEventScreen({super.key});
+
   // Fetch events from Firestore
   Stream<QuerySnapshot> _fetchEvents() {
     return FirebaseFirestore.instance.collection('events').snapshots();

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class CreateEventScreen extends StatefulWidget {
+  const CreateEventScreen({super.key});
+
   @override
   _CreateEventScreenState createState() => _CreateEventScreenState();
 }
