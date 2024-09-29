@@ -1,4 +1,4 @@
-// lib/main.dart
+// main.dart
 
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -11,9 +11,10 @@ import 'screens/forgot_password_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/notifications_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/redeem_points_screen.dart';
+import 'screens/home_screen.dart'; // Import HomeScreen
+import 'screens/redeem_points_screen.dart'; // Import RedeemPointsScreen
 import 'theme/theme.dart';
+<<<<<<< HEAD
 import 'theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
 import 'screens/favorites_screen.dart';
@@ -29,15 +30,19 @@ import 'models/drink.dart';
 // If you have a FavoriteDrink model
 import 'models/user_model.dart'; // Import the AppUser model
 import 'models/review.dart';
+=======
+import 'theme/theme_notifier.dart'; // Import ThemeNotifier
+import 'package:provider/provider.dart'; // Import Provider
+import 'screens/forum_screen.dart'; // Import ForumScreen
+>>>>>>> 4647478d1209231f534e5cfb1f9b32328c8ab529
 
 Future<void> main() async {
-  // Ensure Flutter binding is initialized
+  // Ensure Firebase is initialized before running the application
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+<<<<<<< HEAD
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -55,19 +60,11 @@ Future<void> main() async {
   await Hive.openBox('cart'); // Ensure you open the userBox here
   // Open other boxes like favoritesBox if necessary
 
+=======
+>>>>>>> 4647478d1209231f534e5cfb1f9b32328c8ab529
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => ThemeNotifier(false), // Initial theme: Day Mode
-        ),
-        ChangeNotifierProvider(
-          create: (_) => CartProvider(), // Provide CartProvider
-        ),
-        ChangeNotifierProvider(
-          create: (_) => UserProvider(), // Add UserProvider to the provider list
-        ),
-      ],
+    ChangeNotifierProvider(
+      create: (_) => ThemeNotifier(false), // Initial theme: Day Mode
       child: const MyApp(),
     ),
   );
@@ -82,24 +79,20 @@ class MyApp extends StatelessWidget {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return MaterialApp(
       title: 'Cup Companion',
-      theme: themeNotifier.isNightMode ? ThemeData.dark() : AppTheme.theme,
-      initialRoute: '/',
+      theme: themeNotifier.isNightMode ? ThemeData.dark() : AppTheme.theme, // Apply the custom or dark theme
+      initialRoute: '/', // Initial route set to Start page
       routes: {
         '/': (context) => const StartPage(),
         '/signup': (context) => const SignUpScreen(),
         '/signin': (context) => const SignInScreen(),
         '/survey': (context) => const SurveyScreen(),
         '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/profile': (context) => const ProfileScreen(),
+        '/home': (context) => const HomeScreen(), // Add HomeScreen route
+        '/profile': (context) => const ProfileScreen(), // No need to pass isNightMode
         '/settings': (context) => const SettingsScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/redeem': (context) => const RedeemPointsScreen(),
-        '/events': (context) => const EventScreen(),
-        '/favorites': (context) => const FavoritesScreen(),
-        '/edit_profile': (context) => const EditProfileScreen(),
-        '/marketplace': (context) => const MarketplaceScreen(),
-        '/cart': (context) => const CartScreen(),
+        '/forum': (context) => ForumScreen(), 
       },
     );
   }
