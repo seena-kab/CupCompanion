@@ -240,10 +240,6 @@ class HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.forum),
             label: 'Forum', // Add Forum tab
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.forum_rounded), // New tab with forum icon
-          label: 'Forum',
-        ),
       ],
 
     );
