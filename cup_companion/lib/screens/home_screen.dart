@@ -7,8 +7,11 @@ import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
+
 import 'package:cup_companion/screens/forum_page.dart';
+
 import 'package:geolocator/geolocator.dart';
+
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/theme_notifier.dart';
@@ -232,12 +235,17 @@ class HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.event_note_rounded),
           label: 'Events',
+        ),                
+        BottomNavigationBarItem(
+            icon: Icon(Icons.forum),
+            label: 'Forum', // Add Forum tab
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.forum_rounded), // New tab with forum icon
           label: 'Forum',
         ),
       ],
+
     );
   }
 
@@ -252,7 +260,7 @@ class HomeScreenState extends State<HomeScreen> {
       const MarketplaceScreen(), // Marketplace
       const ChatScreen(), // Chat
       const EventScreen(), // Events
-      const ForumPage(), // Forum
+      const ForumPage(), // Forum // Forum
     ];
 
     return Scaffold(
