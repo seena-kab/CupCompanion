@@ -1,4 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class WallPost extends StatefulWidget {
   final String text;
@@ -6,6 +9,7 @@ class WallPost extends StatefulWidget {
   final String time;
   final String postId;
   final List<String> likes;
+  final int commentCount;
   final VoidCallback onLike;
 
   const WallPost({
@@ -15,6 +19,7 @@ class WallPost extends StatefulWidget {
     required this.time,
     required this.postId,
     required this.likes,
+    required this.commentCount,
     required this.onLike,
   });
 
@@ -24,11 +29,16 @@ class WallPost extends StatefulWidget {
 
 class _WallPostState extends State<WallPost> {
   late List<String> likes;
+  late int commentCount;
+
+  // Comment text controller
+  final _commentTextController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     likes = widget.likes;
+    commentCount = widget.commentCount;
   }
 
   void _handleLike() {
@@ -42,6 +52,57 @@ class _WallPostState extends State<WallPost> {
     });
   }
 
+  // Add a comment
+  void addComment(String commentText) {
+    // Write the comment to Firestore under the comments collection
+    FirebaseFirestore.instance.collection('posts').doc(widget.postId).collection('comments').add({
+      "CommentText": commentText,
+      "CommentedBy": widget.user,
+      "CommentTime": Timestamp.now(),
+    });
+
+    // Increment the comment count
+    FirebaseFirestore.instance.collection('posts').doc(widget.postId).update({
+      "commentCount": FieldValue.increment(1),
+    });
+
+    setState(() {
+      commentCount += 1;
+    });
+  }
+
+  // Show comment dialog
+  void showCommentDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Add a comment"),
+          content: TextField(
+            controller: _commentTextController,
+            decoration: InputDecoration(hintText: "Enter your comment here"),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                addComment(_commentTextController.text);
+                _commentTextController.clear();
+                Navigator.pop(context);
+              },
+              child: Text("Post"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -51,52 +112,95 @@ class _WallPostState extends State<WallPost> {
       ), // BoxDecoration
       margin: EdgeInsets.only(top: 25, left: 25, right: 25),
       padding: EdgeInsets.all(25),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // profile pic
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[400],
-            ),
-            padding: EdgeInsets.all(10),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
-          ), // Container
-          const SizedBox(width: 20),
-          // message and user email
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                widget.user,
-                style: TextStyle(color: Colors.grey[500]),
-              ), // Text
-              const SizedBox(height: 5),
-              Text(
-                widget.time,
-                style: TextStyle(color: Colors.grey[400], fontSize: 12),
-              ), // Text
-              const SizedBox(height: 10),
-              Text(widget.text),
-              Row(
+              // Profile pic
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.grey[400],
+                ),
+                padding: EdgeInsets.all(10),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
+              ), // Container
+              const SizedBox(width: 20),
+              // Message and user email
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  IconButton(
-                    icon: Icon(
-                      likes.contains(widget.postId) ? Icons.favorite : Icons.favorite_border,
-                      color: likes.contains(widget.postId) ? Colors.red : Colors.grey,
-                    ),
-                    onPressed: _handleLike,
-                  ),
-                  Text('${likes.length}'),
+                  Text(
+                    widget.user,
+                    style: TextStyle(color: Colors.grey[500]),
+                  ), // Text
+                  const SizedBox(height: 5),
+                  Text(
+                    widget.time,
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  ), // Text
                 ],
-              ),
+              ), // Column
             ],
-          ), // Column
+          ), // Row
+          const SizedBox(height: 10),
+          Text(widget.text),
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  likes.contains(widget.postId) ? Icons.favorite : Icons.favorite_border,
+                  color: likes.contains(widget.postId) ? Colors.red : Colors.grey,
+                ),
+                onPressed: _handleLike,
+              ),
+              Text('${likes.length}'),
+              IconButton(
+                icon: Icon(Icons.comment),
+                onPressed: showCommentDialog,
+              ),
+              Text('$commentCount'),
+            ],
+          ),
+          const SizedBox(height: 10),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('posts')
+                .doc(widget.postId)
+                .collection('comments')
+                .orderBy('CommentTime', descending: true)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return Center(child: CircularProgressIndicator());
+              }
+              final comments = snapshot.data!.docs;
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: comments.length,
+                itemBuilder: (context, index) {
+                  final comment = comments[index];
+                  final commentText = comment['CommentText'];
+                  final commentedBy = comment['CommentedBy'];
+                  final commentTime = (comment['CommentTime'] as Timestamp).toDate();
+                  final formattedTime = DateFormat('yyyy-MM-dd – kk:mm').format(commentTime);
+
+                  return ListTile(
+                    title: Text(commentedBy),
+                    subtitle: Text(commentText),
+                    trailing: Text(formattedTime),
+                  );
+                },
+              );
+            },
+          ),
         ],
-      ), // Row
+      ), // Column
     ); // Container
   } // build method
 } // WallPost class

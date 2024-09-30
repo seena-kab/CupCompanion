@@ -21,6 +21,7 @@ class _ForumPageState extends State<ForumPage> {
         'timestamp': FieldValue.serverTimestamp(),
         'userId': currentUser?.uid,
         'Likes': [],
+        'commentCount': 0, 
       });
       _controller.clear();
     }
@@ -91,6 +92,7 @@ class _ForumPageState extends State<ForumPage> {
                           postId: message.id,
                           likes: List<String>.from(message['Likes'] ?? []),
                           onLike: () => _toggleLike(message.id, List<String>.from(message['Likes'] ?? [])),
+                          commentCount: (message.data() as Map<String, dynamic>).containsKey('commentCount') ? message['commentCount'] : 0, // Provide default value
                         );
                       },
                     );
