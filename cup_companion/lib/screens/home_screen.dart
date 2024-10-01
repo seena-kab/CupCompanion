@@ -7,7 +7,9 @@ import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/theme_notifier.dart';
 import 'events_screen.dart';
 
@@ -22,6 +24,7 @@ class HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
 
   String username = "Username";
+  String zipCode = "00000";
   String location = "Location";
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
@@ -35,7 +38,7 @@ class HomeScreenState extends State<HomeScreen> {
     'Tea',
     'Juice',
     'Smoothies',
-    'Alcoholic Selections',
+    'Alcoholic Drinks',
   ];
 
   // Categories for night mode
@@ -43,52 +46,115 @@ class HomeScreenState extends State<HomeScreen> {
     'Beer',
     'Wine',
     'Whiskey',
-    'Vodka',
-    'Non-Alcoholic Selections',
+    'Cocktails',
+    'Non-Alcoholic',
   ];
 
   // Mock data for drink cards
   final List<Map<String, String>> drinkList = [
     {
-      'image': 'assets/images/logo.png', // Ensure this asset exists
+      'image': 'assets/images/cappuccino.png',
       'name': 'Cappuccino',
-      'details': 'with Oat Milk',
+      'details': 'With Oat Milk',
       'price': '3.90',
     },
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/espresso.jpg',
       'name': 'Latte',
-      'details': 'with Soy Milk',
+      'details': 'With Soy Milk',
       'price': '4.50',
     },
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/espresso.jpg',
       'name': 'Espresso',
-      'details': 'double shot',
+      'details': 'Double Shot',
       'price': '2.80',
     },
     {
-      'image': 'assets/images/logo.png',
+      'image': 'assets/images/espresso.jpg',
       'name': 'Mocha',
-      'details': 'with Chocolate',
+      'details': 'With Chocolate',
       'price': '4.20',
     },
     // Add more drinks as needed
   ];
 
-  // Fetch user data (username and location)
   void fetchUserData() async {
     try {
       Map<String, String> userData = await _authService.fetchUserData();
       setState(() {
         username = userData['username'] ?? 'Username';
-        location = userData['location'] ?? 'Location';
+        zipCode = userData['zipCode'] ?? '00000'; // Default zip code
       });
+      // After fetching user data, get the location
+      print('User data fetched. Username: $username, Zip Code: $zipCode');
+      getUserLocation();
     } catch (e) {
-      // Handle any errors here
+      print('Error fetching user data: $e');
       setState(() {
         username = 'Username';
-        location = 'Location';
+        zipCode = '00000';
+      });
+      // Attempt to get user location even if fetching user data fails
+      getUserLocation();
+    }
+  }
+
+  void getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Location services are disabled.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      print('Location permission is denied. Requesting permission...');
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('User denied location permission.');
+        setState(() {
+          location = 'Zip Code: $zipCode';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permission is permanently denied.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    print('Location permission granted. Fetching position...');
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      print(
+          'Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
+
+      // Update the location variable with latitude and longitude
+      setState(() {
+        location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
+            'Lng: ${position.longitude.toStringAsFixed(6)}';
+      });
+      print('Location updated to: $location');
+    } catch (e, stacktrace) {
+      print('Error in getUserLocation(): $e');
+      print('Stacktrace: $stacktrace');
+      setState(() {
+        location = 'Zip Code: $zipCode';
       });
     }
   }
@@ -132,9 +198,11 @@ class HomeScreenState extends State<HomeScreen> {
   Widget buildBottomNavigationBar() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return BottomNavigationBar(
-      backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.white,
-      selectedItemColor:
-          themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
+      backgroundColor:
+          themeNotifier.isNightMode ? Colors.black : Colors.white,
+      selectedItemColor: themeNotifier.isNightMode
+          ? Colors.amberAccent
+          : Colors.blueAccent,
       unselectedItemColor:
           themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
       currentIndex: _selectedIndex,
@@ -145,23 +213,23 @@ class HomeScreenState extends State<HomeScreen> {
       iconSize: 24.0, // Adjusted icon size
       items: const [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home),
+          icon: Icon(Icons.home_rounded),
           label: 'Home',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.map),
+          icon: Icon(Icons.map_rounded),
           label: 'Map',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.store),
+          icon: Icon(Icons.store_rounded),
           label: 'Marketplace',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble_outline),
+          icon: Icon(Icons.chat_bubble_rounded),
           label: 'Chat',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.event),
+          icon: Icon(Icons.event_note_rounded),
           label: 'Events',
         ),
       ],
@@ -208,22 +276,17 @@ class HomeScreenState extends State<HomeScreen> {
           },
           child: Stack(
             children: [
-              // Background with two colors: black on top and white below
-              Column(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      color: Colors.black,
-                    ),
+              // Background with gradient
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: themeNotifier.isNightMode
+                        ? [Colors.black87, Colors.black54]
+                        : [Colors.blueAccent, Colors.lightBlueAccent],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                ),
               ),
               // Main Content
               _selectedIndex < screens.length
@@ -269,20 +332,21 @@ class HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 buildDayNightSwitch(),
                 const SizedBox(height: 20),
-                SearchBar(onFilterTap: onFilterTap), // Provide valid callback
+                SearchBar(onFilterTap: onFilterTap),
                 const SizedBox(height: 20),
               ],
             ),
           ),
-          RewardsSection(points: rewardPoints), // Updated RewardsSection
+          const SizedBox(height: 20),
+          RewardsSection(points: rewardPoints),
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'For You:',
-                style: TextStyle(
+                'For You',
+                style: GoogleFonts.poppins(
                   fontSize: 24.0,
                   fontWeight: FontWeight.bold,
                   color:
@@ -316,8 +380,9 @@ class HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 20),
           SizedBox(
-              height:
-                  MediaQuery.of(context).padding.bottom), // Extra space to prevent overflow
+              height: MediaQuery.of(context)
+                  .padding
+                  .bottom), // Extra space to prevent overflow
         ],
       ),
     );
@@ -360,8 +425,8 @@ class HomeScreenState extends State<HomeScreen> {
               child: const CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.white,
-                backgroundImage:
-                    AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
+                backgroundImage: AssetImage(
+                    'assets/images/default_avatar.png'), // Ensure this asset exists
               ),
             ),
             const SizedBox(width: 10),
@@ -371,7 +436,7 @@ class HomeScreenState extends State<HomeScreen> {
               children: [
                 Text(
                   'Hello, $username',
-                  style: const TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 18,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -387,7 +452,7 @@ class HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 4),
                     Text(
                       location,
-                      style: const TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white70,
                       ),
@@ -403,10 +468,9 @@ class HomeScreenState extends State<HomeScreen> {
           children: [
             // Notification Bell Icon
             IconButton(
-              icon: Icon(
-                Icons.notifications,
-                color:
-                    themeNotifier.isNightMode ? Colors.white : Colors.black,
+              icon: const Icon(
+                Icons.notifications_none_rounded,
+                color: Colors.white,
               ),
               onPressed: () {
                 // Navigate to Notifications Screen
@@ -421,10 +485,9 @@ class HomeScreenState extends State<HomeScreen> {
             ),
             // Settings Icon with Drop-down Menu
             PopupMenuButton<String>(
-              icon: Icon(
-                Icons.settings,
-                color:
-                    themeNotifier.isNightMode ? Colors.white : Colors.black,
+              icon: const Icon(
+                Icons.settings_outlined,
+                color: Colors.white,
               ),
               onSelected: (String value) {
                 if (value == 'Settings') {
@@ -485,7 +548,7 @@ class HomeScreenState extends State<HomeScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: categoriesDayMode.length,
         itemBuilder: (context, index) {
-          return buildCategoryChip(categoriesDayMode[index]);
+          return buildCategoryChip(categoriesDayMode[index], index);
         },
       ),
     );
@@ -500,25 +563,31 @@ class HomeScreenState extends State<HomeScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: categoriesNightMode.length,
         itemBuilder: (context, index) {
-          return buildCategoryChip(categoriesNightMode[index]);
+          return buildCategoryChip(categoriesNightMode[index], index);
         },
       ),
     );
   }
 
   // Builds individual category chips
-  Widget buildCategoryChip(String category) {
+  Widget buildCategoryChip(String category, int index) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    Color chipColor = Colors
+        .primaries[index % Colors.primaries.length]; // Cycle through colors
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Chip(
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.grey[800] : Colors.grey[300],
+        backgroundColor: chipColor.withOpacity(0.2),
         label: Text(
           category,
-          style: TextStyle(
-            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+          style: GoogleFonts.poppins(
+            color: chipColor,
+            fontWeight: FontWeight.w500,
           ),
+        ),
+        avatar: Icon(
+          Icons.local_drink,
+          color: chipColor,
         ),
       ),
     );
@@ -530,19 +599,18 @@ class HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () {
         // Handle drink card tap, e.g., navigate to drink details
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => DrinkDetailsScreen(drink: drink)));
       },
       child: Container(
         decoration: BoxDecoration(
-          color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
+          color: themeNotifier.isNightMode ? Colors.grey[900] : Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: themeNotifier.isNightMode
-                  ? Colors.black26
-                  : Colors.grey.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+                  ? Colors.black45
+                  : Colors.grey.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -554,10 +622,32 @@ class HomeScreenState extends State<HomeScreen> {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
-                child: Image.asset(
-                  drink['image']!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
+                child: Stack(
+                  children: [
+                    Image.asset(
+                      drink['image']!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: CircleAvatar(
+                        backgroundColor: Colors.white70,
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.favorite_border,
+                            color: themeNotifier.isNightMode
+                                ? Colors.black
+                                : Colors.redAccent,
+                          ),
+                          onPressed: () {
+                            // Handle favorite action
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -568,16 +658,17 @@ class HomeScreenState extends State<HomeScreen> {
                 children: [
                   Text(
                     drink['name']!,
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color:
-                          themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                      color: themeNotifier.isNightMode
+                          ? Colors.white
+                          : Colors.black87,
                     ),
                   ),
                   Text(
                     drink['details']!,
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 14,
                       color: themeNotifier.isNightMode
                           ? Colors.white70
@@ -587,7 +678,7 @@ class HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 8),
                   Text(
                     '\$${drink['price']}',
-                    style: TextStyle(
+                    style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
                           ? Colors.amberAccent
@@ -637,16 +728,16 @@ class SearchBar extends StatelessWidget {
           fillColor:
               themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
           hintText: 'Search for a beverage',
-          hintStyle: TextStyle(
+          hintStyle: GoogleFonts.poppins(
             color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
           ),
           prefixIcon: Icon(
-            Icons.search,
+            Icons.search_rounded,
             color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
           ),
           suffixIcon: IconButton(
             icon: Icon(
-              Icons.tune,
+              Icons.tune_rounded,
               color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
             ),
             onPressed: onFilterTap,
@@ -662,13 +753,15 @@ class SearchBar extends StatelessWidget {
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
             borderSide: BorderSide(
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode
+                  ? Colors.white70
+                  : Colors.blueAccent,
               width: 1.5,
             ),
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: 0),
         ),
-        style: TextStyle(
+        style: GoogleFonts.poppins(
           color: themeNotifier.isNightMode ? Colors.white : Colors.black,
         ),
       ),
@@ -691,11 +784,18 @@ class RewardsSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        height: 60, // Adjust height as needed
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: 100, // Adjust height as needed
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
-          borderRadius: BorderRadius.circular(30), // Rounded corners for a skinny rectangle
+          gradient: LinearGradient(
+            colors: themeNotifier.isNightMode
+                ? [Colors.grey[900]!, Colors.grey[800]!]
+                : [Colors.white, Colors.grey[200]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius:
+              BorderRadius.circular(20), // Rounded corners for a card-like look
           boxShadow: [
             BoxShadow(
               color: themeNotifier.isNightMode
@@ -707,65 +807,68 @@ class RewardsSection extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Rewards Icon
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: themeNotifier.isNightMode
+                  ? Colors.amberAccent.withOpacity(0.2)
+                  : Colors.blueAccent.withOpacity(0.2),
+              child: Icon(
+                Icons.stars_rounded,
+                color: themeNotifier.isNightMode
+                    ? Colors.amberAccent
+                    : Colors.blueAccent,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 16),
             // Rewards Information
             Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.stars,
-                    color: Colors.amberAccent,
-                    size: 30,
+                  Text(
+                    'Rewards Points',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: themeNotifier.isNightMode
+                          ? Colors.white70
+                          : Colors.black87,
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Rewards Points',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        '$points Points',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: themeNotifier.isNightMode
-                              ? Colors.amberAccent
-                              : Colors.blueAccent,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '$points Points',
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: themeNotifier.isNightMode
+                          ? Colors.amberAccent
+                          : Colors.blueAccent,
+                    ),
                   ),
                 ],
               ),
             ),
             // Redeem Button
-            Flexible(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Handle Redeem button tap
-                  Navigator.pushNamed(context, '/redeem'); // Example navigation
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeNotifier.isNightMode
-                      ? Colors.amberAccent
-                      : Colors.blueAccent, // Updated parameter
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+            ElevatedButton(
+              onPressed: () {
+                // Handle Redeem button tap
+                Navigator.pushNamed(context, '/redeem'); // Example navigation
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeNotifier.isNightMode
+                    ? Colors.amberAccent
+                    : Colors.blueAccent, // Updated parameter
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Redeem',
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+              child: const Text(
+                'Redeem',
               ),
             ),
           ],

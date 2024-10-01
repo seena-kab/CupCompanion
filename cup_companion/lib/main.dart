@@ -28,6 +28,7 @@ import 'models/cart_item.dart';
 import 'models/drink.dart';
 // If you have a FavoriteDrink model
 import 'models/user_model.dart'; // Import the AppUser model
+import 'models/review.dart';
 
 
 Future<void> main() async {
@@ -45,12 +46,14 @@ Future<void> main() async {
   // Register Hive adapters
   Hive.registerAdapter(DrinkAdapter());
   Hive.registerAdapter(CartItemAdapter());
-  Hive.registerAdapter(AppUserAdapter()); // Register the AppUser adapter
+  Hive.registerAdapter(AppUserAdapter());
+  Hive.registerAdapter(ReviewAdapter()); // Register the AppUser adapter
   // Register other adapters like ReviewAdapter, FavoriteDrinkAdapter if necessary
 
   // Open Hive boxes
   await Hive.openBox<CartItem>('cartBox');
-  await Hive.openBox<AppUser>('userBox'); // Ensure you open the userBox here
+  await Hive.openBox<AppUser>('userBox');
+  await Hive.openBox('cart'); // Ensure you open the userBox here
   // Open other boxes like favoritesBox if necessary
 
   runApp(

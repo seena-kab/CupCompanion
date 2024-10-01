@@ -1,5 +1,3 @@
-// lib/screens/edit_profile_screen.dart
-
 import 'dart:io'; // For File
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +21,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   final TextEditingController _mobileNumberController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
 
-  File? _newProfileImage;
+  File? _newProfileImage;  // Store the local image file
 
   @override
   void initState() {
@@ -53,17 +51,15 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     }
   }
 
-  // Pick a new profile image
+  // Pick a new profile image from the local device
   Future<void> pickNewImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile =
-        await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
-        _newProfileImage = File(pickedFile.path);
+        _newProfileImage = File(pickedFile.path);  // Store the selected image
       });
-      // Optionally, upload the image to your backend or Firebase Storage
     }
   }
 
@@ -94,7 +90,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         email: updatedEmail,
         mobileNumber: updatedMobileNumber,
         location: updatedLocation,
-        profileImage: _newProfileImage,
+        profileImage: _newProfileImage,  // Use the file directly
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +144,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                         ? Colors.grey[800]
                         : Colors.white,
                     backgroundImage: _newProfileImage != null
-                        ? FileImage(_newProfileImage!)
+                        ? FileImage(_newProfileImage!)  // Display the picked image
                         : const AssetImage('assets/images/default_avatar.png')
                             as ImageProvider,
                   ),
