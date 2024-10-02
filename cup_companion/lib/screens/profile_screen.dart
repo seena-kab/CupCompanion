@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-// Import Firestore
-// Import Firebase Core
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore
+import 'package:firebase_core/firebase_core.dart'; // Firebase Core
 import '../theme/theme_notifier.dart';
 import 'add_drink_dialog.dart'; // Import the AddDrinkDialog
 import 'favorites_screen.dart';
@@ -31,10 +31,11 @@ class ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
 
   @override
-  void initState() {
-    super.initState();
-    fetchUserData();
-  }
+void initState() {
+  super.initState();
+  fetchUserData();
+  fetchUserDrinks(); // Add this line
+}
 
   // Fetch user data from the database
   void fetchUserData() async {
@@ -62,6 +63,49 @@ class ProfileScreenState extends State<ProfileScreen> {
       getUserLocation();
     }
   }
+
+  List<Map<String, dynamic>> userDrinks = []; // Store user's drinks
+
+void fetchUserDrinks() async {
+  try {
+    // Get the current user's UID
+    String? userId = _authService.getCurrentUserId();
+    if (userId == null) {
+      throw Exception('User not logged in');
+    }
+
+    // Fetch drinks where 'createdBy' equals the user's UID
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('drinks')
+        .where('createdBy', isEqualTo: userId)
+        .get();
+
+    // Map the documents to a list
+    List<Map<String, dynamic>> drinks = snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'name': doc['name'],
+        'imageUrl': doc['imageUrl'],
+        'description': doc['description'],
+        'price': doc['price'],
+        'isAlcoholic': doc['isAlcoholic'],
+        // Include other fields as needed
+      };
+    }).toList();
+
+    setState(() {
+      userDrinks = drinks;
+    });
+  } catch (e) {
+    print('Error fetching user drinks: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to load your drinks: $e'),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
+}
 
   // Pick an image from the gallery
   Future<void> pickImage() async {
@@ -453,40 +497,58 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Build the user's posts grid
   Widget buildUserPosts() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    // Placeholder for user posts
-    List<Map<String, String>> userPosts = [
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-    ];
+  final themeNotifier = Provider.of<ThemeNotifier>(context);
 
+  if (userDrinks.isEmpty) {
     return Container(
-      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
-      padding: const EdgeInsets.all(8),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: userPosts.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        'You have not added any drinks yet.',
+        style: TextStyle(
+          fontSize: 16,
+          color: themeNotifier.isNightMode ? Colors.white70 : Colors.black87,
         ),
-        itemBuilder: (context, index) {
-          return Image.asset(
-            userPosts[index]['image']!,
-            fit: BoxFit.cover,
-          );
-        },
       ),
     );
   }
+
+  return Container(
+    color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+    padding: const EdgeInsets.all(8),
+    child: GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: userDrinks.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemBuilder: (context, index) {
+        final drink = userDrinks[index];
+        return GestureDetector(
+          onTap: () {
+            // Optionally navigate to drink details
+          },
+          child: Image.network(
+            drink['imageUrl'],
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: Icon(
+                  Icons.broken_image,
+                  color: Colors.grey,
+                ),
+              );
+            },
+          ),
+        );
+      },
+    ),
+  );
+}
 
   // Build the entire profile page content
   Widget buildProfileContent() {
@@ -568,7 +630,9 @@ class ProfileScreenState extends State<ProfileScreen> {
           showDialog(
             context: context,
             builder: (context) => const AddDrinkDialog(),
-          );
+          ).then((_) {
+            fetchUserDrinks();
+          });
         },
         backgroundColor: themeNotifier.isNightMode
             ? Colors.greenAccent

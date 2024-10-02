@@ -67,15 +67,18 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
       String imageUrl = await uploadImage(imageFile!);
 
       // Add the new drink to Firestore
-      await FirebaseFirestore.instance.collection('drinks').add({
-        'averageRating': 0,
-        'description': description,
-        'imageUrl': imageUrl,
-        'name': name,
-        'price': price,
-        'isAlcoholic': isAlcoholic,
-        'reviews': [],
-      });
+      String? userId = FirebaseAuth.instance.currentUser?.uid;
+
+await FirebaseFirestore.instance.collection('drinks').add({
+  'averageRating': 0,
+  'description': description,
+  'imageUrl': imageUrl,
+  'name': name,
+  'price': price,
+  'isAlcoholic': isAlcoholic,
+  'reviews': [],
+  'createdBy': userId, // Add this line
+});
 
       setState(() {
         isLoading = false;
@@ -104,26 +107,28 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
   }
 
   Future<String> uploadImage(XFile image) async {
-    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    Reference storageRef =
-        FirebaseStorage.instance.ref().child('drink_images/$fileName');
+  String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+  Reference storageRef = FirebaseStorage.instance.ref().child('drink_images/$fileName');
 
-    UploadTask uploadTask;
+  UploadTask uploadTask;
 
-    if (kIsWeb) {
-      // For web platform
-      Uint8List imageData = await image.readAsBytes();
-      uploadTask = storageRef.putData(imageData);
-    } else {
-      // For mobile platforms (Android/iOS)
-      File file = File(image.path);
-      uploadTask = storageRef.putFile(file);
-    }
-
-    TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
-    String downloadUrl = await snapshot.ref.getDownloadURL();
-    return downloadUrl;
+  if (kIsWeb) {
+    // For web platform
+    Uint8List imageData = await image.readAsBytes();
+    uploadTask = storageRef.putData(
+      imageData,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
+  } else {
+    // For mobile platforms (Android/iOS)
+    File file = File(image.path);
+    uploadTask = storageRef.putFile(file);
   }
+
+  TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
+  String downloadUrl = await snapshot.ref.getDownloadURL();
+  return downloadUrl;
+}
 
   @override
   Widget build(BuildContext context) {
