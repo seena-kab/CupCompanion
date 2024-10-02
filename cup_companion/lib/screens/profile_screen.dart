@@ -6,7 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
+import 'package:firebase_core/firebase_core.dart';   // Import Firebase Core
 import '../theme/theme_notifier.dart';
+import 'add_drink_dialog.dart'; // Import the AddDrinkDialog
 import 'favorites_screen.dart';
 import 'edit_profile_screen.dart'; // Import the new EditProfileScreen
 
@@ -33,32 +36,32 @@ class ProfileScreenState extends State<ProfileScreen> {
     fetchUserData();
   }
 
- // Fetch user data from the database
-void fetchUserData() async {
-  try {
-    Map<String, String> userData = await _authService.fetchUserData();
-    setState(() {
-      username = userData['username'] ?? 'Username';
-      email = userData['email'] ?? 'Email';
-      mobileNumber = userData['mobileNumber'] ?? 'Mobile Number';
-      zipCode = userData['zipCode'] ?? '00000'; // Fetch the zip code
-    });
-    // After fetching user data, get the location
-    getUserLocation();
-  } catch (e) {
-    // Handle errors
-    print('Error fetching user data: $e');
-    // Optionally, set default values or show an error message to the user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to load user data: $e'),
-        backgroundColor: Colors.redAccent,
-      ),
-    );
-    // Attempt to get user location even if fetching user data fails
-    getUserLocation();
+  // Fetch user data from the database
+  void fetchUserData() async {
+    try {
+      Map<String, String> userData = await _authService.fetchUserData();
+      setState(() {
+        username = userData['username'] ?? 'Username';
+        email = userData['email'] ?? 'Email';
+        mobileNumber = userData['mobileNumber'] ?? 'Mobile Number';
+        zipCode = userData['zipCode'] ?? '00000'; // Fetch the zip code
+      });
+      // After fetching user data, get the location
+      getUserLocation();
+    } catch (e) {
+      // Handle errors
+      print('Error fetching user data: $e');
+      // Optionally, set default values or show an error message to the user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load user data: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      // Attempt to get user location even if fetching user data fails
+      getUserLocation();
+    }
   }
-}
 
   // Pick an image from the gallery
   Future<void> pickImage() async {
@@ -94,81 +97,81 @@ void fetchUserData() async {
     }
   }
 
- void getUserLocation() async {
-  bool serviceEnabled;
-  LocationPermission permission;
+  void getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
 
-  // Check if location services are enabled.
-  serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  if (!serviceEnabled) {
-    print('Location services are disabled.');
-    setState(() {
-      location = 'Zip Code: $zipCode';
-    });
-    return;
-  }
-
-  permission = await Geolocator.checkPermission();
-  if (permission == LocationPermission.denied) {
-    print('Location permission is denied. Requesting permission...');
-    permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied) {
-      print('User denied location permission.');
+    // Check if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Location services are disabled.');
       setState(() {
         location = 'Zip Code: $zipCode';
       });
       return;
     }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      print('Location permission is denied. Requesting permission...');
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('User denied location permission.');
+        setState(() {
+          location = 'Zip Code: $zipCode';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permission is permanently denied.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    print('Location permission granted. Fetching position...');
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      print(
+          'Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
+
+      // Update the location variable with latitude and longitude
+      setState(() {
+        location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
+            'Lng: ${position.longitude.toStringAsFixed(6)}';
+      });
+      print('Location updated to: $location');
+    } catch (e, stacktrace) {
+      print('Error in getUserLocation(): $e');
+      print('Stacktrace: $stacktrace');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+    }
   }
 
-  if (permission == LocationPermission.deniedForever) {
-    print('Location permission is permanently denied.');
-    setState(() {
-      location = 'Zip Code: $zipCode';
-    });
-    return;
-  }
-
-  print('Location permission granted. Fetching position...');
-  try {
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    print('Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
-
-    // Update the location variable with latitude and longitude
-    setState(() {
-      location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
-          'Lng: ${position.longitude.toStringAsFixed(6)}';
-    });
-    print('Location updated to: $location');
-  } catch (e, stacktrace) {
-    print('Error in getUserLocation(): $e');
-    print('Stacktrace: $stacktrace');
-    setState(() {
-      location = 'Zip Code: $zipCode';
-    });
-  }
-}
-
- // Build the profile header with profile picture and user info
-// Build the profile header with profile picture and user info
-Widget buildProfileHeader() {
-  final themeNotifier = Provider.of<ThemeNotifier>(context);
-  return Container(
-    padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: themeNotifier.isNightMode
-            ? [Colors.black87, Colors.black54]
-            : [Colors.blueAccent, Colors.lightBlueAccent],
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
+  // Build the profile header with profile picture and user info
+  Widget buildProfileHeader() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: themeNotifier.isNightMode
+              ? [Colors.black87, Colors.black54]
+              : [Colors.blueAccent, Colors.lightBlueAccent],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
       ),
-    ),
-    child: Column(
-      children: [
+      child: Column(
+        children: [
           // Profile Picture with PopupMenuButton
           Stack(
             children: [
@@ -265,40 +268,43 @@ Widget buildProfileHeader() {
               ),
             ],
           ),
-           const SizedBox(height: 20),
-        // Username
-        Text(
-          username,
-          style: TextStyle(
-            fontSize: 28,
-            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.bold,
+          const SizedBox(height: 20),
+          // Username
+          Text(
+            username,
+            style: TextStyle(
+              fontSize: 28,
+              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 5),
-        // Location
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.location_on,
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
-              size: 18,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              location,
-              style: TextStyle(
-                fontSize: 16,
-                color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
+          const SizedBox(height: 5),
+          // Location
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.location_on,
+                color:
+                    themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
+                size: 18,
               ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
+              const SizedBox(width: 5),
+              Text(
+                location,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: themeNotifier.isNightMode
+                      ? Colors.white70
+                      : Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   // Build the statistics section (e.g., posts, followers, following)
   Widget buildStatisticsSection() {
@@ -335,7 +341,8 @@ Widget buildProfileHeader() {
           label,
           style: TextStyle(
             fontSize: 16,
-            color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
+            color:
+                themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
           ),
         ),
       ],
@@ -352,7 +359,9 @@ Widget buildProfileHeader() {
         'This is the user bio or description. You can update it to reflect your personality or share something about yourself.',
         style: TextStyle(
           fontSize: 16,
-          color: themeNotifier.isNightMode ? Colors.white70 : Colors.black87,
+          color: themeNotifier.isNightMode
+              ? Colors.white70
+              : Colors.black87,
         ),
         textAlign: TextAlign.center,
       ),
@@ -370,27 +379,36 @@ Widget buildProfileHeader() {
           ListTile(
             leading: Icon(
               Icons.email,
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode
+                  ? Colors.white70
+                  : Colors.blueAccent,
             ),
             title: Text(
               email,
               style: TextStyle(
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                color: themeNotifier.isNightMode
+                    ? Colors.white
+                    : Colors.black87,
               ),
             ),
           ),
           Divider(
-              color:
-                  themeNotifier.isNightMode ? Colors.white12 : Colors.grey[300]),
+              color: themeNotifier.isNightMode
+                  ? Colors.white12
+                  : Colors.grey[300]),
           ListTile(
             leading: Icon(
               Icons.phone,
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode
+                  ? Colors.white70
+                  : Colors.blueAccent,
             ),
             title: Text(
               mobileNumber,
               style: TextStyle(
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                color: themeNotifier.isNightMode
+                    ? Colors.white
+                    : Colors.black87,
               ),
             ),
           ),
@@ -415,8 +433,9 @@ Widget buildProfileHeader() {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
+            backgroundColor: themeNotifier.isNightMode
+                ? Colors.amberAccent
+                : Colors.blueAccent,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
@@ -492,16 +511,20 @@ Widget buildProfileHeader() {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Scaffold(
-      backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.grey[100],
+      backgroundColor:
+          themeNotifier.isNightMode ? Colors.black : Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.white,
+        backgroundColor:
+            themeNotifier.isNightMode ? Colors.black : Colors.white,
         iconTheme: IconThemeData(
-          color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+          color:
+              themeNotifier.isNightMode ? Colors.white : Colors.black87,
         ),
         title: Text(
           'Profile',
           style: TextStyle(
-            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+            color:
+                themeNotifier.isNightMode ? Colors.white : Colors.black87,
           ),
         ),
         centerTitle: true,
@@ -511,8 +534,14 @@ Widget buildProfileHeader() {
         ],
       ),
       body: buildProfileContent(),
-      // Add navigation to Favorites via FloatingActionButton or another method
-      floatingActionButton: FloatingActionButton(
+      // Modified floatingActionButton to include Favorites and Add Drink buttons
+      floatingActionButton: Stack(
+  children: [
+    Positioned(
+      bottom: 80, // Adjust the position as needed
+      right: 16,
+      child: FloatingActionButton(
+        heroTag: 'favorites_button', // Unique heroTag
         onPressed: () {
           // Navigate to FavoritesScreen
           Navigator.push(
@@ -522,11 +551,34 @@ Widget buildProfileHeader() {
             ),
           );
         },
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
+        backgroundColor: themeNotifier.isNightMode
+            ? Colors.amberAccent
+            : Colors.blueAccent,
         tooltip: 'Favorites',
         child: const Icon(Icons.favorite),
       ),
+    ),
+    Positioned(
+      bottom: 16, // Position below the Favorites button
+      right: 16,
+      child: FloatingActionButton(
+        heroTag: 'add_drink_button', // Unique heroTag
+        onPressed: () {
+          // Show the AddDrinkDialog when the button is pressed
+          showDialog(
+            context: context,
+            builder: (context) => const AddDrinkDialog(),
+          );
+        },
+        backgroundColor: themeNotifier.isNightMode
+            ? Colors.greenAccent
+            : Colors.orangeAccent,
+        tooltip: 'Add Drink',
+        child: const Icon(Icons.add),
+      ),
+    ),
+  ],
+),
     );
   }
 }
