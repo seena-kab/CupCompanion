@@ -77,10 +77,10 @@ class _WallPostState extends State<WallPost> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Add a comment"),
+          title: const Text("Add a comment"),
           content: TextField(
             controller: _commentTextController,
-            decoration: InputDecoration(hintText: "Enter your comment here"),
+            decoration: const InputDecoration(hintText: "Enter your comment here"),
           ),
           actions: [
             TextButton(
@@ -89,13 +89,13 @@ class _WallPostState extends State<WallPost> {
                 _commentTextController.clear();
                 Navigator.pop(context);
               },
-              child: Text("Post"),
+              child: const Text("Post"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
           ],
         );
@@ -110,8 +110,8 @@ class _WallPostState extends State<WallPost> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
       ), // BoxDecoration
-      margin: EdgeInsets.only(top: 25, left: 25, right: 25),
-      padding: EdgeInsets.all(25),
+      margin: const EdgeInsets.only(top: 25, left: 25, right: 25),
+      padding: const EdgeInsets.all(25),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -123,7 +123,7 @@ class _WallPostState extends State<WallPost> {
                   shape: BoxShape.circle,
                   color: Colors.grey[400],
                 ),
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 child: const Icon(
                   Icons.person,
                   color: Colors.white,
@@ -160,7 +160,7 @@ class _WallPostState extends State<WallPost> {
               ),
               Text('${likes.length}'),
               IconButton(
-                icon: Icon(Icons.comment),
+                icon: const Icon(Icons.comment),
                 onPressed: showCommentDialog,
               ),
               Text('$commentCount'),
@@ -176,12 +176,12 @@ class _WallPostState extends State<WallPost> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return Center(child: CircularProgressIndicator());
+                return const Center(child: CircularProgressIndicator());
               }
               final comments = snapshot.data!.docs;
               return ListView.builder(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: comments.length,
                 itemBuilder: (context, index) {
                   final comment = comments[index];

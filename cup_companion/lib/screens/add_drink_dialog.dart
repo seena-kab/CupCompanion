@@ -8,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:typed_data';
 
 class AddDrinkDialog extends StatefulWidget {
-  const AddDrinkDialog({Key? key}) : super(key: key);
+  const AddDrinkDialog({super.key});
 
   @override
   _AddDrinkDialogState createState() => _AddDrinkDialogState();
@@ -162,9 +162,9 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
                             : null,
                       ),
                       child: imageFile == null
-                          ? Column(
+                          ? const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
+                              children: [
                                 Icon(
                                   Icons.add_a_photo,
                                   size: 40,
