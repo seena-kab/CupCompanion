@@ -537,7 +537,7 @@ void fetchUserDrinks() async {
             errorBuilder: (context, error, stackTrace) {
               return Container(
                 color: Colors.grey[300],
-                child: Icon(
+                child: const Icon(
                   Icons.broken_image,
                   color: Colors.grey,
                 ),
