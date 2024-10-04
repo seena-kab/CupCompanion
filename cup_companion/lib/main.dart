@@ -18,6 +18,7 @@ import 'theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/user_provider.dart';
+import 'providers/favorites_provider.dart';
 // Import UserProvider
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/cart_item.dart';
@@ -51,6 +52,7 @@ Future<void> main() async {
   await Hive.openBox<CartItem>('cartBox');
   await Hive.openBox<AppUser>('userBox');
   await Hive.openBox('cart'); // Ensure you open the userBox here
+  await Hive.openBox<Drink>('favoritesBox');
   // Open other boxes like favoritesBox if necessary
 
   runApp(
@@ -59,6 +61,7 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (_) => ThemeNotifier(false)),
       ChangeNotifierProvider(create: (_) => CartProvider()), // Include CartProvider
       ChangeNotifierProvider(create: (_) => UserProvider()), // Include UserProvider
+      ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       // Add other providers if needed
     ],
     child: const MyApp(),
