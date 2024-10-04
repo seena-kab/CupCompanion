@@ -16,21 +16,16 @@ import 'screens/redeem_points_screen.dart'; // Import RedeemPointsScreen
 import 'theme/theme.dart';
 import 'theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
-import 'screens/favorites_screen.dart';
-import 'screens/edit_profile_screen.dart';
-import 'screens/events_screen.dart';
-import 'screens/marketplace_screen.dart';
-import 'screens/cart_screen.dart';
 import 'providers/cart_provider.dart';
-import 'providers/user_provider.dart'; // Import UserProvider
+// Import UserProvider
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/cart_item.dart';
 import 'models/drink.dart';
 // If you have a FavoriteDrink model
 import 'models/user_model.dart'; // Import the AppUser model
 import 'models/review.dart';
-import 'theme/theme_notifier.dart'; // Import ThemeNotifier
-import 'screens/forum_page.dart'; // Import ForumScreen
+// Import ThemeNotifier
+// Import ForumScreen
 
 
 Future<void> main() async {

@@ -7,7 +7,7 @@ import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore
-import 'package:firebase_core/firebase_core.dart'; // Firebase Core
+// Firebase Core
 import '../theme/theme_notifier.dart';
 import 'add_drink_dialog.dart'; // Import the AddDrinkDialog
 import 'favorites_screen.dart';
