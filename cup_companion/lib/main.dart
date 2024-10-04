@@ -17,6 +17,7 @@ import 'theme/theme.dart';
 import 'theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
+import 'providers/user_provider.dart';
 // Import UserProvider
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/cart_item.dart';
@@ -53,14 +54,16 @@ Future<void> main() async {
   // Open other boxes like favoritesBox if necessary
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeNotifier(false)),
-        ChangeNotifierProvider(create: (_) => CartProvider()), // Add CartProvider here
-      ],
-      child: const MyApp(),
-    ),
-  );
+  MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => ThemeNotifier(false)),
+      ChangeNotifierProvider(create: (_) => CartProvider()), // Include CartProvider
+      ChangeNotifierProvider(create: (_) => UserProvider()), // Include UserProvider
+      // Add other providers if needed
+    ],
+    child: const MyApp(),
+  ),
+);
 }
 
 class MyApp extends StatelessWidget {

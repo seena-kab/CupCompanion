@@ -106,28 +106,34 @@ await FirebaseFirestore.instance.collection('drinks').add({
     }
   }
 
-  Future<String> uploadImage(XFile image) async {
-  String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-  Reference storageRef = FirebaseStorage.instance.ref().child('drink_images/$fileName');
+  Future<String> uploadImage(XFile imageFile) async {
+  try {
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+    Reference storageRef = FirebaseStorage.instance.ref().child('drink_images/$fileName.jpg');
 
-  UploadTask uploadTask;
+    UploadTask uploadTask;
 
-  if (kIsWeb) {
-    // For web platform
-    Uint8List imageData = await image.readAsBytes();
-    uploadTask = storageRef.putData(
-      imageData,
-      SettableMetadata(contentType: 'image/jpeg'),
-    );
-  } else {
-    // For mobile platforms (Android/iOS)
-    File file = File(image.path);
-    uploadTask = storageRef.putFile(file);
+    if (kIsWeb) {
+      Uint8List imageData = await imageFile.readAsBytes();
+      uploadTask = storageRef.putData(
+        imageData,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+    } else {
+      File file = File(imageFile.path);
+      uploadTask = storageRef.putFile(
+        file,
+        SettableMetadata(contentType: 'image/jpeg'), // Include metadata
+      );
+    }
+
+    TaskSnapshot snapshot = await uploadTask;
+    String downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
+  } catch (e) {
+    print('Error uploading image: $e');
+    throw Exception('Failed to upload image');
   }
-
-  TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
-  String downloadUrl = await snapshot.ref.getDownloadURL();
-  return downloadUrl;
 }
 
   @override

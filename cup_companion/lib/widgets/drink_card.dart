@@ -9,20 +9,23 @@ import '../providers/cart_provider.dart';
 
 class DrinkCard extends StatelessWidget {
   final Drink drink;
-  final int index; // Add this line
-  final String heroTagPrefix; // Add this line
+  final int index;
+  final String heroTagPrefix;
 
   const DrinkCard({
-    super.key,
+    Key? key,
     required this.drink,
     required this.index,
-    required this.heroTagPrefix, // Add this line
-  });
+    required this.heroTagPrefix,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+    // Debugging: Print the image URL
+    print('Loading image for drink "${drink.name}" from URL: ${drink.imageUrl}');
 
     return GestureDetector(
       onTap: () {
@@ -31,9 +34,9 @@ class DrinkCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => DrinkDetailScreen(
-              drink: drink, 
+              drink: drink,
               heroTag: '$heroTagPrefix$index',
-              ),
+            ),
           ),
         );
       },
@@ -61,7 +64,7 @@ class DrinkCard extends StatelessWidget {
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(20)),
                     child: Hero(
-                      tag: '$heroTagPrefix$index', // Use index here
+                      tag: '$heroTagPrefix$index',
                       child: Image.network(
                         drink.imageUrl,
                         fit: BoxFit.cover,
@@ -78,8 +81,11 @@ class DrinkCard extends StatelessWidget {
                           );
                         },
                         errorBuilder: (context, error, stackTrace) {
+                          // Debugging: Print the error
+                          print('Error loading image for drink "${drink.name}": $error');
                           return const Center(
-                              child: Icon(Icons.broken_image, size: 50));
+                            child: Icon(Icons.broken_image, size: 50),
+                          );
                         },
                       ),
                     ),

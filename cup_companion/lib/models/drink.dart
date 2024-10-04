@@ -39,9 +39,9 @@ class Drink extends HiveObject {
   });
 
   // Convert Firestore document to Drink object
-  factory Drink.fromMap(Map<String, dynamic> map) {
+  factory Drink.fromMap(Map<String, dynamic> map, String documentId) {
     return Drink(
-      id: map['id'] as String? ?? '', // Provide a default value if null
+      id: documentId, // Use the document ID from Firestore
       name: map['name'] as String? ?? 'Unnamed Drink',
       category: map['category'] as String? ?? 'Uncategorized',
       imageUrl: map['imageUrl'] as String? ?? '',
