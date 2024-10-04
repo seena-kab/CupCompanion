@@ -53,7 +53,7 @@ class _ForumPageState extends State<ForumPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFFBE6B2),
       appBar: AppBar(
-        title: Text('Cup Social'),
+        title: const Text('Cup Social'),
         backgroundColor: const Color(0xFFFBE6B2),
       ),
       body: Column(
@@ -66,7 +66,7 @@ class _ForumPageState extends State<ForumPage> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
                 final messages = snapshot.data!.docs;
                 return ListView.builder(
@@ -83,7 +83,7 @@ class _ForumPageState extends State<ForumPage> {
                       future: _getUsername(userId),
                       builder: (context, userSnapshot) {
                         if (!userSnapshot.hasData) {
-                          return Center(child: CircularProgressIndicator());
+                          return const Center(child: CircularProgressIndicator());
                         }
                         return WallPost(
                           text: message['text'],
@@ -108,13 +108,13 @@ class _ForumPageState extends State<ForumPage> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Send your Post',
                     ),
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
                   onPressed: _postMessage,
                 ),
               ],

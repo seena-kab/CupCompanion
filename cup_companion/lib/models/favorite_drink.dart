@@ -21,8 +21,12 @@ class FavoriteDrink extends HiveObject {
 
   // Create FavoriteDrink from Map (Firestore)
   factory FavoriteDrink.fromMap(Map<String, dynamic> map) {
+    // Extract the drink map
+    final drinkMap = map['drink'] as Map<String, dynamic>;
+    // Extract the 'id' from the drink map
+    final drinkId = drinkMap['id'] as String? ?? '';
     return FavoriteDrink(
-      drink: Drink.fromMap(map['drink']),
+      drink: Drink.fromMap(drinkMap, drinkId),
     );
   }
 }

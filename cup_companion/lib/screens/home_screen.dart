@@ -2,20 +2,24 @@
 
 import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart';
+import 'package:cup_companion/services/drink_service.dart';
+import 'package:cup_companion/models/drink.dart';
 import 'package:cup_companion/screens/chat_screen.dart';
 import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
-
 import 'package:cup_companion/screens/forum_page.dart';
+import 'package:cup_companion/theme/theme_notifier.dart';
+import 'package:cup_companion/screens/events_screen.dart';
+import 'package:cup_companion/screens/drink_detail_screen.dart';
+import 'package:cup_companion/providers/cart_provider.dart';
+import 'package:cup_companion/providers/favorites_provider.dart';
 
 import 'package:geolocator/geolocator.dart';
 
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../theme/theme_notifier.dart';
-import 'events_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +30,7 @@ class HomeScreen extends StatefulWidget {
 
 class HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
+  final DrinkService _drinkService = DrinkService();
 
   String username = "Username";
   String zipCode = "00000";
@@ -33,7 +38,6 @@ class HomeScreenState extends State<HomeScreen> {
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
 
-  // Controls visibility of the bottom navigation bar
   bool _isNavBarVisible = true;
 
   // Categories for day mode
@@ -54,34 +58,14 @@ class HomeScreenState extends State<HomeScreen> {
     'Non-Alcoholic',
   ];
 
-  // Mock data for drink cards
-  final List<Map<String, String>> drinkList = [
-    {
-      'image': 'assets/images/cappuccino.png',
-      'name': 'Cappuccino',
-      'details': 'With Oat Milk',
-      'price': '3.90',
-    },
-    {
-      'image': 'assets/images/espresso.jpg',
-      'name': 'Latte',
-      'details': 'With Soy Milk',
-      'price': '4.50',
-    },
-    {
-      'image': 'assets/images/espresso.jpg',
-      'name': 'Espresso',
-      'details': 'Double Shot',
-      'price': '2.80',
-    },
-    {
-      'image': 'assets/images/espresso.jpg',
-      'name': 'Mocha',
-      'details': 'With Chocolate',
-      'price': '4.20',
-    },
-    // Add more drinks as needed
-  ];
+  // List to hold the fetched drinks
+  List<Drink> _drinks = [];
+
+  // Add a loading indicator
+  bool _isLoading = true;
+
+  // Add an error message
+  String? _errorMessage;
 
   void fetchUserData() async {
     try {
@@ -189,6 +173,24 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     fetchUserData();
+    fetchDrinks(); // Fetch drinks when the widget initializes
+  }
+
+  // Method to fetch drinks from Firestore
+  void fetchDrinks() async {
+    try {
+      List<Drink> drinks = await _drinkService.fetchDrinks();
+      setState(() {
+        _drinks = drinks;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching drinks: $e');
+      setState(() {
+        _errorMessage = 'Failed to load drinks.';
+        _isLoading = false;
+      });
+    }
   }
 
   // Called when a tab is selected in the bottom navigation bar
@@ -198,7 +200,7 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Builds the bottom navigation bar with 5 items
+  // Builds the bottom navigation bar with items
   Widget buildBottomNavigationBar() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return BottomNavigationBar(
@@ -235,13 +237,12 @@ class HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.event_note_rounded),
           label: 'Events',
-        ),                
+        ),
         BottomNavigationBarItem(
-            icon: Icon(Icons.forum),
-            label: 'Forum', // Add Forum tab
+          icon: Icon(Icons.forum),
+          label: 'Forum',
         ),
       ],
-
     );
   }
 
@@ -256,7 +257,7 @@ class HomeScreenState extends State<HomeScreen> {
       const MarketplaceScreen(), // Marketplace
       const ChatScreen(), // Chat
       const EventScreen(), // Events
-      const ForumPage(), // Forum // Forum
+      const ForumPage(), // Forum
     ];
 
     return Scaffold(
@@ -372,27 +373,38 @@ class HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: GridView.builder(
-              physics:
-                  const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
-              shrinkWrap: true, // Let GridView take only the needed space
-              itemCount: drinkList.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // 2 per row
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 3 / 4, // Adjust as needed
-              ),
-              itemBuilder: (context, index) {
-                return buildDrinkCard(drinkList[index]);
-              },
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 16,
+                        ),
+                      )
+                    : GridView.builder(
+                        physics:
+                            const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
+                        shrinkWrap: true, // Let GridView take only the needed space
+                        itemCount: _drinks.length,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2, // 2 per row
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 3 / 4, // Adjust as needed
+                        ),
+                        itemBuilder: (context, index) {
+                          return buildDrinkCard(_drinks[index], index);
+                        },
+                      ),
           ),
           const SizedBox(height: 20),
           SizedBox(
-              height: MediaQuery.of(context)
-                  .padding
-                  .bottom), // Extra space to prevent overflow
+            height: MediaQuery.of(context)
+                .padding
+                .bottom), // Extra space to prevent overflow
         ],
       ),
     );
@@ -551,7 +563,6 @@ class HomeScreenState extends State<HomeScreen> {
 
   // Builds the category list for day mode
   Widget buildDayModeCategoryList() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SizedBox(
       height: 50,
       child: ListView.builder(
@@ -566,7 +577,6 @@ class HomeScreenState extends State<HomeScreen> {
 
   // Builds the category list for night mode
   Widget buildNightModeCategoryList() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SizedBox(
       height: 50,
       child: ListView.builder(
@@ -581,7 +591,6 @@ class HomeScreenState extends State<HomeScreen> {
 
   // Builds individual category chips
   Widget buildCategoryChip(String category, int index) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
     Color chipColor = Colors
         .primaries[index % Colors.primaries.length]; // Cycle through colors
     return Container(
@@ -604,11 +613,22 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   // Builds individual drink cards in a grid
-  Widget buildDrinkCard(Map<String, String> drink) {
+  Widget buildDrinkCard(Drink drink, int index) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isFavorite(drink.id);
     return GestureDetector(
       onTap: () {
-        // Handle drink card tap, e.g., navigate to drink details
+        // Navigate to DrinkDetailScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DrinkDetailScreen(
+              drink: drink,
+              heroTag: 'drinkImage$index', // Pass a unique hero tag
+            ),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
@@ -634,10 +654,24 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Stack(
                   children: [
-                    Image.asset(
-                      drink['image']!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+                    Hero(
+                      tag: 'drinkImage$index',
+                      child: Image.network(
+                        drink.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.broken_image, size: 50),
+                          );
+                        },
+                      ),
                     ),
                     Positioned(
                       right: 8,
@@ -646,13 +680,14 @@ class HomeScreenState extends State<HomeScreen> {
                         backgroundColor: Colors.white70,
                         child: IconButton(
                           icon: Icon(
-                            Icons.favorite_border,
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
                             color: themeNotifier.isNightMode
                                 ? Colors.black
                                 : Colors.redAccent,
                           ),
                           onPressed: () {
                             // Handle favorite action
+                            favoritesProvider.toggleFavorite(drink);
                           },
                         ),
                       ),
@@ -667,7 +702,7 @@ class HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   Text(
-                    drink['name']!,
+                    drink.name,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -676,18 +711,19 @@ class HomeScreenState extends State<HomeScreen> {
                           : Colors.black87,
                     ),
                   ),
-                  Text(
-                    drink['details']!,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: themeNotifier.isNightMode
-                          ? Colors.white70
-                          : Colors.grey[600],
+                  if (drink.category.isNotEmpty)
+                    Text(
+                      drink.category,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: themeNotifier.isNightMode
+                            ? Colors.white70
+                            : Colors.grey[600],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$${drink['price']}',
+                    '\$${drink.price.toStringAsFixed(2)}',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
@@ -869,7 +905,7 @@ class RewardsSection extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeNotifier.isNightMode
                     ? Colors.amberAccent
-                    : Colors.blueAccent, // Updated parameter
+                    : Colors.blueAccent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
