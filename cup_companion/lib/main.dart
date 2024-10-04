@@ -98,17 +98,17 @@ class MyApp extends StatelessWidget {
       ],
       initialRoute: '/', // Initial route set to Start page
       routes: {
-        '/': (context) => const StartPage(),
-        '/signup': (context) => const SignUpScreen(),
-        '/signin': (context) => const SignInScreen(),
-        '/survey': (context) => const SurveyScreen(),
-        '/forgot_password': (context) => const ForgotPasswordScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/notifications': (context) => const NotificationsScreen(),
-        '/redeem': (context) => const RedeemPointsScreen(),
-      },
+      '/': (context) => StartPage(),
+      '/signup': (context) => SignUpScreen(),
+      '/signin': (context) => SignInScreen(),
+      '/survey': (context) => SurveyScreen(),
+      '/forgot_password': (context) => ForgotPasswordScreen(),
+      '/home': (context) => HomeScreen(),
+      '/profile': (context) => ProfileScreen(),
+      '/settings': (context) => SettingsScreen(),
+      '/notifications': (context) => NotificationsScreen(),
+      '/redeem': (context) => RedeemPointsScreen(),
+    },
     );
   }
 }
