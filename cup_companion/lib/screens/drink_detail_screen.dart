@@ -9,14 +9,17 @@ import '../models/review.dart';
 import '../providers/user_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Import localization packages
+import 'package:cup_companion/l10n/app_localizations.dart'; // Adjust the import path if necessary
+
 class DrinkDetailScreen extends StatefulWidget {
   final Drink drink;
-  final String heroTag; // Add this line
+  final String heroTag; // Ensure heroTag is used correctly
 
   const DrinkDetailScreen({
     super.key,
     required this.drink,
-    required this.heroTag, // Add this line
+    required this.heroTag,
   });
 
   @override
@@ -34,6 +37,9 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     final appUser = userProvider.user;
+
+    // Retrieve localization instance
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
 
     return Scaffold(
       backgroundColor:
@@ -65,8 +71,15 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                   height: 300,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Text('Failed to load image'),
+                    return Center(
+                      child: Text(
+                        appLocalizations.failedToLoadImage,
+                        style: TextStyle(
+                          color: themeNotifier.isNightMode
+                              ? Colors.white
+                              : Colors.black87,
+                        ),
+                      ),
                     );
                   },
                   loadingBuilder: (context, child, loadingProgress) {
@@ -144,7 +157,8 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                   // Show a Snackbar with animation
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${widget.drink.name} added to cart!'),
+                      content: Text(
+                          '${widget.drink.name} ${appLocalizations.addToCartButton}!'),
                       backgroundColor: Colors.green,
                       behavior: SnackBarBehavior.floating,
                       duration: const Duration(seconds: 2),
@@ -152,9 +166,9 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                   );
                 },
                 icon: const Icon(Icons.add_shopping_cart),
-                label: const Text(
-                  'Add to Cart',
-                  style: TextStyle(fontSize: 18),
+                label: Text(
+                  appLocalizations.addToCartButton,
+                  style: const TextStyle(fontSize: 18),
                 ),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
@@ -174,7 +188,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Reviews',
+                  appLocalizations.reviewsSection,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -191,7 +205,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                 ? Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Text(
-                      'No reviews yet. Be the first to review!',
+                      appLocalizations.noReviewsYet,
                       style: TextStyle(
                         fontSize: 16,
                         color: themeNotifier.isNightMode
@@ -274,7 +288,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Add a Review',
+                      appLocalizations.addAReviewTitle,
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -286,7 +300,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                     const SizedBox(height: 16),
                     // Rating Slider
                     Text(
-                      'Your Rating:',
+                      appLocalizations.yourRating,
                       style: TextStyle(
                         fontSize: 16,
                         color: themeNotifier.isNightMode
@@ -313,7 +327,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                     // Review Text Field
                     TextFormField(
                       decoration: InputDecoration(
-                        labelText: 'Your Review',
+                        labelText: appLocalizations.yourReview,
                         labelStyle: TextStyle(
                           color: themeNotifier.isNightMode
                               ? Colors.white70
@@ -334,7 +348,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                       maxLines: 3,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your review';
+                          return appLocalizations.pleaseEnterYourReview;
                         }
                         return null;
                       },
@@ -377,13 +391,14 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
 
                                 try {
                                   // Check if the drink document exists
-                                  final drinkSnapshot = await drinkDocRef.get();
+                                  final drinkSnapshot =
+                                      await drinkDocRef.get();
 
                                   if (drinkSnapshot.exists) {
                                     // If the document exists, update it with the new review
                                     await drinkDocRef.update({
-                                      'reviews':
-                                          FieldValue.arrayUnion([newReview.toMap()]),
+                                      'reviews': FieldValue.arrayUnion(
+                                          [newReview.toMap()]),
                                     });
                                   } else {
                                     // If the document doesn't exist, create it and add the review
@@ -399,16 +414,22 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                                   }
 
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Review added successfully!'),
+                                    SnackBar(
+                                      content: Text(
+                                          appLocalizations.reviewAdded),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
                                   _formKey.currentState!.reset();
+                                  setState(() {
+                                    _userRating = 5.0; // Reset rating
+                                  });
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Failed to add review: $e'),
+                                      content: Text(
+                                        appLocalizations.failedToAddReview(e.toString()),
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -424,9 +445,9 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Submit Review',
-                        style: TextStyle(fontSize: 18),
+                      child: Text(
+                        appLocalizations.submitReview,
+                        style: const TextStyle(fontSize: 18),
                       ),
                     ),
                   ],
