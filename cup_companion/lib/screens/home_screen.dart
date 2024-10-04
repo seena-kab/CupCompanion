@@ -13,7 +13,6 @@ import 'package:cup_companion/screens/forum_page.dart';
 import 'package:cup_companion/theme/theme_notifier.dart';
 import 'package:cup_companion/screens/events_screen.dart';
 import 'package:cup_companion/screens/drink_detail_screen.dart';
-import 'package:cup_companion/providers/cart_provider.dart';
 import 'package:cup_companion/providers/favorites_provider.dart';
 
 import 'package:geolocator/geolocator.dart';
