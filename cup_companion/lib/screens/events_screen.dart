@@ -18,7 +18,7 @@ class EventsScreenState extends State<EventScreen> {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      backgroundColor: const Color(0xFFFBE6B2), // Set the background color to amber
+      backgroundColor: const Color(0xFFFBE6B2), // Set the background color to our color
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

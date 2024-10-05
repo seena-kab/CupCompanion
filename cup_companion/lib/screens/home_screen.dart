@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/theme_notifier.dart';
 import 'events_screen.dart';
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -76,7 +77,6 @@ class HomeScreenState extends State<HomeScreen> {
       'details': 'With Chocolate',
       'price': '4.20',
     },
-    // Add more drinks as needed
   ];
 
   void fetchUserData() async {
@@ -86,16 +86,12 @@ class HomeScreenState extends State<HomeScreen> {
         username = userData['username'] ?? 'Username';
         zipCode = userData['zipCode'] ?? '00000'; // Default zip code
       });
-      // After fetching user data, get the location
-      print('User data fetched. Username: $username, Zip Code: $zipCode');
       getUserLocation();
     } catch (e) {
-      print('Error fetching user data: $e');
       setState(() {
         username = 'Username';
         zipCode = '00000';
       });
-      // Attempt to get user location even if fetching user data fails
       getUserLocation();
     }
   }
@@ -104,10 +100,8 @@ class HomeScreenState extends State<HomeScreen> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      print('Location services are disabled.');
       setState(() {
         location = 'Zip Code: $zipCode';
       });
@@ -116,10 +110,8 @@ class HomeScreenState extends State<HomeScreen> {
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
-      print('Location permission is denied. Requesting permission...');
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print('User denied location permission.');
         setState(() {
           location = 'Zip Code: $zipCode';
         });
@@ -128,38 +120,28 @@ class HomeScreenState extends State<HomeScreen> {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print('Location permission is permanently denied.');
       setState(() {
         location = 'Zip Code: $zipCode';
       });
       return;
     }
 
-    print('Location permission granted. Fetching position...');
     try {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      print(
-          'Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
-
-      // Update the location variable with latitude and longitude
       setState(() {
         location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
             'Lng: ${position.longitude.toStringAsFixed(6)}';
       });
-      print('Location updated to: $location');
-    } catch (e, stacktrace) {
-      print('Error in getUserLocation(): $e');
-      print('Stacktrace: $stacktrace');
+    } catch (e) {
       setState(() {
         location = 'Zip Code: $zipCode';
       });
     }
   }
 
-  // Callback for filter button in SearchBar
   void onFilterTap() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     showModalBottomSheet(
@@ -187,14 +169,12 @@ class HomeScreenState extends State<HomeScreen> {
     fetchUserData();
   }
 
-  // Called when a tab is selected in the bottom navigation bar
   void _onTabSelected(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
-  // Builds the bottom navigation bar with 5 items
   Widget buildBottomNavigationBar() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return BottomNavigationBar(
@@ -207,10 +187,10 @@ class HomeScreenState extends State<HomeScreen> {
           themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
       currentIndex: _selectedIndex,
       onTap: _onTabSelected,
-      type: BottomNavigationBarType.fixed, // To show all items
-      selectedFontSize: 10.0, // Reduced font size
-      unselectedFontSize: 10.0, // Reduced font size
-      iconSize: 24.0, // Adjusted icon size
+      type: BottomNavigationBarType.fixed,
+      selectedFontSize: 10.0,
+      unselectedFontSize: 10.0,
+      iconSize: 24.0,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_rounded),
@@ -240,13 +220,12 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
 
-    // Initialize the list of screens once
     final List<Widget> screens = [
-      buildHomeScreenContent(), // Home
-      const MapScreen(), // Map
-      const MarketplaceScreen(), // Marketplace
-      const ChatScreen(), // Chat
-      const EventScreen(), // Events
+      buildHomeScreenContent(),
+      const MapScreen(),
+      const MarketplaceScreen(),
+      const ChatScreen(),
+      const EventScreen(),
     ];
 
     return Scaffold(
@@ -257,14 +236,12 @@ class HomeScreenState extends State<HomeScreen> {
           onNotification: (scrollNotification) {
             if (scrollNotification is ScrollUpdateNotification) {
               if (scrollNotification.scrollDelta! > 0) {
-                // User scrolled down, hide bottom navigation bar
                 if (_isNavBarVisible) {
                   setState(() {
                     _isNavBarVisible = false;
                   });
                 }
               } else if (scrollNotification.scrollDelta! < 0) {
-                // User scrolled up, show bottom navigation bar
                 if (!_isNavBarVisible) {
                   setState(() {
                     _isNavBarVisible = true;
@@ -272,11 +249,10 @@ class HomeScreenState extends State<HomeScreen> {
                 }
               }
             }
-            return false; // Allow the notification to continue
+            return false;
           },
           child: Stack(
             children: [
-              // Background with gradient
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -288,7 +264,6 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              // Main Content
               _selectedIndex < screens.length
                   ? screens[_selectedIndex]
                   : buildPlaceholderScreen('Coming Soon!'),
@@ -305,7 +280,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the main home screen content with GridView for drinks
   Widget buildHomeScreenContent() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SingleChildScrollView(
@@ -332,7 +306,7 @@ class HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 buildDayNightSwitch(),
                 const SizedBox(height: 20),
-                SearchBar(onFilterTap: onFilterTap),
+                SearchBar(onFilterTap: onFilterTap), // Integrated SearchBar
                 const SizedBox(height: 20),
               ],
             ),
@@ -363,15 +337,14 @@ class HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: GridView.builder(
-              physics:
-                  const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
-              shrinkWrap: true, // Let GridView take only the needed space
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
               itemCount: drinkList.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // 2 per row
+                crossAxisCount: 2,
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 3 / 4, // Adjust as needed
+                childAspectRatio: 3 / 4,
               ),
               itemBuilder: (context, index) {
                 return buildDrinkCard(drinkList[index]);
@@ -388,7 +361,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Placeholder screen for other tabs (if any)
   Widget buildPlaceholderScreen(String text) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Center(
@@ -402,19 +374,15 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the header with profile picture, username, location, and notification bell
   Widget buildHeader() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Profile Picture and Username
         Row(
           children: [
-            // Profile Picture Placeholder
             GestureDetector(
               onTap: () {
-                // Navigate to Profile Screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -425,12 +393,11 @@ class HomeScreenState extends State<HomeScreen> {
               child: const CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.white,
-                backgroundImage: AssetImage(
-                    'assets/images/default_avatar.png'), // Ensure this asset exists
+                backgroundImage:
+                    AssetImage('assets/images/default_avatar.png'),
               ),
             ),
             const SizedBox(width: 10),
-            // Username and Location
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -463,17 +430,14 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
-        // Notification Bell and Settings Icon
         Row(
           children: [
-            // Notification Bell Icon
             IconButton(
               icon: const Icon(
                 Icons.notifications_none_rounded,
                 color: Colors.white,
               ),
               onPressed: () {
-                // Navigate to Notifications Screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -481,9 +445,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              tooltip: 'Notifications',
             ),
-            // Settings Icon with Drop-down Menu
             PopupMenuButton<String>(
               icon: const Icon(
                 Icons.settings_outlined,
@@ -512,7 +474,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the day/night mode switch
   Widget buildDayNightSwitch() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Row(
@@ -539,7 +500,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the category list for day mode
   Widget buildDayModeCategoryList() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SizedBox(
@@ -554,7 +514,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the category list for night mode
   Widget buildNightModeCategoryList() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SizedBox(
@@ -569,7 +528,6 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds individual category chips
   Widget buildCategoryChip(String category, int index) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     Color chipColor = Colors
@@ -593,12 +551,11 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds individual drink cards in a grid
   Widget buildDrinkCard(Map<String, String> drink) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return GestureDetector(
       onTap: () {
-        // Handle drink card tap, e.g., navigate to drink details
+        // Handle drink card tap
       },
       child: Container(
         decoration: BoxDecoration(
@@ -616,7 +573,6 @@ class HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           children: [
-            // Drink Image
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
@@ -651,7 +607,6 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Drink Details
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
@@ -696,7 +651,6 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// SearchBar widget with updated styling
 class SearchBar extends StatelessWidget {
   final VoidCallback onFilterTap;
 
@@ -723,6 +677,12 @@ class SearchBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(50), // More rounded corners
       ),
       child: TextField(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SearchScreen()),
+          );
+        },
         decoration: InputDecoration(
           filled: true,
           fillColor:
@@ -744,7 +704,7 @@ class SearchBar extends StatelessWidget {
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide.none, // Removes the border
+            borderSide: BorderSide.none,
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
@@ -769,7 +729,6 @@ class SearchBar extends StatelessWidget {
   }
 }
 
-// RewardsSection widget
 class RewardsSection extends StatelessWidget {
   final int points;
 
@@ -784,7 +743,7 @@ class RewardsSection extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        height: 100, // Adjust height as needed
+        height: 100,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -795,7 +754,7 @@ class RewardsSection extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius:
-              BorderRadius.circular(20), // Rounded corners for a card-like look
+              BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: themeNotifier.isNightMode
@@ -808,7 +767,6 @@ class RewardsSection extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Rewards Icon
             CircleAvatar(
               radius: 30,
               backgroundColor: themeNotifier.isNightMode
@@ -823,7 +781,6 @@ class RewardsSection extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 16),
-            // Rewards Information
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -850,16 +807,14 @@ class RewardsSection extends StatelessWidget {
                 ],
               ),
             ),
-            // Redeem Button
             ElevatedButton(
               onPressed: () {
-                // Handle Redeem button tap
-                Navigator.pushNamed(context, '/redeem'); // Example navigation
+                Navigator.pushNamed(context, '/redeem');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: themeNotifier.isNightMode
                     ? Colors.amberAccent
-                    : Colors.blueAccent, // Updated parameter
+                    : Colors.blueAccent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
