@@ -13,13 +13,16 @@ import 'package:cup_companion/screens/forum_page.dart';
 import 'package:cup_companion/theme/theme_notifier.dart';
 import 'package:cup_companion/screens/events_screen.dart';
 import 'package:cup_companion/screens/drink_detail_screen.dart';
-import 'package:cup_companion/providers/cart_provider.dart';
 import 'package:cup_companion/providers/favorites_provider.dart';
+import 'package:cup_companion/constants/menu_options.dart';
 
 import 'package:geolocator/geolocator.dart';
-
+import 'package:cup_companion/providers/locale_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Import the generated localization file
+import 'package:cup_companion/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -67,6 +70,14 @@ class HomeScreenState extends State<HomeScreen> {
   // Add an error message
   String? _errorMessage;
 
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+    fetchDrinks(); // Fetch drinks when the widget initializes
+  }
+
+  // Method to fetch user data
   void fetchUserData() async {
     try {
       Map<String, String> userData = await _authService.fetchUserData();
@@ -88,6 +99,7 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Method to get user location
   void getUserLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -134,8 +146,8 @@ class HomeScreenState extends State<HomeScreen> {
 
       // Update the location variable with latitude and longitude
       setState(() {
-        location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
-            'Lng: ${position.longitude.toStringAsFixed(6)}';
+        location =
+            'Lat: ${position.latitude.toStringAsFixed(6)}, Lng: ${position.longitude.toStringAsFixed(6)}';
       });
       print('Location updated to: $location');
     } catch (e, stacktrace) {
@@ -158,7 +170,7 @@ class HomeScreenState extends State<HomeScreen> {
           color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
           child: Center(
             child: Text(
-              'Filter options here',
+              AppLocalizations.of(context)!.filterOptionsHere, // Localized string
               style: TextStyle(
                 color: themeNotifier.isNightMode ? Colors.white : Colors.black,
               ),
@@ -167,13 +179,6 @@ class HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserData();
-    fetchDrinks(); // Fetch drinks when the widget initializes
   }
 
   // Method to fetch drinks from Firestore
@@ -217,30 +222,30 @@ class HomeScreenState extends State<HomeScreen> {
       selectedFontSize: 10.0, // Reduced font size
       unselectedFontSize: 10.0, // Reduced font size
       iconSize: 24.0, // Adjusted icon size
-      items: const [
+      items: [
         BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded),
-          label: 'Home',
+          icon: const Icon(Icons.home_rounded),
+          label: AppLocalizations.of(context)!.home, // Localized string
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.map_rounded),
-          label: 'Map',
+          icon: const Icon(Icons.map_rounded),
+          label: AppLocalizations.of(context)!.map, // Localized string
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.store_rounded),
-          label: 'Marketplace',
+          icon: const Icon(Icons.store_rounded),
+          label: AppLocalizations.of(context)!.marketplace, // Localized string
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble_rounded),
-          label: 'Chat',
+          icon: const Icon(Icons.chat_bubble_rounded),
+          label: AppLocalizations.of(context)!.chat, // Localized string
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.event_note_rounded),
-          label: 'Events',
+          icon: const Icon(Icons.event_note_rounded),
+          label: AppLocalizations.of(context)!.events, // Localized string
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.forum),
-          label: 'Forum',
+          icon: const Icon(Icons.forum),
+          label: AppLocalizations.of(context)!.forum, // Localized string
         ),
       ],
     );
@@ -249,6 +254,8 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
 
     // Initialize the list of screens once
     final List<Widget> screens = [
@@ -302,7 +309,7 @@ class HomeScreenState extends State<HomeScreen> {
               // Main Content
               _selectedIndex < screens.length
                   ? screens[_selectedIndex]
-                  : buildPlaceholderScreen('Coming Soon!'),
+                  : buildPlaceholderScreen(appLocalizations.comingSoon), // Localized string
             ],
           ),
         ),
@@ -319,6 +326,7 @@ class HomeScreenState extends State<HomeScreen> {
   // Builds the main home screen content with GridView for drinks
   Widget buildHomeScreenContent() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -356,7 +364,7 @@ class HomeScreenState extends State<HomeScreen> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'For You',
+                appLocalizations.forYou, // Localized string
                 style: GoogleFonts.poppins(
                   fontSize: 24.0,
                   fontWeight: FontWeight.bold,
@@ -404,7 +412,8 @@ class HomeScreenState extends State<HomeScreen> {
           SizedBox(
             height: MediaQuery.of(context)
                 .padding
-                .bottom), // Extra space to prevent overflow
+                .bottom, // Extra space to prevent overflow
+          ),
         ],
       ),
     );
@@ -427,6 +436,7 @@ class HomeScreenState extends State<HomeScreen> {
   // Builds the header with profile picture, username, location, and notification bell
   Widget buildHeader() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -447,8 +457,8 @@ class HomeScreenState extends State<HomeScreen> {
               child: const CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.white,
-                backgroundImage: AssetImage(
-                    'assets/images/default_avatar.png'), // Ensure this asset exists
+                backgroundImage:
+                    AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
               ),
             ),
             const SizedBox(width: 10),
@@ -457,7 +467,7 @@ class HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Hello, $username',
+                  '${appLocalizations.hello}, $username', // Localized string
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     color: Colors.white,
@@ -503,7 +513,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
-              tooltip: 'Notifications',
+              tooltip: appLocalizations.notifications, // Localized tooltip
             ),
             // Settings Icon with Drop-down Menu
             PopupMenuButton<String>(
@@ -512,20 +522,25 @@ class HomeScreenState extends State<HomeScreen> {
                 color: Colors.white,
               ),
               onSelected: (String value) {
-                if (value == 'Settings') {
+                print('Menu item selected: $value'); // Debugging statement
+                if (value == MenuOptions.settings) {
                   Navigator.pushNamed(context, '/settings');
-                } else if (value == 'Sign Out') {
+                } else if (value == MenuOptions.signOut) {
                   _authService.signOut();
                   Navigator.pushReplacementNamed(context, '/signin');
                 }
               },
               itemBuilder: (BuildContext context) {
-                return {'Settings', 'Sign Out'}.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
+                return [
+                  PopupMenuItem<String>(
+                    value: MenuOptions.settings,
+                    child: Text(appLocalizations.settings),
+                  ),
+                  PopupMenuItem<String>(
+                    value: MenuOptions.signOut,
+                    child: Text(appLocalizations.signOut),
+                  ),
+                ];
               },
             ),
           ],
@@ -537,6 +552,7 @@ class HomeScreenState extends State<HomeScreen> {
   // Builds the day/night mode switch
   Widget buildDayNightSwitch() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -557,19 +573,39 @@ class HomeScreenState extends State<HomeScreen> {
           Icons.nightlight_round,
           color: Colors.white70,
         ),
+        const SizedBox(width: 8),
+        Text(
+          themeNotifier.isNightMode
+              ? appLocalizations.nightMode
+              : appLocalizations.dayMode, // Localized string
+          style: GoogleFonts.poppins(
+            color: Colors.white70,
+          ),
+        ),
       ],
     );
   }
 
   // Builds the category list for day mode
   Widget buildDayModeCategoryList() {
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
+    // Optionally, you can also localize category names
+    final List<String> localizedCategories = [
+      appLocalizations.coffee,
+      appLocalizations.tea,
+      appLocalizations.juice,
+      appLocalizations.smoothies,
+      appLocalizations.alcoholicDrinks,
+    ];
+
     return SizedBox(
       height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: categoriesDayMode.length,
+        itemCount: localizedCategories.length,
         itemBuilder: (context, index) {
-          return buildCategoryChip(categoriesDayMode[index], index);
+          return buildCategoryChip(localizedCategories[index], index);
         },
       ),
     );
@@ -577,13 +613,24 @@ class HomeScreenState extends State<HomeScreen> {
 
   // Builds the category list for night mode
   Widget buildNightModeCategoryList() {
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
+    // Optionally, you can also localize category names
+    final List<String> localizedCategories = [
+      appLocalizations.beer,
+      appLocalizations.wine,
+      appLocalizations.whiskey,
+      appLocalizations.cocktails,
+      appLocalizations.nonAlcoholic,
+    ];
+
     return SizedBox(
       height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: categoriesNightMode.length,
+        itemCount: localizedCategories.length,
         itemBuilder: (context, index) {
-          return buildCategoryChip(categoriesNightMode[index], index);
+          return buildCategoryChip(localizedCategories[index], index);
         },
       ),
     );
@@ -591,8 +638,8 @@ class HomeScreenState extends State<HomeScreen> {
 
   // Builds individual category chips
   Widget buildCategoryChip(String category, int index) {
-    Color chipColor = Colors
-        .primaries[index % Colors.primaries.length]; // Cycle through colors
+    Color chipColor =
+        Colors.primaries[index % Colors.primaries.length]; // Cycle through colors
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Chip(
@@ -617,6 +664,7 @@ class HomeScreenState extends State<HomeScreen> {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
     final isFavorite = favoritesProvider.isFavorite(drink.id);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return GestureDetector(
       onTap: () {
         // Navigate to DrinkDetailScreen
@@ -689,6 +737,9 @@ class HomeScreenState extends State<HomeScreen> {
                             // Handle favorite action
                             favoritesProvider.toggleFavorite(drink);
                           },
+                          tooltip: isFavorite
+                              ? appLocalizations.removeFromFavorites
+                              : appLocalizations.addToFavorites, // Localized tooltip
                         ),
                       ),
                     ),
@@ -754,6 +805,7 @@ class SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -773,7 +825,7 @@ class SearchBar extends StatelessWidget {
           filled: true,
           fillColor:
               themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
-          hintText: 'Search for a beverage',
+          hintText: appLocalizations.searchForBeverage, // Localized string
           hintStyle: GoogleFonts.poppins(
             color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
           ),
@@ -787,6 +839,7 @@ class SearchBar extends StatelessWidget {
               color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
             ),
             onPressed: onFilterTap,
+            tooltip: appLocalizations.filter, // Localized tooltip
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
@@ -827,6 +880,7 @@ class RewardsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
@@ -875,7 +929,7 @@ class RewardsSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Rewards Points',
+                    appLocalizations.rewardsPoints, // Localized string
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
@@ -884,7 +938,7 @@ class RewardsSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$points Points',
+                    '$points ${appLocalizations.points}', // Localized string
                     style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -913,8 +967,8 @@ class RewardsSection extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              child: const Text(
-                'Redeem',
+              child: Text(
+                appLocalizations.redeem, // Localized string
               ),
             ),
           ],

@@ -13,11 +13,11 @@ class DrinkCard extends StatelessWidget {
   final String heroTagPrefix;
 
   const DrinkCard({
-    Key? key,
+    super.key,
     required this.drink,
     required this.index,
     required this.heroTagPrefix,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

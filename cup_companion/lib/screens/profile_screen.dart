@@ -70,9 +70,6 @@ void fetchUserDrinks() async {
   try {
     // Get the current user's UID
     String? userId = _authService.getCurrentUserId();
-    if (userId == null) {
-      throw Exception('User not logged in');
-    }
 
     // Fetch drinks where 'createdBy' equals the user's UID
     QuerySnapshot snapshot = await FirebaseFirestore.instance
