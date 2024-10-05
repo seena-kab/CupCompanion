@@ -14,6 +14,7 @@ import 'package:cup_companion/theme/theme_notifier.dart';
 import 'package:cup_companion/screens/events_screen.dart';
 import 'package:cup_companion/screens/drink_detail_screen.dart';
 import 'package:cup_companion/providers/favorites_provider.dart';
+import 'package:cup_companion/constants/menu_options.dart';
 
 import 'package:geolocator/geolocator.dart';
 import 'package:cup_companion/providers/locale_provider.dart';
@@ -69,6 +70,14 @@ class HomeScreenState extends State<HomeScreen> {
   // Add an error message
   String? _errorMessage;
 
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+    fetchDrinks(); // Fetch drinks when the widget initializes
+  }
+
+  // Method to fetch user data
   void fetchUserData() async {
     try {
       Map<String, String> userData = await _authService.fetchUserData();
@@ -90,6 +99,7 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Method to get user location
   void getUserLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -136,8 +146,8 @@ class HomeScreenState extends State<HomeScreen> {
 
       // Update the location variable with latitude and longitude
       setState(() {
-        location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
-            'Lng: ${position.longitude.toStringAsFixed(6)}';
+        location =
+            'Lat: ${position.latitude.toStringAsFixed(6)}, Lng: ${position.longitude.toStringAsFixed(6)}';
       });
       print('Location updated to: $location');
     } catch (e, stacktrace) {
@@ -162,21 +172,13 @@ class HomeScreenState extends State<HomeScreen> {
             child: Text(
               AppLocalizations.of(context)!.filterOptionsHere, // Localized string
               style: TextStyle(
-                color:
-                    themeNotifier.isNightMode ? Colors.white : Colors.black,
+                color: themeNotifier.isNightMode ? Colors.white : Colors.black,
               ),
             ),
           ),
         );
       },
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserData();
-    fetchDrinks(); // Fetch drinks when the widget initializes
   }
 
   // Method to fetch drinks from Firestore
@@ -520,23 +522,25 @@ class HomeScreenState extends State<HomeScreen> {
                 color: Colors.white,
               ),
               onSelected: (String value) {
-                if (value == 'Settings') {
+                print('Menu item selected: $value'); // Debugging statement
+                if (value == MenuOptions.settings) {
                   Navigator.pushNamed(context, '/settings');
-                } else if (value == 'Sign Out') {
+                } else if (value == MenuOptions.signOut) {
                   _authService.signOut();
                   Navigator.pushReplacementNamed(context, '/signin');
                 }
               },
               itemBuilder: (BuildContext context) {
-                return {
-                  appLocalizations.settings,
-                  appLocalizations.signOut
-                }.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
+                return [
+                  PopupMenuItem<String>(
+                    value: MenuOptions.settings,
+                    child: Text(appLocalizations.settings),
+                  ),
+                  PopupMenuItem<String>(
+                    value: MenuOptions.signOut,
+                    child: Text(appLocalizations.signOut),
+                  ),
+                ];
               },
             ),
           ],
