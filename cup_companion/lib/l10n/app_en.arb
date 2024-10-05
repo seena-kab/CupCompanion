@@ -60,6 +60,15 @@
     "pleaseEnterYourReview": "Please enter your review",
     "rating": "Rating",
     "submit": "Submit",
+    "cart": "Cart",
+    "searchForDrinks": "Search for drinks...",
+    "clearSearch": "Clear search",
+    "all": "All",
+    "alcoholic": "Alcoholic",
+    "sodas": "Sodas",
+    "juices": "Juices",
+    "drinksFound": "drinks found",
+    "noDrinksFound": "No drinks found.",
     
     "@failedToAddReview": {
       "description": "Error message when adding a review fails",
@@ -67,4 +76,6 @@
         "error": {}
       }
     }
+
+
   }

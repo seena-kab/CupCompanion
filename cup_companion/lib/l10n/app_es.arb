@@ -60,6 +60,15 @@
     "pleaseEnterYourReview": "Por favor, ingresa tu reseña",
     "rating": "Calificación",
     "submit": "Enviar",
+    "cart": "Carrito",
+    "searchForDrinks": "Buscar bebidas...",
+    "clearSearch": "Limpiar búsqueda",
+    "all": "Todas",
+    "alcoholic": "Alcohólicas",
+    "sodas": "Refrescos",
+    "juices": "Jugos",
+    "drinksFound": "bebidas encontradas",
+    "noDrinksFound": "No se encontraron bebidas.",
     
     "@failedToAddReview": {
       "description": "Mensaje de error cuando añadir una reseña falla",

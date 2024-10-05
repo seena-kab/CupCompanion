@@ -178,4 +178,31 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get submit => '送信';
+
+  @override
+  String get cart => 'カート';
+
+  @override
+  String get searchForDrinks => '飲み物を検索...';
+
+  @override
+  String get clearSearch => '検索をクリア';
+
+  @override
+  String get all => 'すべて';
+
+  @override
+  String get alcoholic => 'アルコール';
+
+  @override
+  String get sodas => 'ソーダ';
+
+  @override
+  String get juices => 'ジュース';
+
+  @override
+  String get drinksFound => 'の飲み物が見つかりました';
+
+  @override
+  String get noDrinksFound => '飲み物が見つかりませんでした。';
 }

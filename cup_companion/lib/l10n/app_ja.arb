@@ -60,6 +60,16 @@
     "pleaseEnterYourReview": "レビューを入力してください",
     "rating": "評価",
     "submit": "送信",
+
+    "cart": "カート",
+    "searchForDrinks": "飲み物を検索...",
+    "clearSearch": "検索をクリア",
+    "all": "すべて",
+    "alcoholic": "アルコール",
+    "sodas": "ソーダ",
+    "juices": "ジュース",
+    "drinksFound": "の飲み物が見つかりました",
+    "noDrinksFound": "飲み物が見つかりませんでした。",
  
     "@failedToAddReview": {
       "description": "レビューの追加に失敗したときのエラーメッセージ",

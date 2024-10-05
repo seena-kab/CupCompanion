@@ -438,6 +438,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Submit'**
   String get submit;
+
+  /// No description provided for @cart.
+  ///
+  /// In en, this message translates to:
+  /// **'Cart'**
+  String get cart;
+
+  /// No description provided for @searchForDrinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for drinks...'**
+  String get searchForDrinks;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearch;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get all;
+
+  /// No description provided for @alcoholic.
+  ///
+  /// In en, this message translates to:
+  /// **'Alcoholic'**
+  String get alcoholic;
+
+  /// No description provided for @sodas.
+  ///
+  /// In en, this message translates to:
+  /// **'Sodas'**
+  String get sodas;
+
+  /// No description provided for @juices.
+  ///
+  /// In en, this message translates to:
+  /// **'Juices'**
+  String get juices;
+
+  /// No description provided for @drinksFound.
+  ///
+  /// In en, this message translates to:
+  /// **'drinks found'**
+  String get drinksFound;
+
+  /// No description provided for @noDrinksFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No drinks found.'**
+  String get noDrinksFound;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

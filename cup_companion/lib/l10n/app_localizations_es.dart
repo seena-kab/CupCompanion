@@ -178,4 +178,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get submit => 'Enviar';
+
+  @override
+  String get cart => 'Carrito';
+
+  @override
+  String get searchForDrinks => 'Buscar bebidas...';
+
+  @override
+  String get clearSearch => 'Limpiar búsqueda';
+
+  @override
+  String get all => 'Todas';
+
+  @override
+  String get alcoholic => 'Alcohólicas';
+
+  @override
+  String get sodas => 'Refrescos';
+
+  @override
+  String get juices => 'Jugos';
+
+  @override
+  String get drinksFound => 'bebidas encontradas';
+
+  @override
+  String get noDrinksFound => 'No se encontraron bebidas.';
 }
