@@ -236,10 +236,6 @@ class HomeScreenState extends State<HomeScreen> {
           label: AppLocalizations.of(context)!.marketplace, // Localized string
         ),
         BottomNavigationBarItem(
-          icon: const Icon(Icons.chat_bubble_rounded),
-          label: AppLocalizations.of(context)!.chat, // Localized string
-        ),
-        BottomNavigationBarItem(
           icon: const Icon(Icons.event_note_rounded),
           label: AppLocalizations.of(context)!.events, // Localized string
         ),
@@ -262,7 +258,6 @@ class HomeScreenState extends State<HomeScreen> {
       buildHomeScreenContent(), // Home
       const MapScreen(), // Map
       const MarketplaceScreen(), // Marketplace
-      const ChatScreen(), // Chat
       const EventScreen(), // Events
       const ForumPage(), // Forum
     ];

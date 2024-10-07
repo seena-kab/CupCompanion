@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Add this import for date formatting
+import 'chat_screen.dart'; // Import the ChatScreen widget
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -55,6 +56,17 @@ class _ForumPageState extends State<ForumPage> {
       appBar: AppBar(
         title: const Text('Cup Social'),
         backgroundColor: const Color(0xFFFBE6B2),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.chat),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatScreen()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: <Widget>[
