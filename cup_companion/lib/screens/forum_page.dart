@@ -121,7 +121,7 @@ class _ForumPageState extends State<ForumPage> {
                   child: TextField(
                     controller: _controller,
                     decoration: const InputDecoration(
-                      hintText: 'Send your Post',
+                      hintText: 'Send your Post here!',
                     ),
                   ),
                 ),
