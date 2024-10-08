@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:cup_companion/services/auth_services.dart';
 import 'package:cup_companion/services/drink_service.dart';
 import 'package:cup_companion/models/drink.dart';
-import 'package:cup_companion/screens/chat_screen.dart';
 import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
