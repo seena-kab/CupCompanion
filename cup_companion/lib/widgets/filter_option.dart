@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cup_companion/l10n/app_localizations.dart';
 
 class FilterOptions extends StatelessWidget {
+  const FilterOptions({super.key});
+
   @override
   Widget build(BuildContext context) {
     final appLocalizations = AppLocalizations.of(context)!; // Null assertion

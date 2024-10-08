@@ -878,6 +878,8 @@ class CategoryList extends StatelessWidget {
 
 // Extracted Widget: Filter Options (Bottom Sheet)
 class FilterOptions extends StatelessWidget {
+  const FilterOptions({super.key});
+
   @override
   Widget build(BuildContext context) {
     final appLocalizations = AppLocalizations.of(context)!; // Null assertion
