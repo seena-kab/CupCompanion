@@ -76,10 +76,10 @@ class _WallPostState extends State<WallPost> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Add a comment"),
+          title: const Text("Add a comment"),
           content: TextField(
             controller: _commentTextController,
-            decoration: InputDecoration(hintText: "Enter your comment here"),
+            decoration: const InputDecoration(hintText: "Enter your comment here"),
           ),
           actions: [
             TextButton(
@@ -88,13 +88,13 @@ class _WallPostState extends State<WallPost> {
                 _commentTextController.clear();
                 Navigator.pop(context);
               },
-              child: Text("Post"),
+              child: const Text("Post"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
           ],
         );
@@ -125,7 +125,7 @@ class _WallPostState extends State<WallPost> {
                 await FirebaseFirestore.instance.collection('posts').doc(widget.postId).delete();
 
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Post deleted successfully')),
+                  const SnackBar(content: Text('Post deleted successfully')),
                 );
 
                 Navigator.pop(context);
@@ -191,10 +191,10 @@ class _WallPostState extends State<WallPost> {
                   ),
                 ],
               ),
-              Spacer(),
+              const Spacer(),
               if (currentUserEmail == widget.user)
                 IconButton(
-                  icon: Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: deletePost,
                 ),
             ],
