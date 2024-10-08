@@ -1,18 +1,28 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
+
+// Import other necessary packages and services
 import 'package:cup_companion/services/auth_services.dart';
-import 'package:cup_companion/screens/chat_screen.dart';
+import 'package:cup_companion/services/drink_service.dart';
+import 'package:cup_companion/models/drink.dart';
 import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../theme/theme_notifier.dart';
-import 'events_screen.dart';
-import 'search_screen.dart';
+import 'package:cup_companion/screens/forum_page.dart';
+import 'package:cup_companion/screens/events_screen.dart';
+import 'package:cup_companion/screens/drink_detail_screen.dart';
+import 'package:cup_companion/providers/favorites_provider.dart';
+import 'package:cup_companion/theme/theme_notifier.dart';
+import 'package:cup_companion/constants/menu_options.dart';
+import 'package:cup_companion/l10n/app_localizations.dart';
+
+// Additional imports for animations
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,8 +31,9 @@ class HomeScreen extends StatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final AuthService _authService = AuthService();
+  final DrinkService _drinkService = DrinkService();
 
   String username = "Username";
   String zipCode = "00000";
@@ -30,8 +41,10 @@ class HomeScreenState extends State<HomeScreen> {
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
 
-  // Controls visibility of the bottom navigation bar
   bool _isNavBarVisible = true;
+
+  // Example notification count
+  int _notificationsCount = 3;
 
   // Categories for day mode
   final List<String> categoriesDayMode = [
@@ -51,34 +64,38 @@ class HomeScreenState extends State<HomeScreen> {
     'Non-Alcoholic',
   ];
 
-  // Mock data for drink cards
-  final List<Map<String, String>> drinkList = [
-    {
-      'image': 'assets/images/cappuccino.png',
-      'name': 'Cappuccino',
-      'details': 'With Oat Milk',
-      'price': '3.90',
-    },
-    {
-      'image': 'assets/images/espresso.jpg',
-      'name': 'Latte',
-      'details': 'With Soy Milk',
-      'price': '4.50',
-    },
-    {
-      'image': 'assets/images/espresso.jpg',
-      'name': 'Espresso',
-      'details': 'Double Shot',
-      'price': '2.80',
-    },
-    {
-      'image': 'assets/images/espresso.jpg',
-      'name': 'Mocha',
-      'details': 'With Chocolate',
-      'price': '4.20',
-    },
-  ];
+  // List to hold the fetched drinks
+  List<Drink> _drinks = [];
 
+  // Add a loading indicator
+  bool _isLoading = true;
+
+  // Add an error message
+  String? _errorMessage;
+
+  // Animation controller for playful animations
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+    fetchDrinks(); // Fetch drinks when the widget initializes
+
+    // Initialize the animation controller
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // Method to fetch user data
   void fetchUserData() async {
     try {
       Map<String, String> userData = await _authService.fetchUserData();
@@ -96,6 +113,7 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  // Method to get user location
   void getUserLocation() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -132,8 +150,8 @@ class HomeScreenState extends State<HomeScreen> {
       );
 
       setState(() {
-        location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
-            'Lng: ${position.longitude.toStringAsFixed(6)}';
+        location =
+            'Lat: ${position.latitude.toStringAsFixed(6)}, Lng: ${position.longitude.toStringAsFixed(6)}';
       });
     } catch (e) {
       setState(() {
@@ -146,27 +164,35 @@ class HomeScreenState extends State<HomeScreen> {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     showModalBottomSheet(
       context: context,
+      backgroundColor:
+          themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
       builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
-          child: Center(
-            child: Text(
-              'Filter options here',
-              style: TextStyle(
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: FilterOptions(), // Extracted widget for filter options
         );
       },
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    fetchUserData();
+  // Method to fetch drinks from Firestore
+  void fetchDrinks() async {
+    try {
+      List<Drink> drinks = await _drinkService.fetchDrinks();
+      setState(() {
+        _drinks = drinks;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching drinks: $e');
+      setState(() {
+        _errorMessage = 'Failed to load drinks.';
+        _isLoading = false;
+      });
+    }
   }
 
   void _onTabSelected(int index) {
@@ -175,22 +201,18 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Builds the bottom navigation bar with 5 items
   Widget buildBottomNavigationBar() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return BottomNavigationBar(
-      backgroundColor:
-          themeNotifier.isNightMode ? Colors.black : Colors.white,
-      selectedItemColor: themeNotifier.isNightMode
-          ? Colors.amberAccent
-          : Colors.blueAccent,
-      unselectedItemColor:
-          themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
+    return CustomBottomNavBar(
       currentIndex: _selectedIndex,
       onTap: _onTabSelected,
-      type: BottomNavigationBarType.fixed,
-      selectedFontSize: 10.0,
-      unselectedFontSize: 10.0,
-      iconSize: 24.0,
+      type: BottomNavigationBarType.fixed, // To show all items
+      selectedFontSize: 10.0, // Reduced font size
+      unselectedFontSize: 10.0, // Reduced font size
+      iconSize: 24.0, // Adjusted icon size
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_rounded),
@@ -219,13 +241,16 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    // final localeProvider = Provider.of<LocaleProvider>(context); // Unused
+    // Removed the unused localeProvider to fix the error
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
 
     final List<Widget> screens = [
-      buildHomeScreenContent(),
-      const MapScreen(),
-      const MarketplaceScreen(),
-      const ChatScreen(),
-      const EventScreen(),
+      buildHomeScreenContent(), // Home
+      const MapScreen(), // Map
+      const MarketplaceScreen(), // Marketplace
+      const ChatScreen(), // Chat
+      const EventScreen(), // Events
     ];
 
     return Scaffold(
@@ -253,6 +278,7 @@ class HomeScreenState extends State<HomeScreen> {
           },
           child: Stack(
             children: [
+              // Background with gradient
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -264,6 +290,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+              // Main Content
               _selectedIndex < screens.length
                   ? screens[_selectedIndex]
                   : buildPlaceholderScreen('Coming Soon!'),
@@ -271,11 +298,22 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: Visibility(
-        visible: _isNavBarVisible,
-        child: SafeArea(
-          child: buildBottomNavigationBar(),
-        ),
+      bottomNavigationBar: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: _isNavBarVisible
+            ? SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: buildBottomNavigationBar(),
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
@@ -306,7 +344,7 @@ class HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 buildDayNightSwitch(),
                 const SizedBox(height: 20),
-                SearchBar(onFilterTap: onFilterTap), // Integrated SearchBar
+                SearchBar(onFilterTap: onFilterTap),
                 const SizedBox(height: 20),
               ],
             ),
@@ -337,14 +375,15 @@ class HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
+              shrinkWrap: true, // Let GridView take only the needed space
               itemCount: drinkList.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+                crossAxisCount: 2, // 2 per row
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
-                childAspectRatio: 3 / 4,
+                childAspectRatio: 3 / 4, // Adjust as needed
               ),
               itemBuilder: (context, index) {
                 return buildDrinkCard(drinkList[index]);
@@ -374,15 +413,19 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds the header with profile picture, username, location, and notification bell
   Widget buildHeader() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // Profile Picture and Username
         Row(
           children: [
+            // Profile Picture Placeholder
             GestureDetector(
               onTap: () {
+                // Navigate to Profile Screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -393,11 +436,12 @@ class HomeScreenState extends State<HomeScreen> {
               child: const CircleAvatar(
                 radius: 25,
                 backgroundColor: Colors.white,
-                backgroundImage:
-                    AssetImage('assets/images/default_avatar.png'),
+                backgroundImage: AssetImage(
+                    'assets/images/default_avatar.png'), // Ensure this asset exists
               ),
             ),
             const SizedBox(width: 10),
+            // Username and Location
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -430,14 +474,17 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+        // Notification Bell and Settings Icon
         Row(
           children: [
+            // Notification Bell Icon
             IconButton(
               icon: const Icon(
                 Icons.notifications_none_rounded,
                 color: Colors.white,
               ),
               onPressed: () {
+                // Navigate to Notifications Screen
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -445,7 +492,9 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               },
+              tooltip: 'Notifications',
             ),
+            // Settings Icon with Drop-down Menu
             PopupMenuButton<String>(
               icon: const Icon(
                 Icons.settings_outlined,
@@ -474,6 +523,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds the day/night mode switch
   Widget buildDayNightSwitch() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Row(
@@ -500,6 +550,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds the category list for day mode
   Widget buildDayModeCategoryList() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SizedBox(
@@ -514,6 +565,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds the category list for night mode
   Widget buildNightModeCategoryList() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return SizedBox(
@@ -528,6 +580,7 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds individual category chips
   Widget buildCategoryChip(String category, int index) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     Color chipColor = Colors
@@ -551,11 +604,12 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Builds individual drink cards in a grid
   Widget buildDrinkCard(Map<String, String> drink) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return GestureDetector(
       onTap: () {
-        // Handle drink card tap
+        // Handle drink card tap, e.g., navigate to drink details
       },
       child: Container(
         decoration: BoxDecoration(
@@ -573,6 +627,7 @@ class HomeScreenState extends State<HomeScreen> {
         ),
         child: Column(
           children: [
+            // Drink Image
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
@@ -580,26 +635,55 @@ class HomeScreenState extends State<HomeScreen> {
                 ),
                 child: Stack(
                   children: [
-                    Image.asset(
-                      drink['image']!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
+                    Hero(
+                      tag: 'drinkImage$index',
+                      child: Image.network(
+                        drink.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.broken_image, size: 50),
+                          );
+                        },
+                      ),
                     ),
+                    // Favorite Icon with Animation
                     Positioned(
                       right: 8,
                       top: 8,
-                      child: CircleAvatar(
-                        backgroundColor: Colors.white70,
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.favorite_border,
-                            color: themeNotifier.isNightMode
-                                ? Colors.black
-                                : Colors.redAccent,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.7, end: 1.0)
+                            .animate(CurvedAnimation(
+                          parent: _animationController,
+                          curve: Curves.easeOutBack,
+                        )),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white70,
+                          child: IconButton(
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: themeNotifier.isNightMode
+                                  ? Colors.black
+                                  : Colors.redAccent,
+                            ),
+                            onPressed: () {
+                              // Handle favorite action with animation
+                              favoritesProvider.toggleFavorite(drink);
+                              _animationController.forward(from: 0.0);
+                            },
+                            tooltip: isFavorite
+                                ? appLocalizations.removeFromFavorites
+                                : appLocalizations.addToFavorites, // Localized tooltip
                           ),
-                          onPressed: () {
-                            // Handle favorite action
-                          },
                         ),
                       ),
                     ),
@@ -612,7 +696,7 @@ class HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   Text(
-                    drink['name']!,
+                    drink.name,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -621,18 +705,19 @@ class HomeScreenState extends State<HomeScreen> {
                           : Colors.black87,
                     ),
                   ),
-                  Text(
-                    drink['details']!,
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: themeNotifier.isNightMode
-                          ? Colors.white70
-                          : Colors.grey[600],
+                  if (drink.category.isNotEmpty)
+                    Text(
+                      drink.category,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: themeNotifier.isNightMode
+                            ? Colors.white70
+                            : Colors.grey[600],
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$${drink['price']}',
+                    '\$${drink.price.toStringAsFixed(2)}',
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
@@ -651,38 +736,40 @@ class HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// SearchBar widget with updated styling
 class SearchBar extends StatelessWidget {
   final VoidCallback onFilterTap;
 
-  const SearchBar({
+  const GradientHeader({
     super.key,
-    required this.onFilterTap,
+    required this.username,
+    required this.location,
+    required this.notificationsCount,
+    required this.onProfileTap,
+    required this.onNotificationTap,
+    required this.onSettingsTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: themeNotifier.isNightMode
-                ? Colors.black26
-                : Colors.grey.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(50), // More rounded corners
+        gradient: LinearGradient(
+          colors: themeNotifier.isNightMode
+              ? [Colors.black87, Colors.black54]
+              : [Colors.blueAccent, Colors.lightBlueAccent],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
       ),
       child: TextField(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => SearchScreen()),
-          );
-        },
         decoration: InputDecoration(
           filled: true,
           fillColor:
@@ -704,7 +791,7 @@ class SearchBar extends StatelessWidget {
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide.none,
+            borderSide: BorderSide.none, // Removes the border
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(50),
@@ -729,6 +816,7 @@ class SearchBar extends StatelessWidget {
   }
 }
 
+// RewardsSection widget
 class RewardsSection extends StatelessWidget {
   final int points;
 
@@ -740,6 +828,7 @@ class RewardsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
@@ -786,7 +875,7 @@ class RewardsSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Rewards Points',
+                    appLocalizations.rewardsPoints, // Localized string
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
@@ -795,7 +884,7 @@ class RewardsSection extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$points Points',
+                    '$points ${appLocalizations.points}', // Localized string
                     style: GoogleFonts.poppins(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -822,8 +911,8 @@ class RewardsSection extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              child: const Text(
-                'Redeem',
+              child: Text(
+                appLocalizations.redeem, // Localized string
               ),
             ),
           ],

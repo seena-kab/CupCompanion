@@ -11,7 +11,7 @@ class DrinkService {
     try {
       QuerySnapshot snapshot = await _firestore.collection('drinks').get();
       return snapshot.docs.map((doc) {
-        return Drink.fromMap(doc.data() as Map<String, dynamic>);
+        return Drink.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       }).toList();
     } catch (e) {
       throw Exception('Failed to load drinks: $e');
@@ -21,9 +21,10 @@ class DrinkService {
   // Fetch a single drink by ID
   Future<Drink> fetchDrinkById(String id) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('drinks').doc(id).get();
+      DocumentSnapshot doc =
+          await _firestore.collection('drinks').doc(id).get();
       if (doc.exists) {
-        return Drink.fromMap(doc.data() as Map<String, dynamic>);
+        return Drink.fromMap(doc.data() as Map<String, dynamic>, doc.id);
       } else {
         throw Exception('Drink not found');
       }
@@ -35,7 +36,8 @@ class DrinkService {
   // Add a new drink (admin functionality)
   Future<void> addDrink(Drink drink) async {
     try {
-      await _firestore.collection('drinks').doc(drink.id).set(drink.toMap());
+      // Use Firestore's auto-generated ID
+      await _firestore.collection('drinks').add(drink.toMap());
     } catch (e) {
       throw Exception('Failed to add drink: $e');
     }
@@ -44,7 +46,10 @@ class DrinkService {
   // Update a drink
   Future<void> updateDrink(Drink drink) async {
     try {
-      await _firestore.collection('drinks').doc(drink.id).update(drink.toMap());
+      await _firestore
+          .collection('drinks')
+          .doc(drink.id)
+          .update(drink.toMap());
     } catch (e) {
       throw Exception('Failed to update drink: $e');
     }

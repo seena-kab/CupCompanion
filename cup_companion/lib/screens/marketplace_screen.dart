@@ -7,6 +7,19 @@ import '../models/drink.dart';
 import '../services/drink_service.dart';
 import '../widgets/drink_card.dart';
 
+// Import the generated localization file
+import 'package:cup_companion/l10n/app_localizations.dart';
+
+/// **Category Class**
+///
+/// Represents a category with an identifier and localized display name.
+class Category {
+  final String id;
+  final String name;
+
+  Category({required this.id, required this.name});
+}
+
 class MarketplaceScreen extends StatefulWidget {
   const MarketplaceScreen({super.key});
 
@@ -18,21 +31,24 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   final DrinkService _drinkService = DrinkService();
   List<Drink> allDrinks = [];
   List<Drink> displayedDrinks = [];
-  String selectedCategory = 'All';
+  String selectedCategory = 'all'; // Category ID
   TextEditingController searchController = TextEditingController();
   bool isLoading = true;
   String errorMessage = '';
 
-  // List of categories
-  final List<String> categories = [
-    'All',
-    'Alcoholic',
-    'Non-Alcoholic',
-    'Cocktails',
-    'Smoothies',
-    'Sodas',
-    'Juices',
+  // List of category IDs
+  final List<String> categoryIds = [
+    'all',
+    'alcoholic',
+    'non_alcoholic',
+    'cocktails',
+    'smoothies',
+    'sodas',
+    'juices',
   ];
+
+  // List of Category objects with id and localized name
+  List<Category> categories = [];
 
   @override
   void initState() {
@@ -76,7 +92,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
     setState(() {
       displayedDrinks = allDrinks.where((drink) {
         bool matchesCategory =
-            selectedCategory == 'All' || drink.category == selectedCategory;
+            selectedCategory == 'all' || drink.category == selectedCategory;
         bool matchesSearch = drink.name.toLowerCase().contains(query) ||
             drink.description.toLowerCase().contains(query);
         return matchesCategory && matchesSearch;
@@ -87,6 +103,41 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   // Build category filters as horizontal list
   Widget buildCategoryFilters() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
+    // Initialize categories with localized names
+    if (categories.isEmpty) {
+      categories = categoryIds.map((id) {
+        String name;
+        switch (id) {
+          case 'all':
+            name = appLocalizations.all;
+            break;
+          case 'alcoholic':
+            name = appLocalizations.alcoholic;
+            break;
+          case 'non_alcoholic':
+            name = appLocalizations.nonAlcoholic;
+            break;
+          case 'cocktails':
+            name = appLocalizations.cocktails;
+            break;
+          case 'smoothies':
+            name = appLocalizations.smoothies;
+            break;
+          case 'sodas':
+            name = appLocalizations.sodas;
+            break;
+          case 'juices':
+            name = appLocalizations.juices;
+            break;
+          default:
+            name = id; // Fallback to id
+        }
+        return Category(id: id, name: name);
+      }).toList();
+    }
+
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -94,12 +145,12 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         itemBuilder: (context, index) {
-          String category = categories[index];
-          bool isSelected = category == selectedCategory;
+          Category category = categories[index];
+          bool isSelected = category.id == selectedCategory;
           return GestureDetector(
             onTap: () {
               setState(() {
-                selectedCategory = category;
+                selectedCategory = category.id;
                 filterDrinks();
               });
             },
@@ -129,7 +180,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               ),
               child: Center(
                 child: Text(
-                  category,
+                  category.name,
                   style: TextStyle(
                     color: isSelected
                         ? Colors.white
@@ -152,13 +203,15 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
     return Scaffold(
       backgroundColor:
           themeNotifier.isNightMode ? Colors.grey[900] : Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'Marketplace',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          appLocalizations.marketplace, // Localized string
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor:
             themeNotifier.isNightMode ? Colors.grey[900] : Colors.white,
@@ -174,6 +227,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
               // Navigate to Cart Screen
               Navigator.pushNamed(context, '/cart');
             },
+            tooltip: appLocalizations.cart, // Localized tooltip
           ),
         ],
       ),
@@ -209,7 +263,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                         child: TextField(
                           controller: searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search for drinks...',
+                            hintText: appLocalizations.searchForDrinks, // Localized string
                             hintStyle: TextStyle(
                               color: themeNotifier.isNightMode
                                   ? Colors.white70
@@ -230,6 +284,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                     onPressed: () {
                                       searchController.clear();
                                     },
+                                    tooltip: appLocalizations.clearSearch, // Localized tooltip
                                   )
                                 : null,
                             border: InputBorder.none,
@@ -251,7 +306,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          '${displayedDrinks.length} drinks found',
+                          '${displayedDrinks.length} ${appLocalizations.drinksFound}', // Localized string
                           style: TextStyle(
                             color: themeNotifier.isNightMode
                                 ? Colors.white70
@@ -266,7 +321,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                       child: displayedDrinks.isEmpty
                           ? Center(
                               child: Text(
-                                'No drinks found.',
+                                appLocalizations.noDrinksFound, // Localized string
                                 style: TextStyle(
                                   color: themeNotifier.isNightMode
                                       ? Colors.white70
@@ -291,10 +346,10 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
                                 itemBuilder: (context, index) {
                                   Drink drink = displayedDrinks[index];
                                   return DrinkCard(
-  drink: drink,
-  index: index,
-  heroTagPrefix: 'marketplace_', // Use a unique prefix
-);
+                                    drink: drink,
+                                    index: index,
+                                    heroTagPrefix: 'marketplace_', // Use a unique prefix
+                                  );
                                 },
                               ),
                             ),
