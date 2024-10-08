@@ -105,7 +105,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 
-  // Build the Map View
+  // Build the Map View 
   Widget _buildMapView() {
     return Stack(
       children: [

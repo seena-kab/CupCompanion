@@ -242,86 +242,102 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Builds the main home screen content with GridView for drinks
-  Widget buildHomeScreenContent() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: themeNotifier.isNightMode
-                    ? [Colors.black87, Colors.black54]
-                    : [Colors.blueAccent, Colors.lightBlueAccent],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
+Widget buildHomeScreenContent() {
+  // Accessing the theme to determine night/day mode settings
+  final themeNotifier = Provider.of<ThemeNotifier>(context);
+  
+  return SingleChildScrollView(
+    child: Column(
+      children: [
+        // A container for the header, day/night switch, and search bar
+        Container(
+          padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
+          decoration: BoxDecoration(
+            // Applying a gradient background based on night or day mode
+            gradient: LinearGradient(
+              colors: themeNotifier.isNightMode
+                  ? [Colors.black87, Colors.black54] // Night mode gradient
+                  : [Colors.blueAccent, Colors.lightBlueAccent], // Day mode gradient
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            child: Column(
-              children: [
-                buildHeader(),
-                const SizedBox(height: 20),
-                buildDayNightSwitch(),
-                const SizedBox(height: 20),
-                SearchBar(onFilterTap: onFilterTap), // Provide valid callback
-                const SizedBox(height: 20),
-              ],
+            // Rounded corners for the bottom of the container
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
             ),
           ),
-          RewardsSection(points: rewardPoints), // Updated RewardsSection
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'For You:',
-                style: TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                  color:
-                      themeNotifier.isNightMode ? Colors.white : Colors.black87,
-                ),
+          // Column to stack the header, day/night switch, and search bar vertically
+          child: Column(
+            children: [
+              buildHeader(), // Function to build the header (e.g., profile info, title)
+              const SizedBox(height: 20), // Spacer between header and switch
+              buildDayNightSwitch(), // Widget to toggle between day/night mode
+              const SizedBox(height: 20), // Spacer between switch and search bar
+              SearchBar(onFilterTap: onFilterTap), // Search bar widget with filter functionality
+              const SizedBox(height: 20), // Spacer after the search bar
+            ],
+          ),
+        ),
+        
+        // Section to display user rewards
+        RewardsSection(points: rewardPoints), // Displays the user's reward points
+        const SizedBox(height: 20), // Spacer after the rewards section
+
+        // Section title "For You" with padding and alignment
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Align(
+            alignment: Alignment.centerLeft, // Align the text to the left
+            child: Text(
+              'For You:', // Section title
+              style: TextStyle(
+                fontSize: 24.0, // Font size for the title
+                fontWeight: FontWeight.bold, // Bold text
+                color: themeNotifier.isNightMode ? Colors.white : Colors.black87, // Change color based on theme
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          themeNotifier.isNightMode
-              ? buildNightModeCategoryList()
-              : buildDayModeCategoryList(),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: GridView.builder(
-              physics:
-                  const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
-              shrinkWrap: true, // Let GridView take only the needed space
-              itemCount: drinkList.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // 2 per row
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 3 / 4, // Adjust as needed
-              ),
-              itemBuilder: (context, index) {
-                return buildDrinkCard(drinkList[index]);
-              },
+        ),
+        const SizedBox(height: 10), // Spacer between title and category list
+
+        // Display different category lists based on the theme (day/night mode)
+        themeNotifier.isNightMode 
+          ? buildNightModeCategoryList() // Build night mode category list
+          : buildDayModeCategoryList(),  // Build day mode category list
+
+        const SizedBox(height: 20), // Spacer before the grid view
+
+        // Drink Grid (displaying drinks in a 2-column grid)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(), // Prevents the GridView from being scrollable
+            shrinkWrap: true, // Shrinks the GridView to take only the necessary space
+            itemCount: drinkList.length, // Number of items in the drink list
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 16, 
+              crossAxisSpacing: 16, 
+              childAspectRatio: 3 / 4, 
             ),
+            itemBuilder: (context, index) {
+              // Build the individual drink cards from the drink list
+              return buildDrinkCard(drinkList[index]); // Function to create drink cards
+            },
           ),
-          const SizedBox(height: 20),
-          SizedBox(
-              height:
-                  MediaQuery.of(context).padding.bottom), // Extra space to prevent overflow
-        ],
-      ),
-    );
-  }
+        ),
+        const SizedBox(height: 20), // Spacer after the grid view
+
+        // Extra space at the bottom to prevent content from being obscured
+        SizedBox(
+          height: MediaQuery.of(context).padding.bottom, // Adjust height to account for the device's bottom padding
+        ),
+      ],
+    ),
+  );
+}
+
 
   // Placeholder screen for other tabs (if any)
   Widget buildPlaceholderScreen(String text) {
