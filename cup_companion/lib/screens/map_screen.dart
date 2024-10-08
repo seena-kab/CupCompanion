@@ -1,11 +1,8 @@
-// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables, use_build_context_synchronously
-import 'package:cup_companion/services/auth_services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import '../theme/theme_notifier.dart';
 import 'dart:async';
+import '../theme/theme_notifier.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -105,7 +102,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 
-  // Build the Map View 
+  // Build the Map View
   Widget _buildMapView() {
     return Stack(
       children: [
