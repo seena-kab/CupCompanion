@@ -188,8 +188,8 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
         borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
       ),
       builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
+        return const Padding(
+          padding: EdgeInsets.all(16.0),
           child: FilterOptions(), // Extracted widget for filter options
         );
       },
