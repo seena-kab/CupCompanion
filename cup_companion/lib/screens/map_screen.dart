@@ -1,11 +1,7 @@
 // lib/screens/map_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../theme/theme_notifier.dart';
-import 'package:cup_companion/services/auth_services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'dart:async';
 
 
@@ -17,7 +13,7 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin {
-  Completer<GoogleMapController> _controller = Completer();
+  final Completer<GoogleMapController> _controller = Completer();
   static const LatLng _center = LatLng(45.5231, -122.6765); // Center on Portland
 
   // Current zoom level
@@ -27,7 +23,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   MapType _currentMapType = MapType.normal;
 
   // Set of markers
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
 
   // Tab controller for switching between Map and Favorites
   late TabController _tabController;
@@ -37,17 +33,17 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     {
       'name': 'Stumptown Coffee Roasters',
       'address': '123 Coffee St, Portland, OR',
-      'position': LatLng(45.521563, -122.677433),
+      'position': const LatLng(45.521563, -122.677433),
     },
     {
       'name': 'Heart Coffee Roasters',
       'address': '456 Bean Ave, Portland, OR',
-      'position': LatLng(45.523751, -122.681507),
+      'position': const LatLng(45.523751, -122.681507),
     },
     {
       'name': 'Coava Coffee Roasters',
       'address': '789 Roast Rd, Portland, OR',
-      'position': LatLng(45.526424, -122.675485),
+      'position': const LatLng(45.526424, -122.675485),
     },
   ];
 
@@ -91,7 +87,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         backgroundColor: Colors.blueAccent,
         bottom: TabBar(
           controller: _tabController,
-          tabs: [
+          tabs: const [
             Tab(icon: Icon(Icons.map), text: "Map"),
             Tab(icon: Icon(Icons.favorite), text: "Favorites"),
           ],
@@ -130,15 +126,15 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
               FloatingActionButton(
                 heroTag: 'zoomIn',
                 onPressed: () => _zoomIn(),
-                child: const Icon(Icons.zoom_in),
                 backgroundColor: Colors.blue[700],
+                child: const Icon(Icons.zoom_in),
               ),
               const SizedBox(height: 10),
               FloatingActionButton(
                 heroTag: 'zoomOut',
                 onPressed: () => _zoomOut(),
-                child: const Icon(Icons.zoom_out),
                 backgroundColor: Colors.blue[700],
+                child: const Icon(Icons.zoom_out),
               ),
               const SizedBox(height: 10),
               _buildMapTypeDropdown(),
@@ -155,7 +151,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 5,
@@ -197,7 +193,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         return ListTile(
           title: Text(coffeePlace['name']),
           subtitle: Text(coffeePlace['address']),
-          trailing: Icon(Icons.coffee, color: Colors.brown),
+          trailing: const Icon(Icons.coffee, color: Colors.brown),
           onTap: () {
             _goToLocation(coffeePlace['position']); // Navigate to location on map when clicked
           },
