@@ -166,7 +166,8 @@ class _RedeemPointsScreenState extends State<RedeemPointsScreen>
                       duration: const Duration(milliseconds: 500),
                       transitionBuilder: (child, animation) {
                         return ScaleTransition(
-                            child: child, scale: animation);
+                            scale: animation,
+                            child: child);
                       },
                       child: Text(
                         '$userPoints',
