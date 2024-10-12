@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
+import 'package:cup_companion/screens/policy_acceptance_screen.dart'; // Import the policy acceptance screen
 
 // Import other necessary packages and services
 import 'package:cup_companion/services/auth_services.dart';
@@ -63,8 +65,11 @@ class HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-    fetchUserData();
-    fetchDrinks(); // Fetch drinks when the widget initializes
+
+    // Ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      checkPolicyAcceptance();
+    });
 
     // Initialize the animation controller
     _animationController = AnimationController(
@@ -81,6 +86,39 @@ class HomeScreenState extends State<HomeScreen>
     _animationController.dispose();
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Method to check if the user has accepted the policy
+  void checkPolicyAcceptance() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? policyAccepted = prefs.getBool('policyAccepted');
+
+    if (policyAccepted != true) {
+      // Show the policy acceptance screen
+      bool? accepted = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const PolicyAcceptanceScreen(),
+        ),
+      );
+
+      if (accepted != true) {
+        // If the user declines, exit the app or handle accordingly
+        // For example, you can show a dialog or navigate to a different screen
+        // Here, we'll simply exit the app
+        if (mounted) {
+          // Ensure the widget is still in the tree
+          Navigator.of(context).pop();
+        }
+      } else {
+        // Proceed with fetching user data and other initializations
+        fetchUserData();
+        fetchDrinks();
+      }
+    } else {
+      // Policy already accepted; proceed as normal
+      fetchUserData();
+      fetchDrinks();
+    }
   }
 
   // Method to fetch user data
@@ -771,8 +809,8 @@ class GradientHeader extends StatelessWidget {
                     child: const CircleAvatar(
                       radius: 25,
                       backgroundColor: Colors.white,
-                      backgroundImage:
-                          AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
+                      backgroundImage: AssetImage(
+                          'assets/images/default_avatar.png'), // Ensure this asset exists
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -830,7 +868,8 @@ class GradientHeader extends StatelessWidget {
                       color: Colors.white,
                     ),
                     onPressed: onNotificationTap,
-                    tooltip: appLocalizations.notifications, // Localized tooltip
+                    tooltip:
+                        appLocalizations.notifications, // Localized tooltip
                   ),
                   if (notificationsCount > 0)
                     Positioned(

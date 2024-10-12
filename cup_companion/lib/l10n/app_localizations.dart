@@ -492,6 +492,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No drinks found.'**
   String get noDrinksFound;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @privacyPolicyContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your privacy is important to us. We collect and use your personal information to provide and improve our services. We do not share your personal information with third parties without your consent. By using our app, you agree to our privacy practices as outlined in this policy.'**
+  String get privacyPolicyContent;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @decline.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get decline;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
