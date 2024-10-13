@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
+import 'forum_page.dart'; // Import the ForumPage widget
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -443,26 +444,35 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   @override
-Widget build(BuildContext context) {
-  final themeNotifier = Provider.of<ThemeNotifier>(context);
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text(
-        'Chat',
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+  Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Chat',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor:
+            themeNotifier.isNightMode ? Colors.black : Colors.blueAccent,
+        automaticallyImplyLeading: false, // Remove the default back arrow
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ForumPage()),
+            );
+          },
+        ),
       ),
-      centerTitle: true,
-      elevation: 0,
-      backgroundColor:
-          themeNotifier.isNightMode ? Colors.black : Colors.blueAccent,
-      automaticallyImplyLeading: false, // Add this line to remove the back arrow
-    ),
-    body: Column(
-      children: [
-        Expanded(child: buildMessagesList()),
-        buildMessageInput(),
-      ],
-    ),
-  );
-}
+      body: Column(
+        children: [
+          Expanded(child: buildMessagesList()),
+          buildMessageInput(),
+        ],
+      ),
+    );
+  }
 }

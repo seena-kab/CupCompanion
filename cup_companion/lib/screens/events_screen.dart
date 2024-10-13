@@ -31,7 +31,7 @@ class EventsScreenState extends State<EventScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreateEventScreen(),
+                      builder: (context) => const CreateEventScreen(),
                     ),
                   );
                 },
@@ -59,7 +59,7 @@ class EventsScreenState extends State<EventScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => JoinEventScreen(),
+                      builder: (context) => const JoinEventScreen(),
                     ),
                   );
                 },
