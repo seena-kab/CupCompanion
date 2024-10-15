@@ -42,7 +42,7 @@ class StartPage extends StatelessWidget {
                       textStyle: const TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                         fontFamily: 'Montserrat',
                       ),
                       speed: const Duration(milliseconds: 100),
@@ -60,7 +60,8 @@ class StartPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18.0,
-                    color: Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                     fontFamily: 'Montserrat',
                   ),
                 ),
@@ -98,7 +99,7 @@ class StartPage extends StatelessWidget {
                 // Playful decorative element
                 const Icon(
                   Icons.local_drink_rounded,
-                  color: Colors.white54,
+                  color: Colors.black,
                   size: 50.0,
                 ),
               ],

@@ -47,7 +47,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBl_0uM5fLa4zdc-yca-oO7VVTVOhTRlBU',
+    apiKey: 'AIzaSyC_MglMu-1oRrIPHDyhulXZtPgAZB4pcLA',
     appId: '1:765764181076:web:f147ade3a92bc9190f21c1',
     messagingSenderId: '765764181076',
     projectId: 'cup-companion',

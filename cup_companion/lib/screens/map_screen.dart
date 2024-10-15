@@ -1,13 +1,6 @@
-// lib/screens/map_screen.dart
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../theme/theme_notifier.dart';
-import 'package:cup_companion/services/auth_services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'dart:async';
-
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -16,8 +9,9 @@ class MapScreen extends StatefulWidget {
   _MapScreenState createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin {
-  Completer<GoogleMapController> _controller = Completer();
+class _MapScreenState extends State<MapScreen>
+    with SingleTickerProviderStateMixin {
+  final Completer<GoogleMapController> _controller = Completer();
   static const LatLng _center = LatLng(45.5231, -122.6765); // Center on Portland
 
   // Current zoom level
@@ -27,27 +21,27 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   MapType _currentMapType = MapType.normal;
 
   // Set of markers
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
 
   // Tab controller for switching between Map and Favorites
   late TabController _tabController;
 
-  // List of sample coffee locations
-  final List<Map<String, dynamic>> _coffeePlaces = [
+  // List of coffee places
+  List<Map<String, dynamic>> _coffeePlaces = [
     {
       'name': 'Stumptown Coffee Roasters',
       'address': '123 Coffee St, Portland, OR',
-      'position': LatLng(45.521563, -122.677433),
+      'position': const LatLng(45.521563, -122.677433),
     },
     {
       'name': 'Heart Coffee Roasters',
       'address': '456 Bean Ave, Portland, OR',
-      'position': LatLng(45.523751, -122.681507),
+      'position': const LatLng(45.523751, -122.681507),
     },
     {
       'name': 'Coava Coffee Roasters',
       'address': '789 Roast Rd, Portland, OR',
-      'position': LatLng(45.526424, -122.675485),
+      'position': const LatLng(45.526424, -122.675485),
     },
   ];
 
@@ -91,7 +85,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         backgroundColor: Colors.blueAccent,
         bottom: TabBar(
           controller: _tabController,
-          tabs: [
+          tabs: const [
             Tab(icon: Icon(Icons.map), text: "Map"),
             Tab(icon: Icon(Icons.favorite), text: "Favorites"),
           ],
@@ -101,7 +95,12 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         controller: _tabController,
         children: [
           _buildMapView(), // Display the map in the "Map" tab
-          _buildCoffeeListView(), // Display the coffee list in the "Favorites" tab
+          Stack(
+            children: [
+              _buildCoffeeListView(), // Display the coffee list in the "Favorites" tab
+              _buildAddFavoriteFAB(), // Add the FAB to allow adding new favorites
+            ],
+          ),
         ],
       ),
     );
@@ -113,7 +112,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       children: [
         GoogleMap(
           onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
+            if (!_controller.isCompleted) {
+              _controller.complete(controller);
+            }
           },
           initialCameraPosition: CameraPosition(
             target: _center,
@@ -121,6 +122,9 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
           ),
           mapType: _currentMapType,
           markers: _markers,
+          myLocationEnabled: true, // Enable user location
+          myLocationButtonEnabled: true,
+          zoomControlsEnabled: false,
         ),
         Positioned(
           top: 100,
@@ -130,15 +134,15 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
               FloatingActionButton(
                 heroTag: 'zoomIn',
                 onPressed: () => _zoomIn(),
-                child: const Icon(Icons.zoom_in),
                 backgroundColor: Colors.blue[700],
+                child: const Icon(Icons.zoom_in),
               ),
               const SizedBox(height: 10),
               FloatingActionButton(
                 heroTag: 'zoomOut',
                 onPressed: () => _zoomOut(),
-                child: const Icon(Icons.zoom_out),
                 backgroundColor: Colors.blue[700],
+                child: const Icon(Icons.zoom_out),
               ),
               const SizedBox(height: 10),
               _buildMapTypeDropdown(),
@@ -155,7 +159,7 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(30),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 5,
@@ -197,10 +201,100 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         return ListTile(
           title: Text(coffeePlace['name']),
           subtitle: Text(coffeePlace['address']),
-          trailing: Icon(Icons.coffee, color: Colors.brown),
+          trailing: const Icon(Icons.local_cafe, color: Colors.brown),
           onTap: () {
             _goToLocation(coffeePlace['position']); // Navigate to location on map when clicked
+            _tabController.animateTo(0); // Switch back to map view
           },
+        );
+      },
+    );
+  }
+
+  // Add a floating action button for adding new favorites
+  Widget _buildAddFavoriteFAB() {
+    return Positioned(
+      bottom: 20,
+      right: 20,
+      child: FloatingActionButton(
+        heroTag: 'addFavorite',
+        onPressed: () => _showAddFavoriteDialog(),
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.blue[700],
+      ),
+    );
+  }
+
+  // Show dialog to add a new favorite location
+  void _showAddFavoriteDialog() {
+    final _nameController = TextEditingController();
+    final _addressController = TextEditingController();
+    final _latController = TextEditingController();
+    final _lngController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add New Favorite Location'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: _addressController,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
+              TextField(
+                controller: _latController,
+                decoration: const InputDecoration(labelText: 'Latitude'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _lngController,
+                decoration: const InputDecoration(labelText: 'Longitude'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newPlace = {
+                  'name': _nameController.text,
+                  'address': _addressController.text,
+                  'position': LatLng(
+                    double.parse(_latController.text),
+                    double.parse(_lngController.text),
+                  ),
+                };
+                setState(() {
+                  _coffeePlaces.add(newPlace);
+                  _markers.add(
+                    Marker(
+                      markerId: MarkerId(newPlace['name'] as String),  // Cast to String
+                      position: newPlace['position'] as LatLng,        // Cast to LatLng
+                      infoWindow: InfoWindow(
+                        title: newPlace['name'] as String,            // Cast to String
+                        snippet: newPlace['address'] as String,       // Cast to String
+                      ),
+                    ),
+                  );
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Add'),
+            ),
+          ],
         );
       },
     );
@@ -218,11 +312,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       for (var place in _coffeePlaces) {
         _markers.add(
           Marker(
-            markerId: MarkerId(place['name']),
-            position: place['position'],
+            markerId: MarkerId(place['name'] as String),
+            position: place['position'] as LatLng,
             infoWindow: InfoWindow(
-              title: place['name'],
-              snippet: place['address'],
+              title: place['name'] as String,
+              snippet: place['address'] as String,
             ),
           ),
         );

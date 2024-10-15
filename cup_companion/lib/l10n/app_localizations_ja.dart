@@ -205,4 +205,16 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noDrinksFound => '飲み物が見つかりませんでした。';
+
+  @override
+  String get privacyPolicy => 'プライバシーポリシー';
+
+  @override
+  String get privacyPolicyContent => 'お客様のプライバシーは当社にとって重要です。サービスを提供し改善するために、お客様の個人情報を収集・使用します。お客様の同意なしに第三者と個人情報を共有することはありません。当アプリを使用することで、このポリシーに記載された当社のプライバシー慣行に同意したものとみなされます。';
+
+  @override
+  String get accept => '同意する';
+
+  @override
+  String get decline => '同意しない';
 }
