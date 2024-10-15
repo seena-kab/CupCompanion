@@ -18,10 +18,10 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
   final _formKey = GlobalKey<FormState>();
   String name = '';
   String description = '';
+  String recipe = ''; // New field for recipe
   double price = 0.0;
-  XFile? imageFile; // Changed to XFile?
-  bool isAlcoholic = false; // New field to hold alcoholic status
-
+  XFile? imageFile; // Changed to XFile
+  bool isAlcoholic = false; // Field for alcoholic status
   bool isLoading = false;
 
   Future<void> pickImage() async {
@@ -69,16 +69,17 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
       // Add the new drink to Firestore
       String? userId = FirebaseAuth.instance.currentUser?.uid;
 
-await FirebaseFirestore.instance.collection('drinks').add({
-  'averageRating': 0,
-  'description': description,
-  'imageUrl': imageUrl,
-  'name': name,
-  'price': price,
-  'isAlcoholic': isAlcoholic,
-  'reviews': [],
-  'createdBy': userId, // Add this line
-});
+      await FirebaseFirestore.instance.collection('drinks').add({
+        'averageRating': 0,
+        'description': description,
+        'imageUrl': imageUrl,
+        'name': name,
+        'recipe': recipe, // Save the recipe to Firestore
+        'price': price,
+        'isAlcoholic': isAlcoholic,
+        'reviews': [],
+        'createdBy': userId, // Add this line
+      });
 
       setState(() {
         isLoading = false;
@@ -107,34 +108,35 @@ await FirebaseFirestore.instance.collection('drinks').add({
   }
 
   Future<String> uploadImage(XFile imageFile) async {
-  try {
-    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-    Reference storageRef = FirebaseStorage.instance.ref().child('drink_images/$fileName.jpg');
+    try {
+      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+      Reference storageRef =
+          FirebaseStorage.instance.ref().child('drink_images/$fileName.jpg');
 
-    UploadTask uploadTask;
+      UploadTask uploadTask;
 
-    if (kIsWeb) {
-      Uint8List imageData = await imageFile.readAsBytes();
-      uploadTask = storageRef.putData(
-        imageData,
-        SettableMetadata(contentType: 'image/jpeg'),
-      );
-    } else {
-      File file = File(imageFile.path);
-      uploadTask = storageRef.putFile(
-        file,
-        SettableMetadata(contentType: 'image/jpeg'), // Include metadata
-      );
+      if (kIsWeb) {
+        Uint8List imageData = await imageFile.readAsBytes();
+        uploadTask = storageRef.putData(
+          imageData,
+          SettableMetadata(contentType: 'image/jpeg'),
+        );
+      } else {
+        File file = File(imageFile.path);
+        uploadTask = storageRef.putFile(
+          file,
+          SettableMetadata(contentType: 'image/jpeg'), // Include metadata
+        );
+      }
+
+      TaskSnapshot snapshot = await uploadTask;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      throw Exception('Failed to upload image');
     }
-
-    TaskSnapshot snapshot = await uploadTask;
-    String downloadUrl = await snapshot.ref.getDownloadURL();
-    return downloadUrl;
-  } catch (e) {
-    print('Error uploading image: $e');
-    throw Exception('Failed to upload image');
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +228,25 @@ await FirebaseFirestore.instance.collection('drinks').add({
                     },
                     onSaved: (value) {
                       description = value!.trim();
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  // Recipe Field (New)
+                  TextFormField(
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: 'Recipe',
+                      prefixIcon: Icon(Icons.receipt_long),
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter the recipe';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      recipe = value!.trim();
                     },
                   ),
                   const SizedBox(height: 15),
