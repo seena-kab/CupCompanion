@@ -308,6 +308,23 @@ class HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
+      // Add the Search button just above the navigation bar
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60.0), // Adjust for bottom nav height
+        child: ElevatedButton(
+          onPressed: () {
+            // Navigate to Search Screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SearchScreen(),
+              ),
+            );
+          },
+          child: const Icon(Icons.search), // Localized string
+        ),
+      ),
     );
   }
 
