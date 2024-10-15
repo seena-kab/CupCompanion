@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'join_event_screen.dart';
 import 'create_event_screen.dart';
+import 'friends_screen.dart'; // Import friends_screen.dart
 
 class EventScreen extends StatefulWidget {
   const EventScreen({super.key});
@@ -78,6 +79,34 @@ class EventsScreenState extends State<EventScreen> {
                   ),
                 ),
                 child: const Text('Join Event'),
+              ),
+              const SizedBox(height: 20), // Space between the two buttons
+              
+              // Find Friends Button
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FriendsScreen(), // Navigate to FriendsScreen
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700], // Set button color to blue
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
+                  elevation: 10,
+                  shadowColor: Colors.white,
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+                child: const Text('Find Friends'),
               ),
             ],
           ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 // Import other necessary packages and services
 import 'package:cup_companion/services/auth_services.dart';
@@ -21,8 +22,8 @@ import 'package:cup_companion/theme/theme_notifier.dart';
 import 'package:cup_companion/constants/menu_options.dart';
 import 'package:cup_companion/l10n/app_localizations.dart';
 
-// Additional imports for animations
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+// Import the SearchScreen
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -235,8 +236,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    // final localeProvider = Provider.of<LocaleProvider>(context); // Unused
-    // Removed the unused localeProvider to fix the error
     final appLocalizations = AppLocalizations.of(context)!; // Null assertion
 
     // Initialize the list of screens once
@@ -296,6 +295,26 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                     : buildPlaceholderScreen(
                         appLocalizations.comingSoon), // Localized string
               ),
+              // Add the search button when on the Home screen
+              if (_selectedIndex == 0)
+                Positioned(
+                  left: 16,
+                  bottom: _isNavBarVisible
+                      ? kBottomNavigationBarHeight + 16
+                      : 16, // Adjust as needed
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      // Navigate to SearchScreen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SearchScreen(),
+                        ),
+                      );
+                    },
+                    child: const Icon(Icons.search),
+                  ),
+                ),
             ],
           ),
         ),

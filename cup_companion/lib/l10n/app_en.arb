@@ -69,7 +69,7 @@
     "juices": "Juices",
     "drinksFound": "drinks found",
     "noDrinksFound": "No drinks found.",
-    
+
     "@failedToAddReview": {
       "description": "Error message when adding a review fails",
       "placeholders": {
