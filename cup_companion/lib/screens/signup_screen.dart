@@ -196,7 +196,7 @@ class SignUpScreenState extends State<SignUpScreen>
                       textStyle: const TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -274,7 +274,7 @@ class SignUpScreenState extends State<SignUpScreen>
                     children: [
                       const Text(
                         'Already a member?',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(color: Colors.black),
                       ),
                       TextButton(
                         onPressed: () {
@@ -284,7 +284,7 @@ class SignUpScreenState extends State<SignUpScreen>
                           'Sign In',
                           style: GoogleFonts.montserrat(
                             textStyle: const TextStyle(
-                              color: Colors.white,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -322,9 +322,9 @@ class SignUpScreenState extends State<SignUpScreen>
         textStyle: const TextStyle(color: Colors.white),
       ),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.black),
         labelText: labelText,
-        labelStyle: const TextStyle(color: Colors.white70),
+        labelStyle: const TextStyle(color: Colors.black),
         filled: true,
         fillColor: Colors.white.withOpacity(0.2),
         border: OutlineInputBorder(
@@ -334,12 +334,12 @@ class SignUpScreenState extends State<SignUpScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30.0),
           borderSide:
-              const BorderSide(color: Colors.white70, width: 1.0),
+              const BorderSide(color: Colors.black, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30.0),
           borderSide:
-              const BorderSide(color: Colors.white, width: 2.0),
+              const BorderSide(color: Colors.black, width: 2.0),
         ),
       ),
     );
@@ -351,12 +351,12 @@ class SignUpScreenState extends State<SignUpScreen>
       controller: _passwordController,
       obscureText: !isPasswordVisible, // Controls password visibility
       style: GoogleFonts.montserrat(
-        textStyle: const TextStyle(color: Colors.white),
+        textStyle: const TextStyle(color: Colors.black),
       ),
       decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.lock, color: Colors.white70),
+        prefixIcon: const Icon(Icons.lock, color: Colors.black),
         labelText: 'Password',
-        labelStyle: const TextStyle(color: Colors.white70),
+        labelStyle: const TextStyle(color: Colors.black),
         filled: true,
         fillColor: Colors.white.withOpacity(0.2),
         border: OutlineInputBorder(
@@ -366,17 +366,17 @@ class SignUpScreenState extends State<SignUpScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30.0),
           borderSide:
-              const BorderSide(color: Colors.white70, width: 1.0),
+              const BorderSide(color: Colors.black, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30.0),
           borderSide:
-              const BorderSide(color: Colors.white, width: 2.0),
+              const BorderSide(color: Colors.black, width: 2.0),
         ),
         suffixIcon: IconButton(
           icon: Icon(
             isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-            color: Colors.white70,
+            color: Colors.black,
           ),
           onPressed: () {
             setState(() {
