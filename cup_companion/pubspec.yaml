@@ -42,6 +42,7 @@ dependencies:
   location: ^4.4.0
   uuid: ^4.5.0
   flutter_dotenv: ^5.0.2
+  flutter_markdown: ^0.6.10
   http: ^0.13.5
   file_picker: ^8.1.2
   csv: ^6.0.0
@@ -72,6 +73,11 @@ flutter:
     - assets/illustrations/bottom_decor.svg
     - assets/illustrations/signin_illustration.svg
     - assets/illustrations/forgot_password_illustration.svg
+    - assets/illustrations/privacy_policy_illustration.svg
+    - assets/images/mug.jpg
+    - assets/images/tshirt.jpg
+    - assets/images/backpack.jpg
+    - assets/images/headphones.jpg
 
   fonts:
     - family: Montserrat
