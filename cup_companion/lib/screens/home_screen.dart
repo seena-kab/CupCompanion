@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:cup_companion/screens/policy_acceptance_screen.dart'; // Import the policy acceptance screen
 
@@ -23,8 +24,8 @@ import 'package:cup_companion/theme/theme_notifier.dart';
 import 'package:cup_companion/constants/menu_options.dart';
 import 'package:cup_companion/l10n/app_localizations.dart';
 
-// Additional imports for animations
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
+// Import the SearchScreen
+import 'search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -306,6 +307,23 @@ class HomeScreenState extends State<HomeScreen>
             label: appLocalizations.forum,
           ),
         ],
+      ),
+      // Add the Search button just above the navigation bar
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 60.0), // Adjust for bottom nav height
+        child: ElevatedButton(
+          onPressed: () {
+            // Navigate to Search Screen
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SearchScreen(),
+              ),
+            );
+          },
+          child: const Icon(Icons.search), // Localized string
+        ),
       ),
     );
   }
