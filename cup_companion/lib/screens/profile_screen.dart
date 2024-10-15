@@ -5,7 +5,11 @@ import 'package:cup_companion/services/auth_services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore
+// Firebase Core
 import '../theme/theme_notifier.dart';
+import 'add_drink_dialog.dart'; // Import the AddDrinkDialog
 import 'favorites_screen.dart';
 import 'edit_profile_screen.dart'; // Import the new EditProfileScreen
 
@@ -20,16 +24,18 @@ class ProfileScreenState extends State<ProfileScreen> {
   final AuthService _authService = AuthService();
 
   String username = 'Username';
+  String zipCode = "00000";
   String email = 'Email';
   String mobileNumber = 'Mobile Number';
   String location = 'Location';
   File? _profileImage;
 
   @override
-  void initState() {
-    super.initState();
-    fetchUserData();
-  }
+void initState() {
+  super.initState();
+  fetchUserData();
+  fetchUserDrinks(); // Add this line
+}
 
   // Fetch user data from the database
   void fetchUserData() async {
@@ -39,8 +45,10 @@ class ProfileScreenState extends State<ProfileScreen> {
         username = userData['username'] ?? 'Username';
         email = userData['email'] ?? 'Email';
         mobileNumber = userData['mobileNumber'] ?? 'Mobile Number';
-        location = userData['location'] ?? 'Location';
+        zipCode = userData['zipCode'] ?? '00000'; // Fetch the zip code
       });
+      // After fetching user data, get the location
+      getUserLocation();
     } catch (e) {
       // Handle errors
       print('Error fetching user data: $e');
@@ -51,8 +59,50 @@ class ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: Colors.redAccent,
         ),
       );
+      // Attempt to get user location even if fetching user data fails
+      getUserLocation();
     }
   }
+
+  List<Map<String, dynamic>> userDrinks = []; // Store user's drinks
+
+void fetchUserDrinks() async {
+  try {
+    // Get the current user's UID
+    String? userId = _authService.getCurrentUserId();
+
+    // Fetch drinks where 'createdBy' equals the user's UID
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('drinks')
+        .where('createdBy', isEqualTo: userId)
+        .get();
+
+    // Map the documents to a list
+    List<Map<String, dynamic>> drinks = snapshot.docs.map((doc) {
+      return {
+        'id': doc.id,
+        'name': doc['name'],
+        'imageUrl': doc['imageUrl'],
+        'description': doc['description'],
+        'price': doc['price'],
+        'isAlcoholic': doc['isAlcoholic'],
+        // Include other fields as needed
+      };
+    }).toList();
+
+    setState(() {
+      userDrinks = drinks;
+    });
+  } catch (e) {
+    print('Error fetching user drinks: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Failed to load your drinks: $e'),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
+}
 
   // Pick an image from the gallery
   Future<void> pickImage() async {
@@ -85,6 +135,65 @@ class ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       }
+    }
+  }
+
+  void getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Location services are disabled.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      print('Location permission is denied. Requesting permission...');
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('User denied location permission.');
+        setState(() {
+          location = 'Zip Code: $zipCode';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permission is permanently denied.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    print('Location permission granted. Fetching position...');
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      print(
+          'Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
+
+      // Update the location variable with latitude and longitude
+      setState(() {
+        location = 'Lat: ${position.latitude.toStringAsFixed(6)}, '
+            'Lng: ${position.longitude.toStringAsFixed(6)}';
+      });
+      print('Location updated to: $location');
+    } catch (e, stacktrace) {
+      print('Error in getUserLocation(): $e');
+      print('Stacktrace: $stacktrace');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
     }
   }
 
@@ -226,8 +335,9 @@ class ProfileScreenState extends State<ProfileScreen> {
                 location,
                 style: TextStyle(
                   fontSize: 16,
-                  color:
-                      themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
+                  color: themeNotifier.isNightMode
+                      ? Colors.white70
+                      : Colors.grey[600],
                 ),
               ),
             ],
@@ -272,7 +382,8 @@ class ProfileScreenState extends State<ProfileScreen> {
           label,
           style: TextStyle(
             fontSize: 16,
-            color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
+            color:
+                themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
           ),
         ),
       ],
@@ -289,7 +400,9 @@ class ProfileScreenState extends State<ProfileScreen> {
         'This is the user bio or description. You can update it to reflect your personality or share something about yourself.',
         style: TextStyle(
           fontSize: 16,
-          color: themeNotifier.isNightMode ? Colors.white70 : Colors.black87,
+          color: themeNotifier.isNightMode
+              ? Colors.white70
+              : Colors.black87,
         ),
         textAlign: TextAlign.center,
       ),
@@ -307,27 +420,36 @@ class ProfileScreenState extends State<ProfileScreen> {
           ListTile(
             leading: Icon(
               Icons.email,
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode
+                  ? Colors.white70
+                  : Colors.blueAccent,
             ),
             title: Text(
               email,
               style: TextStyle(
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                color: themeNotifier.isNightMode
+                    ? Colors.white
+                    : Colors.black87,
               ),
             ),
           ),
           Divider(
-              color:
-                  themeNotifier.isNightMode ? Colors.white12 : Colors.grey[300]),
+              color: themeNotifier.isNightMode
+                  ? Colors.white12
+                  : Colors.grey[300]),
           ListTile(
             leading: Icon(
               Icons.phone,
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
+              color: themeNotifier.isNightMode
+                  ? Colors.white70
+                  : Colors.blueAccent,
             ),
             title: Text(
               mobileNumber,
               style: TextStyle(
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                color: themeNotifier.isNightMode
+                    ? Colors.white
+                    : Colors.black87,
               ),
             ),
           ),
@@ -352,8 +474,9 @@ class ProfileScreenState extends State<ProfileScreen> {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
+            backgroundColor: themeNotifier.isNightMode
+                ? Colors.amberAccent
+                : Colors.blueAccent,
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
@@ -371,40 +494,58 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Build the user's posts grid
   Widget buildUserPosts() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    // Placeholder for user posts
-    List<Map<String, String>> userPosts = [
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-      {'image': 'assets/images/logo.png'},
-    ];
+  final themeNotifier = Provider.of<ThemeNotifier>(context);
 
+  if (userDrinks.isEmpty) {
     return Container(
-      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
-      padding: const EdgeInsets.all(8),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        itemCount: userPosts.length,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        'You have not added any drinks yet.',
+        style: TextStyle(
+          fontSize: 16,
+          color: themeNotifier.isNightMode ? Colors.white70 : Colors.black87,
         ),
-        itemBuilder: (context, index) {
-          return Image.asset(
-            userPosts[index]['image']!,
-            fit: BoxFit.cover,
-          );
-        },
       ),
     );
   }
+
+  return Container(
+    color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+    padding: const EdgeInsets.all(8),
+    child: GridView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      itemCount: userDrinks.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemBuilder: (context, index) {
+        final drink = userDrinks[index];
+        return GestureDetector(
+          onTap: () {
+            // Optionally navigate to drink details
+          },
+          child: Image.network(
+            drink['imageUrl'],
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Icon(
+                  Icons.broken_image,
+                  color: Colors.grey,
+                ),
+              );
+            },
+          ),
+        );
+      },
+    ),
+  );
+}
 
   // Build the entire profile page content
   Widget buildProfileContent() {
@@ -429,16 +570,20 @@ class ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Scaffold(
-      backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.grey[100],
+      backgroundColor:
+          themeNotifier.isNightMode ? Colors.black : Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.white,
+        backgroundColor:
+            themeNotifier.isNightMode ? Colors.black : Colors.white,
         iconTheme: IconThemeData(
-          color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+          color:
+              themeNotifier.isNightMode ? Colors.white : Colors.black87,
         ),
         title: Text(
           'Profile',
           style: TextStyle(
-            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+            color:
+                themeNotifier.isNightMode ? Colors.white : Colors.black87,
           ),
         ),
         centerTitle: true,
@@ -448,8 +593,14 @@ class ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: buildProfileContent(),
-      // Add navigation to Favorites via FloatingActionButton or another method
-      floatingActionButton: FloatingActionButton(
+      // Modified floatingActionButton to include Favorites and Add Drink buttons
+      floatingActionButton: Stack(
+  children: [
+    Positioned(
+      bottom: 80, // Adjust the position as needed
+      right: 16,
+      child: FloatingActionButton(
+        heroTag: 'favorites_button', // Unique heroTag
         onPressed: () {
           // Navigate to FavoritesScreen
           Navigator.push(
@@ -459,11 +610,36 @@ class ProfileScreenState extends State<ProfileScreen> {
             ),
           );
         },
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
+        backgroundColor: themeNotifier.isNightMode
+            ? Colors.amberAccent
+            : Colors.blueAccent,
         tooltip: 'Favorites',
         child: const Icon(Icons.favorite),
       ),
+    ),
+    Positioned(
+      bottom: 16, // Position below the Favorites button
+      right: 16,
+      child: FloatingActionButton(
+        heroTag: 'add_drink_button', // Unique heroTag
+        onPressed: () {
+          // Show the AddDrinkDialog when the button is pressed
+          showDialog(
+            context: context,
+            builder: (context) => const AddDrinkDialog(),
+          ).then((_) {
+            fetchUserDrinks();
+          });
+        },
+        backgroundColor: themeNotifier.isNightMode
+            ? Colors.greenAccent
+            : Colors.orangeAccent,
+        tooltip: 'Add Drink',
+        child: const Icon(Icons.add),
+      ),
+    ),
+  ],
+),
     );
   }
 }

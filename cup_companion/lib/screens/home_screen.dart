@@ -1,15 +1,28 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
+
+// Import other necessary packages and services
 import 'package:cup_companion/services/auth_services.dart';
-import 'package:cup_companion/screens/chat_screen.dart';
+import 'package:cup_companion/services/drink_service.dart';
+import 'package:cup_companion/models/drink.dart';
 import 'package:cup_companion/screens/profile_screen.dart';
 import 'package:cup_companion/screens/map_screen.dart';
 import 'package:cup_companion/screens/marketplace_screen.dart';
 import 'package:cup_companion/screens/notifications_screen.dart';
-import 'package:provider/provider.dart';
-import '../theme/theme_notifier.dart';
-import 'events_screen.dart';
+import 'package:cup_companion/screens/forum_page.dart';
+import 'package:cup_companion/screens/events_screen.dart';
+import 'package:cup_companion/screens/drink_detail_screen.dart';
+import 'package:cup_companion/providers/favorites_provider.dart';
+import 'package:cup_companion/theme/theme_notifier.dart';
+import 'package:cup_companion/constants/menu_options.dart';
+import 'package:cup_companion/l10n/app_localizations.dart';
+
+// Additional imports for animations
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,16 +31,20 @@ class HomeScreen extends StatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   final AuthService _authService = AuthService();
+  final DrinkService _drinkService = DrinkService();
 
   String username = "Username";
+  String zipCode = "00000";
   String location = "Location";
   int rewardPoints = 457;
   int _selectedIndex = 0; // Tracks selected bottom navigation tab
 
-  // Controls visibility of the bottom navigation bar
   bool _isNavBarVisible = true;
+
+  // Example notification count
+  int _notificationsCount = 3;
 
   // Categories for day mode
   final List<String> categoriesDayMode = [
@@ -35,7 +52,7 @@ class HomeScreenState extends State<HomeScreen> {
     'Tea',
     'Juice',
     'Smoothies',
-    'Alcoholic Selections',
+    'Alcoholic Drinks',
   ];
 
   // Categories for night mode
@@ -43,52 +60,119 @@ class HomeScreenState extends State<HomeScreen> {
     'Beer',
     'Wine',
     'Whiskey',
-    'Vodka',
-    'Non-Alcoholic Selections',
+    'Cocktails',
+    'Non-Alcoholic',
   ];
 
-  // Mock data for drink cards
-  final List<Map<String, String>> drinkList = [
-    {
-      'image': 'assets/images/logo.png', // Ensure this asset exists
-      'name': 'Cappuccino',
-      'details': 'with Oat Milk',
-      'price': '3.90',
-    },
-    {
-      'image': 'assets/images/logo.png',
-      'name': 'Latte',
-      'details': 'with Soy Milk',
-      'price': '4.50',
-    },
-    {
-      'image': 'assets/images/logo.png',
-      'name': 'Espresso',
-      'details': 'double shot',
-      'price': '2.80',
-    },
-    {
-      'image': 'assets/images/logo.png',
-      'name': 'Mocha',
-      'details': 'with Chocolate',
-      'price': '4.20',
-    },
-    // Add more drinks as needed
-  ];
+  // List to hold the fetched drinks
+  List<Drink> _drinks = [];
 
-  // Fetch user data (username and location)
+  // Add a loading indicator
+  bool _isLoading = true;
+
+  // Add an error message
+  String? _errorMessage;
+
+  // Animation controller for playful animations
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+    fetchDrinks(); // Fetch drinks when the widget initializes
+
+    // Initialize the animation controller
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  // Method to fetch user data
   void fetchUserData() async {
     try {
       Map<String, String> userData = await _authService.fetchUserData();
       setState(() {
         username = userData['username'] ?? 'Username';
-        location = userData['location'] ?? 'Location';
+        zipCode = userData['zipCode'] ?? '00000'; // Default zip code
       });
+      // After fetching user data, get the location
+      print('User data fetched. Username: $username, Zip Code: $zipCode');
+      getUserLocation();
     } catch (e) {
-      // Handle any errors here
+      print('Error fetching user data: $e');
       setState(() {
         username = 'Username';
-        location = 'Location';
+        zipCode = '00000';
+      });
+      // Attempt to get user location even if fetching user data fails
+      getUserLocation();
+    }
+  }
+
+  // Method to get user location
+  void getUserLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      print('Location services are disabled.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      print('Location permission is denied. Requesting permission...');
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        print('User denied location permission.');
+        setState(() {
+          location = 'Zip Code: $zipCode';
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      print('Location permission is permanently denied.');
+      setState(() {
+        location = 'Zip Code: $zipCode';
+      });
+      return;
+    }
+
+    print('Location permission granted. Fetching position...');
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      print(
+          'Position obtained: Latitude ${position.latitude}, Longitude ${position.longitude}');
+
+      // Update the location variable with latitude and longitude
+      setState(() {
+        location =
+            'Lat: ${position.latitude.toStringAsFixed(6)}, Lng: ${position.longitude.toStringAsFixed(6)}';
+      });
+      print('Location updated to: $location');
+    } catch (e, stacktrace) {
+      print('Error in getUserLocation(): $e');
+      print('Stacktrace: $stacktrace');
+      setState(() {
+        location = 'Zip Code: $zipCode';
       });
     }
   }
@@ -98,27 +182,35 @@ class HomeScreenState extends State<HomeScreen> {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     showModalBottomSheet(
       context: context,
+      backgroundColor:
+          themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+      ),
       builder: (BuildContext context) {
-        return Container(
-          height: 200,
-          color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
-          child: Center(
-            child: Text(
-              'Filter options here',
-              style: TextStyle(
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: FilterOptions(), // Extracted widget for filter options
         );
       },
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    fetchUserData();
+  // Method to fetch drinks from Firestore
+  void fetchDrinks() async {
+    try {
+      List<Drink> drinks = await _drinkService.fetchDrinks();
+      setState(() {
+        _drinks = drinks;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching drinks: $e');
+      setState(() {
+        _errorMessage = 'Failed to load drinks.';
+        _isLoading = false;
+      });
+    }
   }
 
   // Called when a tab is selected in the bottom navigation bar
@@ -128,57 +220,32 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Builds the bottom navigation bar with 5 items
+  // Builds the custom bottom navigation bar with animations
   Widget buildBottomNavigationBar() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return BottomNavigationBar(
-      backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.white,
-      selectedItemColor:
-          themeNotifier.isNightMode ? Colors.amberAccent : Colors.blueAccent,
-      unselectedItemColor:
-          themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
+    return CustomBottomNavBar(
       currentIndex: _selectedIndex,
       onTap: _onTabSelected,
-      type: BottomNavigationBarType.fixed, // To show all items
-      selectedFontSize: 10.0, // Reduced font size
-      unselectedFontSize: 10.0, // Reduced font size
-      iconSize: 24.0, // Adjusted icon size
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.map),
-          label: 'Map',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.store),
-          label: 'Marketplace',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble_outline),
-          label: 'Chat',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.event),
-          label: 'Events',
-        ),
-      ],
+      isNightMode: themeNotifier.isNightMode,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    // final localeProvider = Provider.of<LocaleProvider>(context); // Unused
+    // Removed the unused localeProvider to fix the error
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
 
     // Initialize the list of screens once
     final List<Widget> screens = [
       buildHomeScreenContent(), // Home
       const MapScreen(), // Map
       const MarketplaceScreen(), // Marketplace
-      const ChatScreen(), // Chat
       const EventScreen(), // Events
+      const ForumPage(), // Forum
     ];
 
     return Scaffold(
@@ -208,136 +275,185 @@ class HomeScreenState extends State<HomeScreen> {
           },
           child: Stack(
             children: [
-              // Background with two colors: black on top and white below
-              Column(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      color: Colors.black,
-                    ),
+              // Background with gradient
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 500),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: themeNotifier.isNightMode
+                        ? [Colors.black87, Colors.black54]
+                        : [Colors.blueAccent, Colors.lightBlueAccent],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+                ),
               ),
-              // Main Content
-              _selectedIndex < screens.length
-                  ? screens[_selectedIndex]
-                  : buildPlaceholderScreen('Coming Soon!'),
+              // Main Content with AnimatedSwitcher for smooth transitions
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _selectedIndex < screens.length
+                    ? screens[_selectedIndex]
+                    : buildPlaceholderScreen(
+                        appLocalizations.comingSoon), // Localized string
+              ),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: Visibility(
-        visible: _isNavBarVisible,
-        child: SafeArea(
-          child: buildBottomNavigationBar(),
-        ),
+      bottomNavigationBar: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        child: _isNavBarVisible
+            ? SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: buildBottomNavigationBar(),
+                ),
+              )
+            : const SizedBox.shrink(),
       ),
     );
   }
 
-Widget buildHomeScreenContent() {
-  // Accessing the theme to determine night/day mode settings
-  final themeNotifier = Provider.of<ThemeNotifier>(context);
-  
-  return SingleChildScrollView(
-    child: Column(
-      children: [
-        // A container for the header, day/night switch, and search bar
-        Container(
-          padding: const EdgeInsets.only(top: 20, left: 16, right: 16),
-          decoration: BoxDecoration(
-            // Applying a gradient background based on night or day mode
-            gradient: LinearGradient(
-              colors: themeNotifier.isNightMode
-                  ? [Colors.black87, Colors.black54] // Night mode gradient
-                  : [Colors.blueAccent, Colors.lightBlueAccent], // Day mode gradient
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+  // Builds the main home screen content with GridView for drinks
+  Widget buildHomeScreenContent() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+    return AnimationLimiter(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            GradientHeader(
+              username: username,
+              location: location,
+              notificationsCount: _notificationsCount, // Pass the count
+              onProfileTap: () {
+                // Navigate to Profile Screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              onNotificationTap: () {
+                // Navigate to Notifications Screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsScreen(),
+                  ),
+                ).then((_) {
+                  // Reset notifications count after viewing
+                  setState(() {
+                    _notificationsCount = 0;
+                  });
+                });
+              },
+              onSettingsTap: () {
+                // Handle settings via PopupMenu
+                showMenu(
+                  context: context,
+                  position: const RelativeRect.fromLTRB(1000, 80, 0, 0),
+                  items: [
+                    PopupMenuItem<String>(
+                      value: MenuOptions.settings,
+                      child: Text(appLocalizations.settings),
+                    ),
+                    PopupMenuItem<String>(
+                      value: MenuOptions.signOut,
+                      child: Text(appLocalizations.signOut),
+                    ),
+                  ],
+                ).then((value) {
+                  if (value == MenuOptions.settings) {
+                    Navigator.pushNamed(context, '/settings');
+                  } else if (value == MenuOptions.signOut) {
+                    _authService.signOut();
+                    Navigator.pushReplacementNamed(context, '/signin');
+                  }
+                });
+              },
             ),
-            // Rounded corners for the bottom of the container
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30),
-            ),
-          ),
-          // Column to stack the header, day/night switch, and search bar vertically
-          child: Column(
-            children: [
-              buildHeader(), // Function to build the header (e.g., profile info, title)
-              const SizedBox(height: 20), // Spacer between header and switch
-              buildDayNightSwitch(), // Widget to toggle between day/night mode
-              const SizedBox(height: 20), // Spacer between switch and search bar
-              SearchBar(onFilterTap: onFilterTap), // Search bar widget with filter functionality
-              const SizedBox(height: 20), // Spacer after the search bar
-            ],
-          ),
-        ),
-        
-        // Section to display user rewards
-        RewardsSection(points: rewardPoints), // Displays the user's reward points
-        const SizedBox(height: 20), // Spacer after the rewards section
-
-        // Section title "For You" with padding and alignment
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Align(
-            alignment: Alignment.centerLeft, // Align the text to the left
-            child: Text(
-              'For You:', // Section title
-              style: TextStyle(
-                fontSize: 24.0, // Font size for the title
-                fontWeight: FontWeight.bold, // Bold text
-                color: themeNotifier.isNightMode ? Colors.white : Colors.black87, // Change color based on theme
+            const SizedBox(height: 20),
+            RewardsSection(points: rewardPoints),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  appLocalizations.forYou, // Localized string
+                  style: GoogleFonts.poppins(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
+                    color:
+                        themeNotifier.isNightMode ? Colors.white : Colors.black87,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 10), // Spacer between title and category list
-
-        // Display different category lists based on the theme (day/night mode)
-        themeNotifier.isNightMode 
-          ? buildNightModeCategoryList() // Build night mode category list
-          : buildDayModeCategoryList(),  // Build day mode category list
-
-        const SizedBox(height: 20), // Spacer before the grid view
-
-        // Drink Grid (displaying drinks in a 2-column grid)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: GridView.builder(
-            physics: const NeverScrollableScrollPhysics(), // Prevents the GridView from being scrollable
-            shrinkWrap: true, // Shrinks the GridView to take only the necessary space
-            itemCount: drinkList.length, // Number of items in the drink list
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 16, 
-              crossAxisSpacing: 16, 
-              childAspectRatio: 3 / 4, 
+            const SizedBox(height: 10),
+            themeNotifier.isNightMode
+                ? buildNightModeCategoryList()
+                : buildDayModeCategoryList(),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                      ? Text(
+                          _errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 16,
+                          ),
+                        )
+                      : AnimationLimiter(
+                          child: GridView.builder(
+                            physics:
+                                const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
+                            shrinkWrap: true, // Let GridView take only the needed space
+                            itemCount: _drinks.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2, // 2 per row
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: 3 / 4, // Adjust as needed
+                            ),
+                            itemBuilder: (context, index) {
+                              final drink = _drinks[index];
+                              return AnimationConfiguration.staggeredGrid(
+                                position: index,
+                                duration: const Duration(milliseconds: 375),
+                                columnCount: 2,
+                                child: ScaleAnimation(
+                                  child: FadeInAnimation(
+                                    child: buildDrinkCard(drink, index),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
             ),
-            itemBuilder: (context, index) {
-              // Build the individual drink cards from the drink list
-              return buildDrinkCard(drinkList[index]); // Function to create drink cards
-            },
-          ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height:
+                  MediaQuery.of(context).padding.bottom, // Extra space to prevent overflow
+            ),
+          ],
         ),
-        const SizedBox(height: 20), // Spacer after the grid view
-
-        // Extra space at the bottom to prevent content from being obscured
-        SizedBox(
-          height: MediaQuery.of(context).padding.bottom, // Adjust height to account for the device's bottom padding
-        ),
-      ],
-    ),
-  );
-}
-
+      ),
+    );
+  }
 
   // Placeholder screen for other tabs (if any)
   Widget buildPlaceholderScreen(String text) {
@@ -353,121 +469,155 @@ Widget buildHomeScreenContent() {
     );
   }
 
-  // Builds the header with profile picture, username, location, and notification bell
-  Widget buildHeader() {
+  // Builds individual drink cards in a grid
+  Widget buildDrinkCard(Drink drink, int index) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Profile Picture and Username
-        Row(
-          children: [
-            // Profile Picture Placeholder
-            GestureDetector(
-              onTap: () {
-                // Navigate to Profile Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-              child: const CircleAvatar(
-                radius: 25,
-                backgroundColor: Colors.white,
-                backgroundImage:
-                    AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
-              ),
+    final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final isFavorite = favoritesProvider.isFavorite(drink.id);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+    return GestureDetector(
+      onTap: () {
+        // Navigate to DrinkDetailScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DrinkDetailScreen(
+              drink: drink,
+              heroTag: 'drinkImage$index', // Pass a unique hero tag
             ),
-            const SizedBox(width: 10),
-            // Username and Location
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello, $username',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+          ),
+        );
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        decoration: BoxDecoration(
+          color: themeNotifier.isNightMode ? Colors.grey[900] : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: themeNotifier.isNightMode
+                  ? Colors.black45
+                  : Colors.grey.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Drink Image with Hero animation
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
-                Row(
+                child: Stack(
                   children: [
-                    const Icon(
-                      Icons.location_on,
-                      color: Colors.white70,
-                      size: 16,
+                    Hero(
+                      tag: 'drinkImage$index',
+                      child: Image.network(
+                        drink.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(Icons.broken_image, size: 50),
+                          );
+                        },
+                      ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      location,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
+                    // Favorite Icon with Animation
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: ScaleTransition(
+                        scale: Tween<double>(begin: 0.7, end: 1.0)
+                            .animate(CurvedAnimation(
+                          parent: _animationController,
+                          curve: Curves.easeOutBack,
+                        )),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white70,
+                          child: IconButton(
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: themeNotifier.isNightMode
+                                  ? Colors.black
+                                  : Colors.redAccent,
+                            ),
+                            onPressed: () {
+                              // Handle favorite action with animation
+                              favoritesProvider.toggleFavorite(drink);
+                              _animationController.forward(from: 0.0);
+                            },
+                            tooltip: isFavorite
+                                ? appLocalizations.removeFromFavorites
+                                : appLocalizations.addToFavorites, // Localized tooltip
+                          ),
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ],
-        ),
-        // Notification Bell and Settings Icon
-        Row(
-          children: [
-            // Notification Bell Icon
-            IconButton(
-              icon: Icon(
-                Icons.notifications,
-                color:
-                    themeNotifier.isNightMode ? Colors.white : Colors.black,
               ),
-              onPressed: () {
-                // Navigate to Notifications Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationsScreen(),
+            ),
+            // Drink Details
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Text(
+                    drink.name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: themeNotifier.isNightMode
+                          ? Colors.white
+                          : Colors.black87,
+                    ),
                   ),
-                );
-              },
-              tooltip: 'Notifications',
-            ),
-            // Settings Icon with Drop-down Menu
-            PopupMenuButton<String>(
-              icon: Icon(
-                Icons.settings,
-                color:
-                    themeNotifier.isNightMode ? Colors.white : Colors.black,
+                  if (drink.category.isNotEmpty)
+                    Text(
+                      drink.category,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: themeNotifier.isNightMode
+                            ? Colors.white70
+                            : Colors.grey[600],
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '\$${drink.price.toStringAsFixed(2)}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: themeNotifier.isNightMode
+                          ? Colors.amberAccent
+                          : Colors.blueAccent,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              onSelected: (String value) {
-                if (value == 'Settings') {
-                  Navigator.pushNamed(context, '/settings');
-                } else if (value == 'Sign Out') {
-                  _authService.signOut();
-                  Navigator.pushReplacementNamed(context, '/signin');
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return {'Settings', 'Sign Out'}.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
-              },
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
   // Builds the day/night mode switch
   Widget buildDayNightSwitch() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -488,211 +638,272 @@ Widget buildHomeScreenContent() {
           Icons.nightlight_round,
           color: Colors.white70,
         ),
+        const SizedBox(width: 8),
+        Text(
+          themeNotifier.isNightMode
+              ? appLocalizations.nightMode
+              : appLocalizations.dayMode, // Localized string
+          style: GoogleFonts.poppins(
+            color: Colors.white70,
+          ),
+        ),
       ],
     );
   }
 
   // Builds the category list for day mode
   Widget buildDayModeCategoryList() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: categoriesDayMode.length,
-        itemBuilder: (context, index) {
-          return buildCategoryChip(categoriesDayMode[index]);
-        },
-      ),
-    );
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+
+    // Optionally, you can also localize category names
+    final List<String> localizedCategories = [
+      appLocalizations.coffee,
+      appLocalizations.tea,
+      appLocalizations.juice,
+      appLocalizations.smoothies,
+      appLocalizations.alcoholicDrinks,
+    ];
+
+    return CategoryList(categories: localizedCategories);
   }
 
   // Builds the category list for night mode
   Widget buildNightModeCategoryList() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: categoriesNightMode.length,
-        itemBuilder: (context, index) {
-          return buildCategoryChip(categoriesNightMode[index]);
-        },
-      ),
-    );
-  }
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
 
-  // Builds individual category chips
-  Widget buildCategoryChip(String category) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      child: Chip(
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.grey[800] : Colors.grey[300],
-        label: Text(
-          category,
-          style: TextStyle(
-            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
-          ),
-        ),
-      ),
-    );
-  }
+    // Optionally, you can also localize category names
+    final List<String> localizedCategories = [
+      appLocalizations.beer,
+      appLocalizations.wine,
+      appLocalizations.whiskey,
+      appLocalizations.cocktails,
+      appLocalizations.nonAlcoholic,
+    ];
 
-  // Builds individual drink cards in a grid
-  Widget buildDrinkCard(Map<String, String> drink) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    return GestureDetector(
-      onTap: () {
-        // Handle drink card tap, e.g., navigate to drink details
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => DrinkDetailsScreen(drink: drink)));
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: themeNotifier.isNightMode
-                  ? Colors.black26
-                  : Colors.grey.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            // Drink Image
-            Expanded(
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: Image.asset(
-                  drink['image']!,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
-              ),
-            ),
-            // Drink Details
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Text(
-                    drink['name']!,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color:
-                          themeNotifier.isNightMode ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  Text(
-                    drink['details']!,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: themeNotifier.isNightMode
-                          ? Colors.white70
-                          : Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '\$${drink['price']}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: themeNotifier.isNightMode
-                          ? Colors.amberAccent
-                          : Colors.blueAccent,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return CategoryList(categories: localizedCategories);
   }
 }
 
-// SearchBar widget with updated styling
-class SearchBar extends StatelessWidget {
-  final VoidCallback onFilterTap;
+// Extracted Widget: Gradient Header with Profile, Username, Location, Notifications, and Settings
+class GradientHeader extends StatelessWidget {
+  final String username;
+  final String location;
+  final int notificationsCount;
+  final VoidCallback onProfileTap;
+  final VoidCallback onNotificationTap;
+  final VoidCallback onSettingsTap;
 
-  const SearchBar({
+  const GradientHeader({
     super.key,
-    required this.onFilterTap,
+    required this.username,
+    required this.location,
+    required this.notificationsCount,
+    required this.onProfileTap,
+    required this.onNotificationTap,
+    required this.onSettingsTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: themeNotifier.isNightMode
-                ? Colors.black26
-                : Colors.grey.withOpacity(0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+        gradient: LinearGradient(
+          colors: themeNotifier.isNightMode
+              ? [Colors.black87, Colors.black54]
+              : [Colors.blueAccent, Colors.lightBlueAccent],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Profile Picture and Username
+          Row(
+            children: [
+              // Profile Picture Placeholder
+              GestureDetector(
+                onTap: onProfileTap,
+                child: const CircleAvatar(
+                  radius: 25,
+                  backgroundColor: Colors.white,
+                  backgroundImage:
+                      AssetImage('assets/images/default_avatar.png'), // Ensure this asset exists
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Username and Location
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${appLocalizations.hello}, $username', // Localized string
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Colors.white70,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        location,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // Notification Bell and Settings Icon
+          Row(
+            children: [
+              // Notification Bell Icon with Badge
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: onNotificationTap,
+                    tooltip: appLocalizations.notifications, // Localized tooltip
+                  ),
+                  if (notificationsCount > 0)
+                    Positioned(
+                      right: 11,
+                      top: 11,
+                      child: Container(
+                        padding: const EdgeInsets.all(1),
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          '$notificationsCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 8,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              // Settings Icon
+              IconButton(
+                icon: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                ),
+                onPressed: onSettingsTap,
+                tooltip: appLocalizations.settings, // Localized tooltip
+              ),
+            ],
           ),
         ],
-        borderRadius: BorderRadius.circular(50), // More rounded corners
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          filled: true,
-          fillColor:
-              themeNotifier.isNightMode ? Colors.grey[850] : Colors.white,
-          hintText: 'Search for a beverage',
-          hintStyle: TextStyle(
-            color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
-          ),
-          prefixIcon: Icon(
-            Icons.search,
-            color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
-          ),
-          suffixIcon: IconButton(
-            icon: Icon(
-              Icons.tune,
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
-            ),
-            onPressed: onFilterTap,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide.none, // Removes the border
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide(
-              color: themeNotifier.isNightMode ? Colors.white70 : Colors.blueAccent,
-              width: 1.5,
-            ),
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-        ),
-        style: TextStyle(
-          color: themeNotifier.isNightMode ? Colors.white : Colors.black,
-        ),
       ),
     );
   }
 }
 
-// RewardsSection widget
+// Extracted Widget: Category List
+class CategoryList extends StatelessWidget {
+  final List<String> categories;
+
+  const CategoryList({
+    super.key,
+    required this.categories,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    return SizedBox(
+      height: 50,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: categories.length,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemBuilder: (context, index) {
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            child: Chip(
+              backgroundColor: themeNotifier.isNightMode
+                  ? Colors.white12
+                  : Colors.blueAccent.withOpacity(0.1),
+              label: Text(
+                categories[index],
+                style: GoogleFonts.poppins(
+                  color: themeNotifier.isNightMode
+                      ? Colors.white
+                      : Colors.blueAccent,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              avatar: const Icon(
+                Icons.local_drink,
+                size: 20,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Extracted Widget: Filter Options (Bottom Sheet)
+class FilterOptions extends StatelessWidget {
+  const FilterOptions({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+    // Implement your filter options here
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          appLocalizations.filter,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Add your filter options widgets here
+        // For example, category selection, price range, etc.
+        // ...
+      ],
+    );
+  }
+}
+
+// Extracted Widget: Rewards Section
 class RewardsSection extends StatelessWidget {
   final int points;
 
@@ -704,14 +915,22 @@ class RewardsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Container(
-        height: 60, // Adjust height as needed
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        height: 100, // Adjust height as needed
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
-          borderRadius: BorderRadius.circular(30), // Rounded corners for a skinny rectangle
+          gradient: LinearGradient(
+            colors: themeNotifier.isNightMode
+                ? [Colors.grey[900]!, Colors.grey[800]!]
+                : [Colors.white, Colors.grey[200]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius:
+              BorderRadius.circular(20), // Rounded corners for a card-like look
           boxShadow: [
             BoxShadow(
               color: themeNotifier.isNightMode
@@ -723,69 +942,201 @@ class RewardsSection extends StatelessWidget {
           ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Rewards Icon
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: themeNotifier.isNightMode
+                  ? Colors.amberAccent.withOpacity(0.2)
+                  : Colors.blueAccent.withOpacity(0.2),
+              child: Icon(
+                Icons.stars_rounded,
+                color: themeNotifier.isNightMode
+                    ? Colors.amberAccent
+                    : Colors.blueAccent,
+                size: 30,
+              ),
+            ),
+            const SizedBox(width: 16),
             // Rewards Information
             Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.stars,
-                    color: Colors.amberAccent,
-                    size: 30,
+                  Text(
+                    appLocalizations.rewardsPoints, // Localized string
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: themeNotifier.isNightMode
+                          ? Colors.white70
+                          : Colors.black87,
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Rewards Points',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        '$points Points',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: themeNotifier.isNightMode
-                              ? Colors.amberAccent
-                              : Colors.blueAccent,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    '$points ${appLocalizations.points}', // Localized string
+                    style: GoogleFonts.poppins(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: themeNotifier.isNightMode
+                          ? Colors.amberAccent
+                          : Colors.blueAccent,
+                    ),
                   ),
                 ],
               ),
             ),
             // Redeem Button
-            Flexible(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Handle Redeem button tap
-                  Navigator.pushNamed(context, '/redeem'); // Example navigation
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: themeNotifier.isNightMode
-                      ? Colors.amberAccent
-                      : Colors.blueAccent, // Updated parameter
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+            ElevatedButton(
+              onPressed: () {
+                // Handle Redeem button tap
+                Navigator.pushNamed(context, '/redeem'); // Example navigation
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: themeNotifier.isNightMode
+                    ? Colors.amberAccent
+                    : Colors.blueAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text(
-                  'Redeem',
+                textStyle: const TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+              child: Text(
+                appLocalizations.redeem, // Localized string
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// Extracted Widget: Custom Bottom Navigation Bar
+class CustomBottomNavBar extends StatefulWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+  final bool isNightMode;
+
+  const CustomBottomNavBar({
+    super.key,
+    required this.currentIndex,
+    required this.onTap,
+    required this.isNightMode,
+  });
+
+  @override
+  State<CustomBottomNavBar> createState() => _CustomBottomNavBarState();
+}
+
+class _CustomBottomNavBarState extends State<CustomBottomNavBar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  final List<IconData> icons = [
+    Icons.home_rounded,
+    Icons.map_rounded,
+    Icons.store_rounded,
+    Icons.event_note_rounded,
+    Icons.forum,
+  ];
+
+  final List<String> labels = [
+    'Home',
+    'Map',
+    'Marketplace',
+    'Events',
+    'Forum',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _animation =
+        CurvedAnimation(parent: _controller, curve: Curves.easeInOutBack);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget buildNavItem(int index) {
+    bool isSelected = index == widget.currentIndex;
+    Color color = widget.isNightMode
+        ? (isSelected ? Colors.amberAccent : Colors.white70)
+        : (isSelected ? Colors.blueAccent : Colors.grey);
+
+    return GestureDetector(
+      onTap: () {
+        widget.onTap(index);
+        _controller.forward(from: 0.0);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (widget.isNightMode
+                  ? Colors.white12
+                  : Colors.blueAccent.withOpacity(0.1))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ScaleTransition(
+              scale: Tween<double>(begin: 1.0, end: 1.2).animate(_animation),
+              child: Icon(
+                icons[index],
+                color: color,
+                size: isSelected ? 28 : 24,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              labels[index],
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: color,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // height: 60,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        color: widget.isNightMode ? Colors.black : Colors.white,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: widget.isNightMode
+                ? Colors.black54
+                : Colors.grey.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(icons.length, (index) => buildNavItem(index)),
       ),
     );
   }

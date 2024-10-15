@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
 import '../theme/theme_notifier.dart';
+import 'package:cup_companion/services/auth_services.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -27,8 +29,8 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
   // Tab controller for switching between Map and Favorites
   late TabController _tabController;
 
-  // List of sample coffee locations
-  final List<Map<String, dynamic>> _coffeePlaces = [
+  // List of coffee places
+  List<Map<String, dynamic>> _coffeePlaces = [
     {
       'name': 'Stumptown Coffee Roasters',
       'address': '123 Coffee St, Portland, OR',
@@ -96,7 +98,12 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
         controller: _tabController,
         children: [
           _buildMapView(), // Display the map in the "Map" tab
-          _buildCoffeeListView(), // Display the coffee list in the "Favorites" tab
+          Stack(
+            children: [
+              _buildCoffeeListView(), // Display the coffee list in the "Favorites" tab
+              _buildAddFavoriteFAB(), // Add the FAB to allow adding new favorites
+            ],
+          ),
         ],
       ),
     );
@@ -201,6 +208,95 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
     );
   }
 
+  // Add a floating action button for adding new favorites
+  Widget _buildAddFavoriteFAB() {
+    return Positioned(
+      bottom: 20,
+      right: 20,
+      child: FloatingActionButton(
+        heroTag: 'addFavorite',
+        onPressed: () => _showAddFavoriteDialog(),
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.blue[700],
+      ),
+    );
+  }
+
+  // Show dialog to add a new favorite location
+  void _showAddFavoriteDialog() {
+    final _nameController = TextEditingController();
+    final _addressController = TextEditingController();
+    final _latController = TextEditingController();
+    final _lngController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add New Favorite Location'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: _addressController,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
+              TextField(
+                controller: _latController,
+                decoration: const InputDecoration(labelText: 'Latitude'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _lngController,
+                decoration: const InputDecoration(labelText: 'Longitude'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newPlace = {
+                  'name': _nameController.text,
+                  'address': _addressController.text,
+                  'position': LatLng(
+                    double.parse(_latController.text),
+                    double.parse(_lngController.text),
+                  ),
+                };
+                setState(() {
+                  _coffeePlaces.add(newPlace);
+                  _markers.add(
+                    Marker(
+                      markerId: MarkerId(newPlace['name'] as String),  // Cast to String
+                      position: newPlace['position'] as LatLng,        // Cast to LatLng
+                      infoWindow: InfoWindow(
+                        title: newPlace['name'] as String,            // Cast to String
+                        snippet: newPlace['address'] as String,       // Cast to String
+                      ),
+                    ),
+                  );
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Navigate to the selected coffee place on the map
   void _goToLocation(LatLng position) async {
     final GoogleMapController controller = await _controller.future;
@@ -213,11 +309,11 @@ class _MapScreenState extends State<MapScreen> with SingleTickerProviderStateMix
       for (var place in _coffeePlaces) {
         _markers.add(
           Marker(
-            markerId: MarkerId(place['name']),
-            position: place['position'],
+            markerId: MarkerId(place['name'] as String),
+            position: place['position'] as LatLng,
             infoWindow: InfoWindow(
-              title: place['name'],
-              snippet: place['address'],
+              title: place['name'] as String,
+              snippet: place['address'] as String,
             ),
           ),
         );
