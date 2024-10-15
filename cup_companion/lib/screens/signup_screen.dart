@@ -23,24 +23,24 @@ class SignUpScreenState extends State<SignUpScreen>
   bool isPasswordVisible = false; // Password visibility tracker
 
   // Animation Controller for form animations
-  late AnimationController _animationController;
-  late Animation<double> _fadeInAnimation;
+  late AnimationController animationController;
+  late Animation<double> fadeInAnimation;
 
   @override
   void initState() {
     super.initState();
     // Initialize animation controller
-    _animationController = AnimationController(
+    animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
     // Define fade-in animation
-    _fadeInAnimation =
-        CurvedAnimation(parent: _animationController, curve: Curves.easeIn);
+    fadeInAnimation =
+        CurvedAnimation(parent: animationController, curve: Curves.easeIn);
 
     // Start the animation
-    _animationController.forward();
+    animationController.forward();
   }
 
   // Method to validate email format
@@ -152,7 +152,7 @@ class SignUpScreenState extends State<SignUpScreen>
     _passwordController.dispose();
     _usernameController.dispose();
     _mobileNumberController.dispose();
-    _animationController.dispose();
+    animationController.dispose();
     super.dispose();
   }
 
@@ -178,7 +178,7 @@ class SignUpScreenState extends State<SignUpScreen>
             padding:
                 const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
             child: FadeTransition(
-              opacity: _fadeInAnimation,
+              opacity: fadeInAnimation,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
