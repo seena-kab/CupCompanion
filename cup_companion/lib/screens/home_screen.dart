@@ -104,8 +104,6 @@ class HomeScreenState extends State<HomeScreen>
 
       if (accepted != true) {
         // If the user declines, exit the app or handle accordingly
-        // For example, you can show a dialog or navigate to a different screen
-        // Here, we'll simply exit the app
         if (mounted) {
           // Ensure the widget is still in the tree
           Navigator.of(context).pop();
@@ -252,13 +250,11 @@ class HomeScreenState extends State<HomeScreen>
             // Background with gradient
             AnimatedContainer(
               duration: const Duration(milliseconds: 500),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: themeNotifier.isNightMode
-                      ? [Colors.black87, Colors.black54]
-                      : [Colors.blueAccent, Colors.lightBlueAccent],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)], // Same gradient as SignInScreen
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
                 ),
               ),
             ),
@@ -307,23 +303,6 @@ class HomeScreenState extends State<HomeScreen>
             label: appLocalizations.forum,
           ),
         ],
-      ),
-      // Add the Search button just above the navigation bar
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 60.0), // Adjust for bottom nav height
-        child: ElevatedButton(
-          onPressed: () {
-            // Navigate to Search Screen
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const SearchScreen(),
-              ),
-            );
-          },
-          child: const Icon(Icons.search), // Localized string
-        ),
       ),
     );
   }
@@ -387,6 +366,15 @@ class HomeScreenState extends State<HomeScreen>
                   }
                 });
               },
+              onSearchTap: () {
+                // Navigate to Search Screen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SearchScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 20),
             RewardsSection(points: rewardPoints),
@@ -397,7 +385,7 @@ class HomeScreenState extends State<HomeScreen>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   appLocalizations.forYou, // Localized string
-                  style: GoogleFonts.poppins(
+                  style: GoogleFonts.montserrat(
                     fontSize: 24.0,
                     fontWeight: FontWeight.bold,
                     color: themeNotifier.isNightMode
@@ -573,7 +561,7 @@ class HomeScreenState extends State<HomeScreen>
                 children: [
                   Text(
                     drink.name,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: themeNotifier.isNightMode
@@ -584,7 +572,7 @@ class HomeScreenState extends State<HomeScreen>
                   if (drink.category.isNotEmpty)
                     Text(
                       drink.category,
-                      style: GoogleFonts.poppins(
+                      style: GoogleFonts.montserrat(
                         fontSize: 14,
                         color: themeNotifier.isNightMode
                             ? Colors.white70
@@ -594,7 +582,7 @@ class HomeScreenState extends State<HomeScreen>
                   const SizedBox(height: 8),
                   Text(
                     '\$${drink.price.toStringAsFixed(2)}',
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
                           ? Colors.amberAccent
@@ -680,7 +668,7 @@ class HomeScreenState extends State<HomeScreen>
                 children: [
                   Text(
                     appLocalizations.rewardsPoints, // Localized string
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 16,
                       color: themeNotifier.isNightMode
                           ? Colors.white70
@@ -689,7 +677,7 @@ class HomeScreenState extends State<HomeScreen>
                   ),
                   Text(
                     '$points ${appLocalizations.points}', // Localized string
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: themeNotifier.isNightMode
@@ -746,7 +734,7 @@ class HomeScreenState extends State<HomeScreen>
                   : Colors.blueAccent.withOpacity(0.1),
               label: Text(
                 categories[index],
-                style: GoogleFonts.poppins(
+                style: GoogleFonts.montserrat(
                   color: themeNotifier.isNightMode
                       ? Colors.white
                       : Colors.blueAccent,
@@ -765,7 +753,7 @@ class HomeScreenState extends State<HomeScreen>
   }
 }
 
-// Extracted Widget: Gradient Header with Profile, Username, Location, Notifications, and Settings
+// Extracted Widget: Gradient Header with Profile, Username, Location, Search, Notifications, and Settings
 class GradientHeader extends StatelessWidget {
   final String username;
   final String location;
@@ -773,6 +761,7 @@ class GradientHeader extends StatelessWidget {
   final VoidCallback onProfileTap;
   final VoidCallback onNotificationTap;
   final VoidCallback onSettingsTap;
+  final VoidCallback onSearchTap;
 
   const GradientHeader({
     super.key,
@@ -782,6 +771,7 @@ class GradientHeader extends StatelessWidget {
     required this.onProfileTap,
     required this.onNotificationTap,
     required this.onSettingsTap,
+    required this.onSearchTap,
   });
 
   @override
@@ -790,31 +780,27 @@ class GradientHeader extends StatelessWidget {
     final appLocalizations = AppLocalizations.of(context)!; // Null assertion
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: themeNotifier.isNightMode
-              ? [Colors.black87, Colors.black54]
-              : [Colors.blueAccent, Colors.lightBlueAccent],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)], // Same gradient as SignInScreen
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         ),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(30),
           bottomRight: Radius.circular(30),
         ),
         boxShadow: [
           BoxShadow(
-            color: themeNotifier.isNightMode
-                ? Colors.black54
-                : Colors.grey.withOpacity(0.3),
+            color: Colors.black26,
             blurRadius: 10,
-            offset: const Offset(0, 5),
+            offset: Offset(0, 5),
           ),
         ],
       ),
       child: Column(
         children: [
-          // First Row: Profile and Settings
+          // First Row: Profile, Search, Notifications, and Settings
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -835,27 +821,77 @@ class GradientHeader extends StatelessWidget {
                   // Username
                   Text(
                     '${appLocalizations.hello}, $username', // Localized string
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 18,
-                      color: Colors.white,
+                      color: Colors.black87,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-              // Settings Icon
-              IconButton(
-                icon: const Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white,
-                ),
-                onPressed: onSettingsTap,
-                tooltip: appLocalizations.settings, // Localized tooltip
+              // Search, Notifications, and Settings Icons
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.search,
+                      color: Colors.black87,
+                    ),
+                    onPressed: onSearchTap,
+                    tooltip: appLocalizations.search, // Localized tooltip
+                  ),
+                  // Notification Bell Icon with Badge
+                  Stack(
+                    children: [
+                      IconButton(
+                        icon: const Icon(
+                          Icons.notifications_none_rounded,
+                          color: Colors.black87,
+                        ),
+                        onPressed: onNotificationTap,
+                        tooltip:
+                            appLocalizations.notifications, // Localized tooltip
+                      ),
+                      if (notificationsCount > 0)
+                        Positioned(
+                          right: 11,
+                          top: 11,
+                          child: Container(
+                            padding: const EdgeInsets.all(1),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 12,
+                              minHeight: 12,
+                            ),
+                            child: Text(
+                              '$notificationsCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.settings_outlined,
+                      color: Colors.black87,
+                    ),
+                    onPressed: onSettingsTap,
+                    tooltip: appLocalizations.settings, // Localized tooltip
+                  ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 10),
-          // Second Row: Location and Notifications
+          // Second Row: Location
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -864,57 +900,21 @@ class GradientHeader extends StatelessWidget {
                 children: [
                   const Icon(
                     Icons.location_on,
-                    color: Colors.white70,
+                    color: Colors.black54,
                     size: 16,
                   ),
                   const SizedBox(width: 4),
                   Text(
                     location,
-                    style: GoogleFonts.poppins(
+                    style: GoogleFonts.montserrat(
                       fontSize: 14,
-                      color: Colors.white70,
+                      color: Colors.black54,
                     ),
                   ),
                 ],
               ),
-              // Notification Bell Icon with Badge
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: Colors.white,
-                    ),
-                    onPressed: onNotificationTap,
-                    tooltip:
-                        appLocalizations.notifications, // Localized tooltip
-                  ),
-                  if (notificationsCount > 0)
-                    Positioned(
-                      right: 11,
-                      top: 11,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          '$notificationsCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              // Empty space to align location to the left
+              const SizedBox(width: 48), // Adjust as needed
             ],
           ),
         ],

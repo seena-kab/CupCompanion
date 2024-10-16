@@ -207,6 +207,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDrinksFound => 'No drinks found.';
 
   @override
+  String get search => 'Search';
+
+  @override
   String get privacyPolicy => 'Privacy Policy';
 
   @override

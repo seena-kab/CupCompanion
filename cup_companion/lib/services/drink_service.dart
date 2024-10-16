@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/drink.dart';
+import '../models/review.dart';
 
 class DrinkService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -15,6 +16,47 @@ class DrinkService {
       }).toList();
     } catch (e) {
       throw Exception('Failed to load drinks: $e');
+    }
+  }
+
+
+  // Search drinks with filters
+  Future<List<Drink>> searchDrinks({
+    required String query,
+    required bool isAlcoholic,
+    required bool isNonAlcoholic,
+  }) async {
+    try {
+      CollectionReference drinksRef = _firestore.collection('drinks');
+      Query queryRef = drinksRef;
+
+      // Apply filters
+      if (isAlcoholic != isNonAlcoholic) {
+        // Only one of them is true
+        queryRef = queryRef.where('isAlcoholic', isEqualTo: isAlcoholic);
+      } else if (!isAlcoholic && !isNonAlcoholic) {
+        // Both are false, return empty list
+        return [];
+      }
+      // If both are true, no need to filter by 'isAlcoholic'
+
+      // Apply search query
+      if (query.isNotEmpty) {
+        queryRef = queryRef.where('searchKeywords',
+            arrayContains: query.toLowerCase());
+      }
+
+      QuerySnapshot snapshot = await queryRef.get();
+
+      // Map Firestore documents to Drink objects using fromMap
+      List<Drink> drinkList = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        return Drink.fromMap(data, doc.id);
+      }).toList();
+
+      return drinkList;
+    } catch (e) {
+      throw Exception('Failed to search drinks: $e');
     }
   }
 
