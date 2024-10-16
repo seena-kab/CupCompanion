@@ -6,12 +6,13 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore
-// Firebase Core
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/theme_notifier.dart';
-import 'add_drink_dialog.dart'; // Import the AddDrinkDialog
+import 'add_drink_dialog.dart';
 import 'favorites_screen.dart';
-import 'edit_profile_screen.dart'; // Import the new EditProfileScreen
+import 'edit_profile_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:cup_companion/l10n/app_localizations.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,24 +29,30 @@ class ProfileScreenState extends State<ProfileScreen> {
   String email = 'Email';
   String mobileNumber = 'Mobile Number';
   String location = 'Location';
+  String bio = 'This is the user bio or description. You can update it to reflect your personality or share something about yourself.';
+  String profileImageUrl = '';
   File? _profileImage;
 
+  List<Map<String, dynamic>> userDrinks = [];
+
   @override
-void initState() {
-  super.initState();
-  fetchUserData();
-  fetchUserDrinks(); // Add this line
-}
+  void initState() {
+    super.initState();
+    fetchUserData();
+    fetchUserDrinks();
+  }
 
   // Fetch user data from the database
   void fetchUserData() async {
     try {
-      Map<String, String> userData = await _authService.fetchUserData();
+      Map<String, dynamic> userData = await _authService.fetchUserDataWithImage();
       setState(() {
         username = userData['username'] ?? 'Username';
         email = userData['email'] ?? 'Email';
         mobileNumber = userData['mobileNumber'] ?? 'Mobile Number';
-        zipCode = userData['zipCode'] ?? '00000'; // Fetch the zip code
+        zipCode = userData['zipCode'] ?? '00000';
+        bio = userData['bio'] ?? bio;
+        profileImageUrl = userData['profileImageUrl'] ?? '';
       });
       // After fetching user data, get the location
       getUserLocation();
@@ -64,45 +71,42 @@ void initState() {
     }
   }
 
-  List<Map<String, dynamic>> userDrinks = []; // Store user's drinks
+  void fetchUserDrinks() async {
+    try {
+      // Get the current user's UID
+      String? userId = _authService.getCurrentUserId();
 
-void fetchUserDrinks() async {
-  try {
-    // Get the current user's UID
-    String? userId = _authService.getCurrentUserId();
+      // Fetch drinks where 'createdBy' equals the user's UID
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('drinks')
+          .where('createdBy', isEqualTo: userId)
+          .get();
 
-    // Fetch drinks where 'createdBy' equals the user's UID
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('drinks')
-        .where('createdBy', isEqualTo: userId)
-        .get();
+      // Map the documents to a list
+      List<Map<String, dynamic>> drinks = snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          'name': doc['name'],
+          'imageUrl': doc['imageUrl'],
+          'description': doc['description'],
+          'price': doc['price'],
+          'isAlcoholic': doc['isAlcoholic'],
+        };
+      }).toList();
 
-    // Map the documents to a list
-    List<Map<String, dynamic>> drinks = snapshot.docs.map((doc) {
-      return {
-        'id': doc.id,
-        'name': doc['name'],
-        'imageUrl': doc['imageUrl'],
-        'description': doc['description'],
-        'price': doc['price'],
-        'isAlcoholic': doc['isAlcoholic'],
-        // Include other fields as needed
-      };
-    }).toList();
-
-    setState(() {
-      userDrinks = drinks;
-    });
-  } catch (e) {
-    print('Error fetching user drinks: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to load your drinks: $e'),
-        backgroundColor: Colors.redAccent,
-      ),
-    );
+      setState(() {
+        userDrinks = drinks;
+      });
+    } catch (e) {
+      print('Error fetching user drinks: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to load your drinks: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
-}
 
   // Pick an image from the gallery
   Future<void> pickImage() async {
@@ -116,9 +120,10 @@ void fetchUserDrinks() async {
 
       // Upload the image and update profile
       try {
-        await _authService.updateProfileImage(imageFile);
+        String imageUrl = await _authService.updateProfileImage(imageFile);
         setState(() {
           _profileImage = imageFile;
+          profileImageUrl = imageUrl;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -200,109 +205,50 @@ void fetchUserDrinks() async {
   // Build the profile header with profile picture and user info
   Widget buildProfileHeader() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: themeNotifier.isNightMode
-              ? [Colors.black87, Colors.black54]
-              : [Colors.blueAccent, Colors.lightBlueAccent],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
         ),
       ),
       child: Column(
         children: [
-          // Profile Picture with PopupMenuButton
+          // Profile Picture with Edit Icon
           Stack(
             children: [
-              GestureDetector(
-                onTap: () {
-                  // Allow users to pick a new profile image
-                  pickImage();
-                },
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor:
-                      themeNotifier.isNightMode ? Colors.grey[800] : Colors.white,
-                  backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!)
-                      : const AssetImage('assets/images/default_avatar.png')
-                          as ImageProvider,
-                ),
+              CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.white,
+                backgroundImage: _profileImage != null
+                    ? FileImage(_profileImage!)
+                    : (profileImageUrl.isNotEmpty
+                        ? NetworkImage(profileImageUrl)
+                        : const AssetImage('assets/images/default_avatar.png')
+                            as ImageProvider),
               ),
               Positioned(
                 bottom: 0,
                 right: 4,
-                child: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      // Handle Edit Profile
-                      // Navigate to EditProfileScreen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen(),
-                        ),
-                      );
-                    } else if (value == 'signout') {
-                      // Handle Sign Out
-                      _authService.signOut().then((_) {
-                        Navigator.pushReplacementNamed(context, '/signin');
-                      }).catchError((error) {
-                        // Handle sign out error
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error signing out: $error'),
-                            backgroundColor: Colors.redAccent,
-                          ),
-                        );
-                      });
-                    }
+                child: GestureDetector(
+                  onTap: () {
+                    // Allow users to pick a new profile image
+                    pickImage();
                   },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.edit,
-                            color: themeNotifier.isNightMode
-                                ? Colors.white
-                                : Colors.black87,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Edit Profile'),
-                        ],
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'signout',
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.logout,
-                            color: themeNotifier.isNightMode
-                                ? Colors.white
-                                : Colors.black87,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Sign Out'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  icon: Container(
+                  child: Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.more_vert,
-                      color: themeNotifier.isNightMode
-                          ? Colors.black
-                          : Colors.blueAccent,
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.black87,
+                      size: 20,
                     ),
                   ),
                 ),
@@ -313,9 +259,9 @@ void fetchUserDrinks() async {
           // Username
           Text(
             username,
-            style: TextStyle(
+            style: GoogleFonts.montserrat(
               fontSize: 28,
-              color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+              color: Colors.black87,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -324,20 +270,17 @@ void fetchUserDrinks() async {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
+              const Icon(
                 Icons.location_on,
-                color:
-                    themeNotifier.isNightMode ? Colors.white70 : Colors.grey[600],
+                color: Colors.black54,
                 size: 18,
               ),
               const SizedBox(width: 5),
               Text(
                 location,
-                style: TextStyle(
+                style: GoogleFonts.montserrat(
                   fontSize: 16,
-                  color: themeNotifier.isNightMode
-                      ? Colors.white70
-                      : Colors.grey[600],
+                  color: Colors.black54,
                 ),
               ),
             ],
@@ -351,7 +294,7 @@ void fetchUserDrinks() async {
   Widget buildStatisticsSection() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+      color: Colors.transparent,
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -366,24 +309,22 @@ void fetchUserDrinks() async {
 
   // Helper method to build a single statistic item
   Widget buildStatisticItem(String label, String count) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Column(
       children: [
         Text(
           count,
-          style: TextStyle(
+          style: GoogleFonts.montserrat(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: themeNotifier.isNightMode ? Colors.white : Colors.black87,
+            color: Colors.black87,
           ),
         ),
         const SizedBox(height: 5),
         Text(
           label,
-          style: TextStyle(
+          style: GoogleFonts.montserrat(
             fontSize: 16,
-            color:
-                themeNotifier.isNightMode ? Colors.white70 : Colors.grey,
+            color: Colors.black54,
           ),
         ),
       ],
@@ -393,18 +334,87 @@ void fetchUserDrinks() async {
   // Build the user's bio or description
   Widget buildBioSection() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!;
     return Container(
-      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+      color: Colors.transparent,
       padding: const EdgeInsets.all(16),
-      child: Text(
-        'This is the user bio or description. You can update it to reflect your personality or share something about yourself.',
-        style: TextStyle(
-          fontSize: 16,
-          color: themeNotifier.isNightMode
-              ? Colors.white70
-              : Colors.black87,
-        ),
-        textAlign: TextAlign.center,
+      child: Stack(
+        children: [
+          Text(
+            bio,
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.edit, color: Colors.black54),
+              onPressed: () async {
+                // Open dialog to edit bio
+                final newBio = await showDialog<String>(
+                  context: context,
+                  builder: (context) {
+                    String updatedBio = bio;
+                    return AlertDialog(
+                      title: Text(appLocalizations.editBio),
+                      content: TextField(
+                        maxLines: 4,
+                        onChanged: (value) {
+                          updatedBio = value;
+                        },
+                        controller: TextEditingController(text: bio),
+                        decoration: InputDecoration(
+                          hintText: appLocalizations.enterYourBio,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(appLocalizations.cancel),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, updatedBio),
+                          child: Text(appLocalizations.save),
+                        ),
+                      ],
+                    );
+                  },
+                );
+
+                if (newBio != null && newBio != bio) {
+                  // Update bio in Firestore
+                  try {
+                    await _authService.updateUserBio(newBio);
+                    setState(() {
+                      bio = newBio;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(appLocalizations.bioUpdated),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content:
+                            Text('${appLocalizations.failedToUpdateBio}: $e'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -413,43 +423,32 @@ void fetchUserDrinks() async {
   Widget buildContactInfo() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Container(
-      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+      color: Colors.transparent,
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           ListTile(
-            leading: Icon(
+            leading: const Icon(
               Icons.email,
-              color: themeNotifier.isNightMode
-                  ? Colors.white70
-                  : Colors.blueAccent,
+              color: Colors.black54,
             ),
             title: Text(
               email,
-              style: TextStyle(
-                color: themeNotifier.isNightMode
-                    ? Colors.white
-                    : Colors.black87,
+              style: GoogleFonts.montserrat(
+                color: Colors.black87,
               ),
             ),
           ),
-          Divider(
-              color: themeNotifier.isNightMode
-                  ? Colors.white12
-                  : Colors.grey[300]),
+          Divider(color: Colors.grey[300]),
           ListTile(
-            leading: Icon(
+            leading: const Icon(
               Icons.phone,
-              color: themeNotifier.isNightMode
-                  ? Colors.white70
-                  : Colors.blueAccent,
+              color: Colors.black54,
             ),
             title: Text(
               mobileNumber,
-              style: TextStyle(
-                color: themeNotifier.isNightMode
-                    ? Colors.white
-                    : Colors.black87,
+              style: GoogleFonts.montserrat(
+                color: Colors.black87,
               ),
             ),
           ),
@@ -461,8 +460,9 @@ void fetchUserDrinks() async {
   // Build the Edit Profile button
   Widget buildEditProfileButton() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!;
     return Container(
-      color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+      color: Colors.transparent,
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Center(
         child: ElevatedButton(
@@ -471,21 +471,21 @@ void fetchUserDrinks() async {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const EditProfileScreen()),
-            );
+            ).then((_) {
+              fetchUserData();
+            });
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: themeNotifier.isNightMode
-                ? Colors.amberAccent
-                : Colors.blueAccent,
+            backgroundColor: const Color(0xFFFFC3A0),
             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
           ),
           child: Text(
-            'Edit Profile',
-            style: TextStyle(
-              color: themeNotifier.isNightMode ? Colors.black : Colors.white,
+            appLocalizations.editProfile,
+            style: GoogleFonts.montserrat(
+              color: Colors.black87,
               fontSize: 18,
             ),
           ),
@@ -495,57 +495,57 @@ void fetchUserDrinks() async {
   }
 
   Widget buildUserPosts() {
-  final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
 
-  if (userDrinks.isEmpty) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Text(
-        'You have not added any drinks yet.',
-        style: TextStyle(
-          fontSize: 16,
-          color: themeNotifier.isNightMode ? Colors.white70 : Colors.black87,
+    if (userDrinks.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          'You have not added any drinks yet.',
+          style: GoogleFonts.montserrat(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
         ),
+      );
+    }
+
+    return Container(
+      color: Colors.transparent,
+      padding: const EdgeInsets.all(8),
+      child: GridView.builder(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemCount: userDrinks.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemBuilder: (context, index) {
+          final drink = userDrinks[index];
+          return GestureDetector(
+            onTap: () {
+              // Optionally navigate to drink details
+            },
+            child: Image.network(
+              drink['imageUrl'],
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: const Icon(
+                    Icons.broken_image,
+                    color: Colors.grey,
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
-
-  return Container(
-    color: themeNotifier.isNightMode ? Colors.black : Colors.white,
-    padding: const EdgeInsets.all(8),
-    child: GridView.builder(
-      physics: const NeverScrollableScrollPhysics(),
-      shrinkWrap: true,
-      itemCount: userDrinks.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4,
-        mainAxisSpacing: 4,
-      ),
-      itemBuilder: (context, index) {
-        final drink = userDrinks[index];
-        return GestureDetector(
-          onTap: () {
-            // Optionally navigate to drink details
-          },
-          child: Image.network(
-            drink['imageUrl'],
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Container(
-                color: Colors.grey[300],
-                child: const Icon(
-                  Icons.broken_image,
-                  color: Colors.grey,
-                ),
-              );
-            },
-          ),
-        );
-      },
-    ),
-  );
-}
 
   // Build the entire profile page content
   Widget buildProfileContent() {
@@ -569,77 +569,87 @@ void fetchUserDrinks() async {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final appLocalizations = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor:
-          themeNotifier.isNightMode ? Colors.black : Colors.grey[100],
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor:
-            themeNotifier.isNightMode ? Colors.black : Colors.white,
-        iconTheme: IconThemeData(
-          color:
-              themeNotifier.isNightMode ? Colors.white : Colors.black87,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(
+          color: Colors.black87,
         ),
         title: Text(
-          'Profile',
-          style: TextStyle(
-            color:
-                themeNotifier.isNightMode ? Colors.white : Colors.black87,
+          appLocalizations.profile,
+          style: GoogleFonts.montserrat(
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
           ),
         ),
         centerTitle: true,
-        actions: const [
-          // Optional: Add action buttons if needed
-          // Currently, the logout button is handled within the PopupMenuButton in the profile header
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // Handle Sign Out
+              _authService.signOut().then((_) {
+                Navigator.pushReplacementNamed(context, '/signin');
+              }).catchError((error) {
+                // Handle sign out error
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Error signing out: $error'),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              });
+            },
+            tooltip: appLocalizations.signOut,
+          ),
         ],
       ),
       body: buildProfileContent(),
-      // Modified floatingActionButton to include Favorites and Add Drink buttons
       floatingActionButton: Stack(
-  children: [
-    Positioned(
-      bottom: 80, // Adjust the position as needed
-      right: 16,
-      child: FloatingActionButton(
-        heroTag: 'favorites_button', // Unique heroTag
-        onPressed: () {
-          // Navigate to FavoritesScreen
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const FavoritesScreen(),
+        children: [
+          Positioned(
+            bottom: 80,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'favorites_button',
+              onPressed: () {
+                // Navigate to FavoritesScreen
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FavoritesScreen(),
+                  ),
+                );
+              },
+              backgroundColor: Colors.redAccent,
+              tooltip: appLocalizations.favorites,
+              child: const Icon(Icons.favorite),
             ),
-          );
-        },
-        backgroundColor: themeNotifier.isNightMode
-            ? Colors.amberAccent
-            : Colors.blueAccent,
-        tooltip: 'Favorites',
-        child: const Icon(Icons.favorite),
+          ),
+          Positioned(
+            bottom: 16,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'add_drink_button',
+              onPressed: () {
+                // Show the AddDrinkDialog when the button is pressed
+                showDialog(
+                  context: context,
+                  builder: (context) => const AddDrinkDialog(),
+                ).then((_) {
+                  fetchUserDrinks();
+                });
+              },
+              backgroundColor: Colors.orangeAccent,
+              tooltip: appLocalizations.addDrink,
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ],
       ),
-    ),
-    Positioned(
-      bottom: 16, // Position below the Favorites button
-      right: 16,
-      child: FloatingActionButton(
-        heroTag: 'add_drink_button', // Unique heroTag
-        onPressed: () {
-          // Show the AddDrinkDialog when the button is pressed
-          showDialog(
-            context: context,
-            builder: (context) => const AddDrinkDialog(),
-          ).then((_) {
-            fetchUserDrinks();
-          });
-        },
-        backgroundColor: themeNotifier.isNightMode
-            ? Colors.greenAccent
-            : Colors.orangeAccent,
-        tooltip: 'Add Drink',
-        child: const Icon(Icons.add),
-      ),
-    ),
-  ],
-),
     );
   }
 }

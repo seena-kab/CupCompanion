@@ -1,6 +1,6 @@
 {
   "@@locale": "ja",
-  
+
   "settings": "設定",
   "nightMode": "ナイトモード",
   "dayMode": "デイモード",
@@ -28,6 +28,7 @@
   "addToCart": "カートに追加",
   "removeFromFavorites": "お気に入りから削除",
   "addToFavorites": "お気に入りに追加",
+  "search": "検索",
   "searchForBeverage": "飲み物を検索",
   "reviews": "レビュー",
   "noReviews": "まだレビューがありません。最初のレビューを書いてください！",
@@ -37,7 +38,6 @@
   "failedToLoadImage": "画像の読み込みに失敗しました",
   "reviewAdded": "レビューが正常に追加されました！",
   "failedToAddReview": "レビューの追加に失敗しました: {error}",
-  
   "coffee": "コーヒー",
   "tea": "お茶",
   "juice": "ジュース",
@@ -48,7 +48,6 @@
   "whiskey": "ウイスキー",
   "cocktails": "カクテル",
   "nonAlcoholic": "ノンアルコール",
-  
   "drinkDetailTitle": "ドリンク詳細",
   "description": "説明",
   "price": "価格",
@@ -69,13 +68,22 @@
   "juices": "ジュース",
   "drinksFound": "の飲み物が見つかりました",
   "noDrinksFound": "飲み物が見つかりませんでした。",
-  "search": "検索",
-  
   "privacyPolicy": "プライバシーポリシー",
   "privacyPolicyContent": "お客様のプライバシーは当社にとって重要です。サービスを提供し改善するために、お客様の個人情報を収集・使用します。お客様の同意なしに第三者と個人情報を共有することはありません。当アプリを使用することで、このポリシーに記載された当社のプライバシー慣行に同意したものとみなされます。",
   "accept": "同意する",
   "decline": "同意しない",
-  
+
+  "editBio": "プロフィールを編集",
+  "enterYourBio": "あなたの自己紹介を入力してください",
+  "cancel": "キャンセル",
+  "save": "保存",
+  "bioUpdated": "自己紹介が更新されました！",
+  "failedToUpdateBio": "自己紹介の更新に失敗しました",
+  "editProfile": "プロフィールを編集",
+  "profile": "プロフィール",
+  "favorites": "お気に入り",
+  "addDrink": "ドリンクを追加",
+
   "@failedToAddReview": {
     "description": "レビューの追加に失敗したときのエラーメッセージ",
     "placeholders": {
