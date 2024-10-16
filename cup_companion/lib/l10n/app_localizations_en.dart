@@ -88,6 +88,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addToFavorites => 'Add to Favorites';
 
   @override
+  String get search => 'Search';
+
+  @override
   String get searchForBeverage => 'Search for a beverage';
 
   @override
@@ -207,9 +210,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDrinksFound => 'No drinks found.';
 
   @override
-  String get search => 'Search';
-
-  @override
   String get privacyPolicy => 'Privacy Policy';
 
   @override
@@ -220,4 +220,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get decline => 'Decline';
+
+  @override
+  String get editBio => 'Edit Bio';
+
+  @override
+  String get enterYourBio => 'Enter your bio';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get bioUpdated => 'Bio updated successfully!';
+
+  @override
+  String get failedToUpdateBio => 'Failed to update bio';
+
+  @override
+  String get editProfile => 'Edit Profile';
+
+  @override
+  String get profile => 'Profile';
+
+  @override
+  String get favorites => 'Favorites';
+
+  @override
+  String get addDrink => 'Add Drink';
 }
