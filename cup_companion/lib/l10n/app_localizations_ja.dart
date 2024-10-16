@@ -207,6 +207,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get noDrinksFound => '飲み物が見つかりませんでした。';
 
   @override
+  String get search => '検索';
+
+  @override
   String get privacyPolicy => 'プライバシーポリシー';
 
   @override

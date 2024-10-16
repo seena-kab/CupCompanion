@@ -493,6 +493,12 @@ abstract class AppLocalizations {
   /// **'No drinks found.'**
   String get noDrinksFound;
 
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
   /// No description provided for @privacyPolicy.
   ///
   /// In en, this message translates to:

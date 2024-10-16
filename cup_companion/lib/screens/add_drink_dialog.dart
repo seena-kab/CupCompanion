@@ -36,6 +36,28 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
     }
   }
 
+  // Function to generate search keywords from the drink name
+  List<String> generateSearchKeywords(String name) {
+    List<String> keywords = [];
+    String lowerCaseName = name.toLowerCase();
+
+    // Add all substrings of the name
+    for (int i = 1; i <= lowerCaseName.length; i++) {
+      keywords.add(lowerCaseName.substring(0, i));
+    }
+
+    // Split the name into words and add substrings of each word
+    List<String> words = lowerCaseName.split(' ');
+    for (String word in words) {
+      for (int i = 1; i <= word.length; i++) {
+        keywords.add(word.substring(0, i));
+      }
+    }
+
+    // Remove duplicates
+    return keywords.toSet().toList();
+  }
+
   Future<void> addDrink() async {
     if (imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -66,8 +88,11 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
       // Proceed with uploading the image and adding the drink
       String imageUrl = await uploadImage(imageFile!);
 
+      // Generate search keywords from the drink name
+      List<String> keywords = generateSearchKeywords(name);
+
       // Add the new drink to Firestore
-      String? userId = FirebaseAuth.instance.currentUser?.uid;
+      String? userId = user.uid;
 
       await FirebaseFirestore.instance.collection('drinks').add({
         'averageRating': 0,
@@ -78,6 +103,7 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
         'price': price,
         'isAlcoholic': isAlcoholic,
         'reviews': [],
+        'searchKeywords': keywords, // Add this line
         'createdBy': userId, // Add this line
       });
 
@@ -274,37 +300,37 @@ class _AddDrinkDialogState extends State<AddDrinkDialog> {
                   ),
                   const SizedBox(height: 15),
                   // Alcoholic Status Field
-                  // Using ToggleButtons for selection
-                  Row(
+                  // Using Wrap to ensure proper layout on small screens
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 10,
                     children: [
                       const Text(
                         'Alcohol Content:',
                         style: TextStyle(fontSize: 16),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: ToggleButtons(
-                          isSelected: [!isAlcoholic, isAlcoholic],
-                          borderRadius: BorderRadius.circular(10),
-                          selectedColor: Colors.white,
-                          fillColor: Theme.of(context).primaryColor,
-                          color: Colors.grey,
-                          children: const [
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('Non-Alcoholic'),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 16),
-                              child: Text('Alcoholic'),
-                            ),
-                          ],
-                          onPressed: (int index) {
-                            setState(() {
-                              isAlcoholic = index == 1;
-                            });
-                          },
-                        ),
+                      ToggleButtons(
+                        isSelected: [!isAlcoholic, isAlcoholic],
+                        borderRadius: BorderRadius.circular(10),
+                        selectedColor: Colors.white,
+                        fillColor: Theme.of(context).primaryColor,
+                        color: Colors.grey,
+                        constraints: const BoxConstraints(minHeight: 36),
+                        children: const [
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text('Non-Alc'),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            child: Text('Alcoholic'),
+                          ),
+                        ],
+                        onPressed: (int index) {
+                          setState(() {
+                            isAlcoholic = index == 1;
+                          });
+                        },
                       ),
                     ],
                   ),

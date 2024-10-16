@@ -207,6 +207,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noDrinksFound => 'No se encontraron bebidas.';
 
   @override
+  String get search => 'Buscar';
+
+  @override
   String get privacyPolicy => 'Política de Privacidad';
 
   @override
