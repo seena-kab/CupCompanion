@@ -44,8 +44,6 @@ dependencies:
   google_maps_flutter: ^2.1.1
   flutter_google_places: ^0.3.0
   location: ^4.4.0
-  uuid: ^4.5.0
-  flutter_dotenv: ^5.0.2
   flutter_markdown: ^0.6.10
   http: ^0.13.5
   file_picker: ^8.1.2
