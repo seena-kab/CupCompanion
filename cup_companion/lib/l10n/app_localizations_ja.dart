@@ -88,6 +88,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addToFavorites => 'お気に入りに追加';
 
   @override
+  String get search => '検索';
+
+  @override
   String get searchForBeverage => '飲み物を検索';
 
   @override
@@ -217,4 +220,34 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get decline => '同意しない';
+
+  @override
+  String get editBio => 'プロフィールを編集';
+
+  @override
+  String get enterYourBio => 'あなたの自己紹介を入力してください';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get bioUpdated => '自己紹介が更新されました！';
+
+  @override
+  String get failedToUpdateBio => '自己紹介の更新に失敗しました';
+
+  @override
+  String get editProfile => 'プロフィールを編集';
+
+  @override
+  String get profile => 'プロフィール';
+
+  @override
+  String get favorites => 'お気に入り';
+
+  @override
+  String get addDrink => 'ドリンクを追加';
 }

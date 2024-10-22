@@ -1,6 +1,6 @@
 {
   "@@locale": "es",
-  
+
   "settings": "Configuración",
   "nightMode": "Modo Nocturno",
   "dayMode": "Modo Diurno",
@@ -28,6 +28,7 @@
   "addToCart": "Añadir al Carrito",
   "removeFromFavorites": "Eliminar de Favoritos",
   "addToFavorites": "Añadir a Favoritos",
+  "search": "Buscar",
   "searchForBeverage": "Buscar una bebida",
   "reviews": "Reseñas",
   "noReviews": "No hay reseñas todavía. ¡Sé el primero en reseñar!",
@@ -37,7 +38,6 @@
   "failedToLoadImage": "Error al cargar la imagen",
   "reviewAdded": "¡Reseña añadida con éxito!",
   "failedToAddReview": "Error al añadir la reseña: {error}",
-  
   "coffee": "Café",
   "tea": "Té",
   "juice": "Jugo",
@@ -48,7 +48,6 @@
   "whiskey": "Whiskey",
   "cocktails": "Cócteles",
   "nonAlcoholic": "Sin Alcohol",
-  
   "drinkDetailTitle": "Detalles de la Bebida",
   "description": "Descripción",
   "price": "Precio",
@@ -69,12 +68,22 @@
   "juices": "Jugos",
   "drinksFound": "bebidas encontradas",
   "noDrinksFound": "No se encontraron bebidas.",
-  
   "privacyPolicy": "Política de Privacidad",
   "privacyPolicyContent": "Su privacidad es importante para nosotros. Recopilamos y usamos su información personal para proporcionar y mejorar nuestros servicios. No compartimos su información personal con terceros sin su consentimiento. Al usar nuestra aplicación, usted acepta nuestras prácticas de privacidad como se describe en esta política.",
   "accept": "Aceptar",
   "decline": "Rechazar",
-  
+
+  "editBio": "Editar Biografía",
+  "enterYourBio": "Ingresa tu biografía",
+  "cancel": "Cancelar",
+  "save": "Guardar",
+  "bioUpdated": "¡Biografía actualizada con éxito!",
+  "failedToUpdateBio": "Error al actualizar la biografía",
+  "editProfile": "Editar Perfil",
+  "profile": "Perfil",
+  "favorites": "Favoritos",
+  "addDrink": "Añadir Bebida",
+
   "@failedToAddReview": {
     "description": "Mensaje de error cuando añadir una reseña falla",
     "placeholders": {
