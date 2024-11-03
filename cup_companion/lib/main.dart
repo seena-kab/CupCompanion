@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -9,6 +7,7 @@ import 'screens/signin_screen.dart';
 import 'screens/survey_screen.dart';
 import 'screens/forgot_password_screen.dart';
 import 'screens/profile_screen.dart';
+import 'screens/favorites_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/home_screen.dart'; // Import HomeScreen
@@ -111,6 +110,7 @@ class MyApp extends StatelessWidget {
       '/settings': (context) => const SettingsScreen(),
       '/notifications': (context) => const NotificationsScreen(),
       '/redeem': (context) => const RedeemPointsScreen(),
+      '/favorites_screen': (context) => const FavoritesScreen(),
     },
     );
   }

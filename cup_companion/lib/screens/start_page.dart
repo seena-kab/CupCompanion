@@ -42,7 +42,7 @@ class StartPage extends StatelessWidget {
                       textStyle: const TextStyle(
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                         fontFamily: 'Montserrat',
                       ),
                       speed: const Duration(milliseconds: 100),
@@ -60,7 +60,8 @@ class StartPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 18.0,
-                    color: Colors.white70,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                     fontFamily: 'Montserrat',
                   ),
                 ),
@@ -98,7 +99,7 @@ class StartPage extends StatelessWidget {
                 // Playful decorative element
                 const Icon(
                   Icons.local_drink_rounded,
-                  color: Colors.white54,
+                  color: Colors.black,
                   size: 50.0,
                 ),
               ],
@@ -113,10 +114,10 @@ class AnimatedLogo extends StatefulWidget {
   const AnimatedLogo({super.key});
 
   @override
-  _AnimatedLogoState createState() => _AnimatedLogoState();
+  AnimatedLogoState createState() => AnimatedLogoState();
 }
 
-class _AnimatedLogoState extends State<AnimatedLogo>
+class AnimatedLogoState extends State<AnimatedLogo>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;

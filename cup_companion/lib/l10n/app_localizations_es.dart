@@ -88,6 +88,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addToFavorites => 'Añadir a Favoritos';
 
   @override
+  String get search => 'Buscar';
+
+  @override
   String get searchForBeverage => 'Buscar una bebida';
 
   @override
@@ -205,4 +208,46 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noDrinksFound => 'No se encontraron bebidas.';
+
+  @override
+  String get privacyPolicy => 'Política de Privacidad';
+
+  @override
+  String get privacyPolicyContent => 'Su privacidad es importante para nosotros. Recopilamos y usamos su información personal para proporcionar y mejorar nuestros servicios. No compartimos su información personal con terceros sin su consentimiento. Al usar nuestra aplicación, usted acepta nuestras prácticas de privacidad como se describe en esta política.';
+
+  @override
+  String get accept => 'Aceptar';
+
+  @override
+  String get decline => 'Rechazar';
+
+  @override
+  String get editBio => 'Editar Biografía';
+
+  @override
+  String get enterYourBio => 'Ingresa tu biografía';
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get bioUpdated => '¡Biografía actualizada con éxito!';
+
+  @override
+  String get failedToUpdateBio => 'Error al actualizar la biografía';
+
+  @override
+  String get editProfile => 'Editar Perfil';
+
+  @override
+  String get profile => 'Perfil';
+
+  @override
+  String get favorites => 'Favoritos';
+
+  @override
+  String get addDrink => 'Añadir Bebida';
 }

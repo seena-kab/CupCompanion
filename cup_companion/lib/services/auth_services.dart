@@ -5,6 +5,7 @@ import 'dart:io'; // For File
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; 
 import 'package:flutter/material.dart';
 // Import other necessary packages
 
@@ -13,35 +14,35 @@ class AuthService {
   final DatabaseReference _databaseRef =
       FirebaseDatabase.instance.ref().child('users');
   final FirebaseStorage _storage = FirebaseStorage.instance; // Initialize FirebaseStorage
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Public getters for accessing _auth and _databaseRef
   FirebaseAuth get auth => _auth; // Expose _auth as a public getter
   DatabaseReference get databaseRef =>
       _databaseRef; // Expose _databaseRef as a public getter
 
-  // API call for creating a User
   Future<UserCredential> createUser(
-      String email, String password, String username, String mobileNumber) async {
-    try {
-      final UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+    String email, String password, String username, String mobileNumber) async {
+  try {
+    final UserCredential userCredential =
+        await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
 
-      // Save user data in the database and set surveyCompleted to false
-      await _databaseRef.child(userCredential.user!.uid).set({
-        'email': email,
-        'username': username,
-        'mobileNumber': mobileNumber, // Save the mobile number
-        'surveyCompleted': false, // New user must complete the survey
-      });
+    // Save user data in Firestore and set surveyCompleted to false
+    await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      'email': email,
+      'username': username,
+      'mobileNumber': mobileNumber,
+      'surveyCompleted': false,
+    });
 
-      return userCredential;
-    } on FirebaseAuthException catch (e) {
-      throw Exception(_handleFirebaseAuthException(e));
-    }
+    return userCredential;
+  } on FirebaseAuthException catch (e) {
+    throw Exception(_handleFirebaseAuthException(e));
   }
+}
 
   Future<UserCredential> signIn(String email, String password) async {
     try {
@@ -149,33 +150,93 @@ class AuthService {
     }
   }
 
-  // Update profile image method (Optional, since updateUserProfile handles it)
-  Future<void> updateProfileImage(File imageFile) async {
+   // Fetch user data with profile image URL
+  Future<Map<String, dynamic>> fetchUserDataWithImage() async {
     User? user = _auth.currentUser;
     if (user != null) {
+      String uid = user.uid;
+
+      // Fetch data from Firestore
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(uid).get();
+
+      if (userDoc.exists) {
+        Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+        String username = userData['username'] ?? 'Unknown User';
+        String email = userData['email'] ?? 'Unknown Email';
+        String mobileNumber = userData['mobileNumber'] ?? 'Unknown Number';
+        String zipCode = userData['zipCode'] ?? '00000';
+        String bio = userData['bio'] ?? '';
+        String profileImageUrl = userData['profileImageUrl'] ?? '';
+
+        return {
+          'username': username,
+          'email': email,
+          'mobileNumber': mobileNumber,
+          'zipCode': zipCode,
+          'bio': bio,
+          'profileImageUrl': profileImageUrl,
+        };
+      } else {
+        return {
+          'username': 'Unknown User',
+          'email': 'Unknown Email',
+          'mobileNumber': 'Unknown Number',
+          'zipCode': '00000',
+          'bio': '',
+          'profileImageUrl': '',
+        };
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  // Update profile image method
+  Future<String> updateProfileImage(File imageFile) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      String userId = user.uid;
+
       // Create a reference to the location you want to upload to in Firebase Storage
       Reference storageRef = _storage
           .ref()
           .child('profile_images')
-          .child('${user.uid}.jpg'); // You can use any naming convention
+          .child('$userId.jpg'); // You can use any naming convention
 
       // Upload the file
       UploadTask uploadTask = storageRef.putFile(imageFile);
 
       // Wait for the upload to complete
-      TaskSnapshot snapshot = await uploadTask;
+      TaskSnapshot snapshot = await uploadTask.whenComplete(() => null);
 
       // Get the download URL
       String downloadUrl = await snapshot.ref.getDownloadURL();
 
-      // Update the user's profile with the new photo URL
+      // Update the user's profile with the new photo URL in Firestore
+      await _firestore.collection('users').doc(userId).update({
+        'profileImageUrl': downloadUrl,
+      });
+
+      // Also update the Firebase Auth user's photoURL
       await user.updatePhotoURL(downloadUrl);
 
-      // Optionally, if you're storing user data in Firestore, update there as well
-      // Example:
-      // await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-      //   'photoURL': downloadUrl,
-      // });
+      return downloadUrl;
+    } else {
+      throw Exception('No user logged in');
+    }
+  }
+
+   // Update user's bio
+  Future<void> updateUserBio(String newBio) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      String userId = user.uid;
+
+      // Update the bio in Firestore
+      await _firestore.collection('users').doc(userId).update({
+        'bio': newBio,
+      });
     } else {
       throw Exception('No user logged in');
     }

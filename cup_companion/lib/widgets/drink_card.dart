@@ -1,5 +1,3 @@
-// lib/widgets/drink_card.dart
-
 import 'package:flutter/material.dart';
 import '../models/drink.dart';
 import '../screens/drink_detail_screen.dart';

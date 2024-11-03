@@ -26,8 +26,6 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Your photo library usage description.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Your camera usage description.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -35,7 +33,9 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This app needs access to your location to provide background location features.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to your location to show it on the map.</string>
+	<string>App needs access to your location to show coffee shops nearby.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Your photo library usage description.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

@@ -8,7 +8,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
+  sdk: '>=3.4.3 <4.0.0'
 
 dependencies:
   flutter:
@@ -35,17 +35,19 @@ dependencies:
   google_fonts: ^4.0.3
   geocoding: ^3.0.0
   path_provider: ^2.1.4
+  flutter_typeahead: ^5.2.0
+  flutter_dotenv: ^5.1.0
   provider: ^6.0.5
   hive: ^2.2.3
   hive_flutter: ^1.0.0-nullsafety.0
   google_maps_flutter: ^2.1.1
+  flutter_google_places: ^0.3.0
   location: ^4.4.0
   uuid: ^4.5.0
-  flutter_dotenv: ^5.0.2
+  flutter_markdown: ^0.6.10
   http: ^0.13.5
   file_picker: ^8.1.2
   csv: ^6.0.0
-  flutter_typeahead: ^4.1.1
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +74,11 @@ flutter:
     - assets/illustrations/bottom_decor.svg
     - assets/illustrations/signin_illustration.svg
     - assets/illustrations/forgot_password_illustration.svg
+    - assets/illustrations/privacy_policy_illustration.svg
+    - assets/images/mug.jpg
+    - assets/images/tshirt.jpg
+    - assets/images/backpack.jpg
+    - assets/images/headphones.jpg
 
   fonts:
     - family: Montserrat

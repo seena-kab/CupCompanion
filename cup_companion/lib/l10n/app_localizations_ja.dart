@@ -88,6 +88,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get addToFavorites => 'お気に入りに追加';
 
   @override
+  String get search => '検索';
+
+  @override
   String get searchForBeverage => '飲み物を検索';
 
   @override
@@ -205,4 +208,46 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noDrinksFound => '飲み物が見つかりませんでした。';
+
+  @override
+  String get privacyPolicy => 'プライバシーポリシー';
+
+  @override
+  String get privacyPolicyContent => 'お客様のプライバシーは当社にとって重要です。サービスを提供し改善するために、お客様の個人情報を収集・使用します。お客様の同意なしに第三者と個人情報を共有することはありません。当アプリを使用することで、このポリシーに記載された当社のプライバシー慣行に同意したものとみなされます。';
+
+  @override
+  String get accept => '同意する';
+
+  @override
+  String get decline => '同意しない';
+
+  @override
+  String get editBio => 'プロフィールを編集';
+
+  @override
+  String get enterYourBio => 'あなたの自己紹介を入力してください';
+
+  @override
+  String get cancel => 'キャンセル';
+
+  @override
+  String get save => '保存';
+
+  @override
+  String get bioUpdated => '自己紹介が更新されました！';
+
+  @override
+  String get failedToUpdateBio => '自己紹介の更新に失敗しました';
+
+  @override
+  String get editProfile => 'プロフィールを編集';
+
+  @override
+  String get profile => 'プロフィール';
+
+  @override
+  String get favorites => 'お気に入り';
+
+  @override
+  String get addDrink => 'ドリンクを追加';
 }
