@@ -9,6 +9,8 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _taskTitleController = TextEditingController();
+  final TextEditingController _taskDescriptionController = TextEditingController();
 
   // Example notifications data (this can be replaced with real data)
   List<Map<String, dynamic>> allNotifications = [
@@ -42,15 +44,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
     },
   ];
 
+  // Task manager data
+  List<Map<String, dynamic>> tasks = [];
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this); // Add an extra tab for Tasks
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _taskTitleController.dispose();
+    _taskDescriptionController.dispose();
     super.dispose();
   }
 
@@ -65,6 +72,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
             Tab(text: 'All'),
             Tab(text: 'Messages'),
             Tab(text: 'System Alerts'),
+            Tab(text: 'Tasks'), // New Task Manager tab
           ],
         ),
         actions: [
@@ -82,6 +90,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           _buildNotificationList(allNotifications), // "All" notifications tab
           _buildNotificationList(_filterNotifications('Messages')), // "Messages" tab
           _buildNotificationList(_filterNotifications('System Alerts')), // "System Alerts" tab
+          _buildTaskManager(), // "Tasks" tab content
         ],
       ),
     );
@@ -168,5 +177,101 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         );
       },
     );
+  }
+
+  // Task Manager functions
+  Widget _buildTaskManager() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _taskTitleController,
+                decoration: const InputDecoration(
+                  labelText: 'Task Title',
+                  hintText: 'Enter task title',
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              TextField(
+                controller: _taskDescriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Task Description',
+                  hintText: 'Enter task description',
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 8.0),
+              ElevatedButton(
+                onPressed: _addTask,
+                child: const Text('Add Task'),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: tasks.isEmpty
+              ? const Center(child: Text('No tasks available.'))
+              : ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return ListTile(
+                      leading: Icon(
+                        task['completed'] ? Icons.check_circle : Icons.circle_outlined,
+                        color: task['completed'] ? Colors.green : Colors.grey,
+                      ),
+                      title: Text(
+                        task['title'],
+                        style: TextStyle(
+                          decoration: task['completed']
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
+                      ),
+                      subtitle: task['description'] != null
+                          ? Text(task['description'] as String)
+                          : null,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _deleteTask(index),
+                      ),
+                      onTap: () => _toggleTaskCompletion(index),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  void _addTask() {
+    final taskTitle = _taskTitleController.text;
+    final taskDescription = _taskDescriptionController.text;
+    if (taskTitle.isNotEmpty) {
+      setState(() {
+        tasks.add({
+          'title': taskTitle,
+          'description': taskDescription,
+          'completed': false,
+        });
+        _taskTitleController.clear();
+        _taskDescriptionController.clear();
+      });
+    }
+  }
+
+  void _toggleTaskCompletion(int index) {
+    setState(() {
+      tasks[index]['completed'] = !tasks[index]['completed'];
+    });
+  }
+
+  void _deleteTask(int index) {
+    setState(() {
+      tasks.removeAt(index);
+    });
   }
 }
