@@ -1,10 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'dart:async';
 import 'package:google_maps_webservice/places.dart';
-import 'package:provider/provider.dart';
-import '../theme/theme_notifier.dart';
+import 'package:location/location.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -16,15 +14,27 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen>
     with SingleTickerProviderStateMixin {
   final Completer<GoogleMapController> _controller = Completer();
-  static const LatLng _center = LatLng(45.5231, -122.6765);
-  final GoogleMapsPlaces _places = GoogleMapsPlaces(apiKey: 'YOUR_API_KEY'); // Replace with your API key
+  static const LatLng _center = LatLng(45.5231, -122.6765); // Center on Portland
 
+  // Current zoom level
   double _currentZoom = 12.0;
+
+  // Initial map type
   MapType _currentMapType = MapType.normal;
+
+  // Set of markers
   final Set<Marker> _markers = {};
+
+  // Tab controller for switching between Map and Favorites
   late TabController _tabController;
 
-  // List of coffee places with name, address, and position
+  // Google Places API instance
+  final places = GoogleMapsPlaces(apiKey: 'AIzaSyAlx5sC50RFziKxX94fMe6sphvIJ_XIM7E'); // Replace with your API key
+
+  // List to hold autocomplete results
+  List<Prediction> _searchResults = [];
+
+  // List of coffee places
   List<Map<String, dynamic>> _coffeePlaces = [
     {
       'name': 'Stumptown Coffee Roasters',
@@ -43,46 +53,44 @@ class _MapScreenState extends State<MapScreen>
     },
   ];
 
-  // Default map style for day and night
-  String? _mapStyle;
+  // List of map types for the dropdown menu
+  final List<MapType> _mapTypes = [
+    MapType.normal,
+    MapType.satellite,
+    MapType.terrain,
+    MapType.hybrid,
+  ];
 
-  // Controller for search bar
-  final TextEditingController _searchController = TextEditingController();
-  List<Prediction> _predictions = [];
+  // Map type names for the dropdown menu display
+  final List<String> _mapTypeNames = [
+    'Normal',
+    'Satellite',
+    'Terrain',
+    'Hybrid',
+  ];
+
+  // Selected map type name
+  String _selectedMapType = 'Normal';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _addInitialMarkers();
-    _loadMapStyle();
-  }
-
-  void _loadMapStyle() async {
-    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    if (themeNotifier.isNightMode) {
-      _mapStyle = await DefaultAssetBundle.of(context).loadString('assets/map_styles/night.json');
-    } else {
-      _mapStyle = await DefaultAssetBundle.of(context).loadString('assets/map_styles/day.json');
-    }
-    setState(() {}); // Update the map style by triggering a rebuild
+    _addInitialMarkers(); // Add markers for coffee places when the map loads
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _places.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Map'),
-        backgroundColor: themeNotifier.isNightMode ? Colors.black : Colors.blueAccent,
+        backgroundColor: Colors.blueAccent,
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -91,148 +99,147 @@ class _MapScreenState extends State<MapScreen>
           ],
         ),
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          _buildSearchBar(),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildMapView(),
-                _buildCoffeeListView(),
-              ],
-            ),
+          _buildMapView(), // Display the map in the "Map" tab
+          Stack(
+            children: [
+              _buildFavoritesView(), // Display the coffee list in the "Favorites" tab with scrolling enabled
+              _buildAddFavoriteFAB(), // Add the FAB to allow adding new favorites
+            ],
           ),
         ],
       ),
-      floatingActionButton: _tabController.index == 1
-          ? FloatingActionButton(
-              onPressed: () => _showAddPlaceDialog(context),
-              child: const Icon(Icons.add),
-              backgroundColor: themeNotifier.isNightMode ? Colors.amber : Colors.blue,
-            )
-          : null,
     );
   }
 
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search for a place',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            onChanged: (value) {
-              _getAutocompleteSuggestions(value);
-            },
+  // Build the Map View
+  Widget _buildMapView() {
+    return Stack(
+      children: [
+        GoogleMap(
+          onMapCreated: (GoogleMapController controller) {
+            if (!_controller.isCompleted) {
+              _controller.complete(controller);
+            }
+          },
+          initialCameraPosition: CameraPosition(
+            target: _center,
+            zoom: _currentZoom,
           ),
-          if (_predictions.isNotEmpty)
-            Container(
+          mapType: _currentMapType,
+          markers: _markers,
+          myLocationEnabled: true, // Enable user location
+          myLocationButtonEnabled: true,
+          zoomControlsEnabled: false,
+        ),
+        Positioned(
+          top: 100,
+          right: 10,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                heroTag: 'zoomIn',
+                onPressed: () => _zoomIn(),
+                backgroundColor: Colors.blue[700],
+                child: const Icon(Icons.zoom_in),
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                heroTag: 'zoomOut',
+                onPressed: () => _zoomOut(),
+                backgroundColor: Colors.blue[700],
+                child: const Icon(Icons.zoom_out),
+              ),
+              const SizedBox(height: 10),
+              _buildMapTypeDropdown(),
+            ],
+          ),
+        ),
+        Positioned(
+          bottom: 20,
+          left: 10,
+          right: 10,
+          child: Container(
+            height: 60,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      hintText: 'Search here',
+                      border: InputBorder.none,
+                      icon: Icon(Icons.search, color: Colors.grey),
+                    ),
+                    onChanged: (query) {
+                      _performAutocomplete(query); // Call autocomplete on text change
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.filter_list),
+                  color: Colors.grey,
+                  onPressed: () {
+                    // Filter button action
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_searchResults.isNotEmpty)
+          Positioned(
+            bottom: 80,
+            left: 10,
+            right: 10,
+            child: Container(
               color: Colors.white,
               child: ListView.builder(
                 shrinkWrap: true,
-                itemCount: _predictions.length,
+                itemCount: _searchResults.length,
                 itemBuilder: (context, index) {
-                  final prediction = _predictions[index];
+                  final result = _searchResults[index];
                   return ListTile(
-                    title: Text(prediction.description ?? ""),
+                    title: Text(result.description ?? ''),
                     onTap: () {
-                      _selectPrediction(prediction);
-                      _searchController.clear();
-                      setState(() {
-                        _predictions = [];
-                      });
+                      _selectPlace(result);
                     },
                   );
                 },
               ),
             ),
+          ),
+      ],
+    );
+  }
+
+  // Build the Favorites View with scroll enabled
+  Widget _buildFavoritesView() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height - 100, // Adjust height to fit screen
+            child: _buildCoffeeListView(),
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _getAutocompleteSuggestions(String input) async {
-    if (input.isEmpty) {
-      setState(() {
-        _predictions = [];
-      });
-      return;
-    }
-
-    final response = await _places.autocomplete(input);
-    if (response.isOkay) {
-      setState(() {
-        _predictions = response.predictions;
-      });
-    } else {
-      setState(() {
-        _predictions = [];
-      });
-    }
-  }
-
-  Future<void> _selectPrediction(Prediction prediction) async {
-    final placeId = prediction.placeId;
-    if (placeId != null) {
-      final response = await _places.getDetailsByPlaceId(placeId);
-      if (response.isOkay) {
-        final result = response.result;
-        final latLng = LatLng(result.geometry!.location.lat, result.geometry!.location.lng);
-
-        // Add a marker for the selected place and move the camera
-        setState(() {
-          _markers.add(
-            Marker(
-              markerId: MarkerId(result.name),
-              position: latLng,
-              infoWindow: InfoWindow(
-                title: result.name,
-                snippet: result.formattedAddress,
-              ),
-            ),
-          );
-        });
-
-        final controller = await _controller.future;
-        controller.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15.0));
-      }
-    }
-  }
-
-  Widget _buildMapView() {
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: GoogleMap(
-            onMapCreated: (GoogleMapController controller) {
-              if (!_controller.isCompleted) {
-                _controller.complete(controller);
-              }
-            },
-            initialCameraPosition: CameraPosition(
-              target: _center,
-              zoom: _currentZoom,
-            ),
-            mapType: _currentMapType,
-            markers: _markers,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: false,
-            style: _mapStyle,
-          ),
-        ),
-      ],
-    );
-  }
-
+  // Build the Coffee List View for the "Favorites" tab
   Widget _buildCoffeeListView() {
     return ListView.builder(
       itemCount: _coffeePlaces.length,
@@ -243,14 +250,143 @@ class _MapScreenState extends State<MapScreen>
           subtitle: Text(coffeePlace['address']),
           trailing: const Icon(Icons.local_cafe, color: Colors.brown),
           onTap: () {
-            _goToLocation(coffeePlace['position']);
-            _tabController.animateTo(0);
+            _goToLocation(coffeePlace['position']); // Navigate to location on map when clicked
+            _tabController.animateTo(0); // Switch back to map view
           },
         );
       },
     );
   }
 
+  // Add a floating action button for adding new favorites
+  Widget _buildAddFavoriteFAB() {
+    return Positioned(
+      bottom: 20,
+      right: 20,
+      child: FloatingActionButton(
+        heroTag: 'addFavorite',
+        onPressed: () => _showAddFavoriteDialog(),
+        child: const Icon(Icons.add),
+        backgroundColor: Colors.blue[700],
+      ),
+    );
+  }
+
+  // Show dialog to add a new favorite location
+  void _showAddFavoriteDialog() {
+    final _nameController = TextEditingController();
+    final _addressController = TextEditingController();
+    final _latController = TextEditingController();
+    final _lngController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add New Favorite Location'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: _addressController,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
+              TextField(
+                controller: _latController,
+                decoration: const InputDecoration(labelText: 'Latitude'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: _lngController,
+                decoration: const InputDecoration(labelText: 'Longitude'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newPlace = {
+                  'name': _nameController.text,
+                  'address': _addressController.text,
+                  'position': LatLng(
+                    double.parse(_latController.text),
+                    double.parse(_lngController.text),
+                  ),
+                };
+                setState(() {
+                  _coffeePlaces.add(newPlace);
+                  _markers.add(
+                    Marker(
+                      markerId: MarkerId(newPlace['name'] as String),
+                      position: newPlace['position'] as LatLng,
+                      infoWindow: InfoWindow(
+                        title: newPlace['name'] as String,
+                        snippet: newPlace['address'] as String,
+                      ),
+                    ),
+                  );
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Autocomplete function to search for places
+  Future<void> _performAutocomplete(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
+    final response = await places.autocomplete(query);
+    if (response.isOkay) {
+      setState(() {
+        _searchResults = response.predictions;
+      });
+    } else {
+      print('Error: ${response.errorMessage}');
+    }
+  }
+
+  // Select a place and center it on the map
+  Future<void> _selectPlace(Prediction prediction) async {
+    final placeDetails = await places.getDetailsByPlaceId(prediction.placeId ?? '');
+    final location = placeDetails.result.geometry?.location;
+    if (location != null) {
+      final LatLng selectedPosition = LatLng(location.lat, location.lng);
+      _goToLocation(selectedPosition);
+
+      setState(() {
+        _searchResults = [];
+        _markers.add(
+          Marker(
+            markerId: MarkerId(prediction.placeId ?? ''),
+            position: selectedPosition,
+            infoWindow: InfoWindow(title: prediction.description),
+          ),
+        );
+      });
+    }
+  }
+
+  // Add markers for the sample coffee places
   void _addInitialMarkers() {
     setState(() {
       for (var place in _coffeePlaces) {
@@ -268,70 +404,47 @@ class _MapScreenState extends State<MapScreen>
     });
   }
 
-  void _showAddPlaceDialog(BuildContext context) {
-    final TextEditingController _addressController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Add a New Place'),
-        content: TextField(
-          controller: _addressController,
-          decoration: const InputDecoration(hintText: 'Enter address'),
-          onSubmitted: (_) => _searchPlace(_addressController.text),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              _searchPlace(_addressController.text);
-              Navigator.pop(context);
-            },
-            child: const Text('Add'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _searchPlace(String address) async {
-    final response = await _places.searchByText(address);
-    if (response.isOkay && response.results.isNotEmpty) {
-      final result = response.results.first;
-      final latLng = LatLng(result.geometry!.location.lat, result.geometry!.location.lng);
-
-      setState(() {
-        _coffeePlaces.add({
-          'name': result.name,
-          'address': address,
-          'position': latLng,
-        });
-        _markers.add(
-          Marker(
-            markerId: MarkerId(result.name),
-            position: latLng,
-            infoWindow: InfoWindow(
-              title: result.name,
-              snippet: address,
-            ),
-          ),
-        );
-      });
-
-      final controller = await _controller.future;
-      controller.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15.0));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No results found for that address')),
-      );
-    }
-  }
-
+  // Navigate to the selected coffee place on the map
   void _goToLocation(LatLng position) async {
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newLatLngZoom(position, 15.0));
+  }
+
+  // Build dropdown menu for selecting map type
+  Widget _buildMapTypeDropdown() {
+    return DropdownButton<String>(
+      value: _selectedMapType,
+      icon: Icon(Icons.map, color: Colors.blue[700]),
+      items: _mapTypeNames.map((String mapTypeName) {
+        return DropdownMenuItem<String>(
+          value: mapTypeName,
+          child: Text(mapTypeName),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          _selectedMapType = newValue!;
+          _currentMapType = _mapTypes[_mapTypeNames.indexOf(_selectedMapType)];
+        });
+      },
+    );
+  }
+
+  // Zoom in
+  void _zoomIn() async {
+    final GoogleMapController controller = await _controller.future;
+    setState(() {
+      _currentZoom++;
+    });
+    controller.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  // Zoom out
+  void _zoomOut() async {
+    final GoogleMapController controller = await _controller.future;
+    setState(() {
+      _currentZoom--;
+    });
+    controller.animateCamera(CameraUpdate.zoomOut());
   }
 }
