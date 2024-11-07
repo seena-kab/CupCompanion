@@ -57,3 +57,7 @@
 	</array>
 </dict>
 </plist>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need your location to show your position on the map.</string>
+<key>NSLocationAlwaysUsageDescription</key>
+<string>We need your location to show your position on the map.</string>
