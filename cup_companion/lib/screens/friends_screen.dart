@@ -1,5 +1,3 @@
-// lib/screens/friends_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -34,8 +32,8 @@ class FriendsScreenState extends State<FriendsScreen> {
 
       // Apply search query (case-insensitive)
       if (query.isNotEmpty) {
-        queryRef = queryRef.where('name', isGreaterThanOrEqualTo: query)
-                           .where('name', isLessThanOrEqualTo: query + '\uf8ff');
+        queryRef = queryRef.where('username', isGreaterThanOrEqualTo: query)
+                           .where('username', isLessThanOrEqualTo: query + '\uf8ff');
       }
 
       QuerySnapshot snapshot = await queryRef.get();
@@ -44,8 +42,8 @@ class FriendsScreenState extends State<FriendsScreen> {
       List<Map<String, dynamic>> userList = snapshot.docs.map((doc) {
         return {
           'id': doc.id,
-          'name': doc['name'],
-          'email': doc['email'], // Assuming the 'users' collection has 'name' and 'email'
+          'username': doc['username'],
+          'email': doc['email'],
         };
       }).toList();
 
@@ -59,6 +57,29 @@ class FriendsScreenState extends State<FriendsScreen> {
         _errorMessage = 'Error searching users: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  // Method to send a friend request
+  Future<void> _sendFriendRequest(String userId, String username) async {
+    try {
+      // Assuming you have a logged-in user ID
+      final currentUserId = "yourCurrentUserId"; // Replace with the actual current user ID
+
+      await FirebaseFirestore.instance.collection('friend_requests').add({
+        'fromUserId': currentUserId,
+        'toUserId': userId,
+        'status': 'pending',
+        'timestamp': Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Friend request sent to $username')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send friend request: $e')),
+      );
     }
   }
 
@@ -114,10 +135,34 @@ class FriendsScreenState extends State<FriendsScreen> {
                               final user = _searchResults[index];
                               return ListTile(
                                 leading: const Icon(Icons.person),
-                                title: Text(user['name']),
+                                title: Text(user['username']),
                                 subtitle: Text(user['email']),
                                 onTap: () {
-                                  // Implement action when a user is tapped, like sending a friend request
+                                  // Show dialog to confirm friend request
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text('Send Friend Request'),
+                                        content: Text('Send friend request to ${user['username']}?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Cancel'),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              _sendFriendRequest(user['id'], user['username']);
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('Send'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
                                 },
                               );
                             },
