@@ -33,3 +33,9 @@
             android:value="AIzaSyC_MglMu-1oRrIPHDyhulXZtPgAZB4pcLA"/>
     </application>
 </manifest>
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+<meta-data
+    android:name="com.google.android.geo.API_KEY"
+    android:value="AIzaSyAlx5sC50RFziKxX94fMe6sphvIJ_XIM7E" /> <!-- Replace YOUR_API_KEY with your Google Maps API key -->
+
