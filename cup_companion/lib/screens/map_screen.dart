@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
+import 'package:google_maps_webservice/places.dart';
+import 'package:location/location.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -25,6 +27,12 @@ class _MapScreenState extends State<MapScreen>
 
   // Tab controller for switching between Map and Favorites
   late TabController _tabController;
+
+  // Google Places API instance
+  final places = GoogleMapsPlaces(apiKey: 'AIzaSyAlx5sC50RFziKxX94fMe6sphvIJ_XIM7E'); // Replace with your API key
+
+  // List to hold autocomplete results
+  List<Prediction> _searchResults = [];
 
   // List of coffee places
   List<Map<String, dynamic>> _coffeePlaces = [
@@ -97,7 +105,7 @@ class _MapScreenState extends State<MapScreen>
           _buildMapView(), // Display the map in the "Map" tab
           Stack(
             children: [
-              _buildCoffeeListView(), // Display the coffee list in the "Favorites" tab
+              _buildFavoritesView(), // Display the coffee list in the "Favorites" tab with scrolling enabled
               _buildAddFavoriteFAB(), // Add the FAB to allow adding new favorites
             ],
           ),
@@ -168,13 +176,16 @@ class _MapScreenState extends State<MapScreen>
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: TextField(
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Search here',
                       border: InputBorder.none,
                       icon: Icon(Icons.search, color: Colors.grey),
                     ),
+                    onChanged: (query) {
+                      _performAutocomplete(query); // Call autocomplete on text change
+                    },
                   ),
                 ),
                 IconButton(
@@ -188,7 +199,43 @@ class _MapScreenState extends State<MapScreen>
             ),
           ),
         ),
+        if (_searchResults.isNotEmpty)
+          Positioned(
+            bottom: 80,
+            left: 10,
+            right: 10,
+            child: Container(
+              color: Colors.white,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  final result = _searchResults[index];
+                  return ListTile(
+                    title: Text(result.description ?? ''),
+                    onTap: () {
+                      _selectPlace(result);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
       ],
+    );
+  }
+
+  // Build the Favorites View with scroll enabled
+  Widget _buildFavoritesView() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height - 100, // Adjust height to fit screen
+            child: _buildCoffeeListView(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -281,11 +328,11 @@ class _MapScreenState extends State<MapScreen>
                   _coffeePlaces.add(newPlace);
                   _markers.add(
                     Marker(
-                      markerId: MarkerId(newPlace['name'] as String),  // Cast to String
-                      position: newPlace['position'] as LatLng,        // Cast to LatLng
+                      markerId: MarkerId(newPlace['name'] as String),
+                      position: newPlace['position'] as LatLng,
                       infoWindow: InfoWindow(
-                        title: newPlace['name'] as String,            // Cast to String
-                        snippet: newPlace['address'] as String,       // Cast to String
+                        title: newPlace['name'] as String,
+                        snippet: newPlace['address'] as String,
                       ),
                     ),
                   );
@@ -300,10 +347,43 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  // Navigate to the selected coffee place on the map
-  void _goToLocation(LatLng position) async {
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newLatLngZoom(position, 15.0));
+  // Autocomplete function to search for places
+  Future<void> _performAutocomplete(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _searchResults = [];
+      });
+      return;
+    }
+    final response = await places.autocomplete(query);
+    if (response.isOkay) {
+      setState(() {
+        _searchResults = response.predictions;
+      });
+    } else {
+      print('Error: ${response.errorMessage}');
+    }
+  }
+
+  // Select a place and center it on the map
+  Future<void> _selectPlace(Prediction prediction) async {
+    final placeDetails = await places.getDetailsByPlaceId(prediction.placeId ?? '');
+    final location = placeDetails.result.geometry?.location;
+    if (location != null) {
+      final LatLng selectedPosition = LatLng(location.lat, location.lng);
+      _goToLocation(selectedPosition);
+
+      setState(() {
+        _searchResults = [];
+        _markers.add(
+          Marker(
+            markerId: MarkerId(prediction.placeId ?? ''),
+            position: selectedPosition,
+            infoWindow: InfoWindow(title: prediction.description),
+          ),
+        );
+      });
+    }
   }
 
   // Add markers for the sample coffee places
@@ -322,6 +402,12 @@ class _MapScreenState extends State<MapScreen>
         );
       }
     });
+  }
+
+  // Navigate to the selected coffee place on the map
+  void _goToLocation(LatLng position) async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newLatLngZoom(position, 15.0));
   }
 
   // Build dropdown menu for selecting map type
