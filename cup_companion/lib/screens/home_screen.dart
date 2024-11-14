@@ -252,7 +252,10 @@ class HomeScreenState extends State<HomeScreen>
               duration: const Duration(milliseconds: 500),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)], // Same gradient as SignInScreen
+                  colors: [
+                    Color(0xFFFFC3A0),
+                    Color(0xFFFDF3E7)
+                  ], // Same gradient as SignInScreen
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                 ),
@@ -467,6 +470,7 @@ class HomeScreenState extends State<HomeScreen>
             builder: (context) => DrinkDetailScreen(
               drink: drink,
               heroTag: 'drinkImage$index', // Pass a unique hero tag
+              coffeeShopUrl: "https://www.starbucks.com",
             ),
           ),
         );
@@ -782,7 +786,10 @@ class GradientHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)], // Same gradient as SignInScreen
+          colors: [
+            Color(0xFFFFC3A0),
+            Color(0xFFFDF3E7)
+          ], // Same gradient as SignInScreen
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
