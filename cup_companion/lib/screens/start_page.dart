@@ -32,7 +32,7 @@ class StartPage extends StatelessWidget {
                 // Animated logo with a scaling effect
                 const AnimatedLogo(),
                 const SizedBox(height: 30.0),
-                
+
                 // Animated text for a dynamic feel
                 AnimatedTextKit(
                   animatedTexts: [
@@ -54,7 +54,7 @@ class StartPage extends StatelessWidget {
                   stopPauseOnTap: true,
                 ),
                 const SizedBox(height: 20.0),
-                
+
                 const Text(
                   'A Drink Lover\'s Oasis',
                   textAlign: TextAlign.center,
@@ -66,7 +66,7 @@ class StartPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40.0),
-                
+
                 // Enhanced Get Started button with shadow and ripple effect
                 ElevatedButton(
                   onPressed: () {
@@ -108,6 +108,7 @@ class StartPage extends StatelessWidget {
         ),
       ),
     );
+  } // <-- Missing closing brace for StartPage's build method
 }
 
 class AnimatedLogo extends StatefulWidget {
