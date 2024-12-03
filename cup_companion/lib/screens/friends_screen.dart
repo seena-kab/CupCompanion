@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FriendsScreen extends StatefulWidget {
   const FriendsScreen({Key? key}) : super(key: key);
@@ -11,8 +12,17 @@ class FriendsScreen extends StatefulWidget {
 class FriendsScreenState extends State<FriendsScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
+  List<Map<String, dynamic>> _friendRequests = [];
+  List<Map<String, dynamic>> _friendsList = [];
   bool _isLoading = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFriendRequests();
+    _fetchFriendsList();
+  }
 
   @override
   void dispose() {
@@ -51,7 +61,6 @@ class FriendsScreenState extends State<FriendsScreen> {
         _searchResults = userList;
         _isLoading = false;
       });
-
     } catch (e) {
       setState(() {
         _errorMessage = 'Error searching users: $e';
@@ -60,25 +69,89 @@ class FriendsScreenState extends State<FriendsScreen> {
     }
   }
 
-  // Method to send a friend request
-  Future<void> _sendFriendRequest(String userId, String username) async {
-    try {
-      // Assuming you have a logged-in user ID
-      final currentUserId = "yourCurrentUserId"; // Replace with the actual current user ID
+  // Method to fetch friend requests for the current user
+  void _fetchFriendRequests() async {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
 
-      await FirebaseFirestore.instance.collection('friend_requests').add({
-        'fromUserId': currentUserId,
-        'toUserId': userId,
-        'status': 'pending',
-        'timestamp': Timestamp.now(),
+    if (currentUserId == null) return;
+
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .where('toUserId', isEqualTo: currentUserId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+
+      List<Map<String, dynamic>> requests = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          'fromUserId': data['fromUserId'],
+          'timestamp': data['timestamp'],
+        };
+      }).toList();
+
+      setState(() {
+        _friendRequests = requests;
+      });
+    } catch (e) {
+      print('Error fetching friend requests: $e');
+    }
+  }
+
+  // Method to fetch the user's friends list
+  void _fetchFriendsList() async {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (currentUserId == null) return;
+
+    try {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .get();
+
+      List<dynamic> friends = (userDoc.data() as Map<String, dynamic>)['friends'] ?? [];
+
+      setState(() {
+        _friendsList = friends.map((friendId) => {'id': friendId}).toList();
+      });
+    } catch (e) {
+      print('Error fetching friends list: $e');
+    }
+  }
+
+  // Method to accept a friend request
+  Future<void> _acceptFriendRequest(String requestId, String fromUserId) async {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (currentUserId == null) return;
+
+    try {
+      // Update the friend request status to 'accepted'
+      await FirebaseFirestore.instance
+          .collection('friend_requests')
+          .doc(requestId)
+          .update({'status': 'accepted'});
+
+      // Add both users to each other's friend list
+      await FirebaseFirestore.instance.collection('users').doc(currentUserId).update({
+        'friends': FieldValue.arrayUnion([fromUserId])
       });
 
+      await FirebaseFirestore.instance.collection('users').doc(fromUserId).update({
+        'friends': FieldValue.arrayUnion([currentUserId])
+      });
+
+      _fetchFriendRequests();
+      _fetchFriendsList();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Friend request sent to $username')),
+        SnackBar(content: Text('Friend request accepted!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send friend request: $e')),
+        SnackBar(content: Text('Failed to accept friend request: $e')),
       );
     }
   }
@@ -87,7 +160,7 @@ class FriendsScreenState extends State<FriendsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Find Friends'),
+        title: const Text('Friends'),
         backgroundColor: Colors.blue[700],
       ),
       body: Column(
@@ -111,62 +184,64 @@ class FriendsScreenState extends State<FriendsScreen> {
               ),
             ),
           ),
-          // Search results
+          // Friend Requests
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                    ? Center(
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      )
-                    : _searchResults.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No users found',
-                              style: TextStyle(fontSize: 18),
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _searchResults.length,
-                            itemBuilder: (context, index) {
-                              final user = _searchResults[index];
-                              return ListTile(
-                                leading: const Icon(Icons.person),
-                                title: Text(user['username']),
-                                subtitle: Text(user['email']),
-                                onTap: () {
-                                  // Show dialog to confirm friend request
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return AlertDialog(
-                                        title: Text('Send Friend Request'),
-                                        content: Text('Send friend request to ${user['username']}?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text('Cancel'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              _sendFriendRequest(user['id'], user['username']);
-                                              Navigator.pop(context);
-                                            },
-                                            child: const Text('Send'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                },
-                              );
+            child: ListView(
+              children: [
+                // Friend Requests Section
+                if (_friendRequests.isNotEmpty) ...[
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text(
+                      'Friend Requests',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ..._friendRequests.map((request) {
+                    return ListTile(
+                      title: Text('Request from: ${request['fromUserId']}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.check, color: Colors.green),
+                            onPressed: () {
+                              _acceptFriendRequest(request['id'], request['fromUserId']);
                             },
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.red),
+                            onPressed: () {
+                              // Reject logic (similar to accept)
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ],
+
+                // Friends List Section
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Friends List',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                if (_friendsList.isEmpty)
+                  const Center(
+                    child: Text('No friends yet!'),
+                  )
+                else
+                  ..._friendsList.map((friend) {
+                    return ListTile(
+                      title: Text('Friend ID: ${friend['id']}'),
+                      // Add more friend details if needed
+                    );
+                  }).toList(),
+              ],
+            ),
           ),
         ],
       ),
