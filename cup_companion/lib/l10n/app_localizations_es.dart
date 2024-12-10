@@ -250,4 +250,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get addDrink => 'Añadir Bebida';
+
+  @override
+  String get averageRating => 'Average Rating';
+
+  @override
+  String get trendyDrinks => 'Trendy Drinks';
 }

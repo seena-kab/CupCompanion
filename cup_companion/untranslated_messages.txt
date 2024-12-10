@@ -1,1 +1,11 @@
-{}
+{
+  "es": [
+    "averageRating",
+    "trendyDrinks"
+  ],
+
+  "ja": [
+    "averageRating",
+    "trendyDrinks"
+  ]
+}
