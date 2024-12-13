@@ -34,6 +34,9 @@ class _MapScreenState extends State<MapScreen>
   // List to hold autocomplete results
   List<Prediction> _searchResults = [];
 
+  // List of favorite locations
+  final List<Map<String, dynamic>> _favorites = [];
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +67,7 @@ class _MapScreenState extends State<MapScreen>
         controller: _tabController,
         children: [
           _buildMapView(), // Display the map in the "Map" tab
-          Center(child: const Text('Favorites view will go here')), // Placeholder for Favorites tab
+          _buildFavoritesView(), // Updated Favorites tab
         ],
       ),
     );
@@ -158,6 +161,107 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
+  // Build the Favorites View with "Add Favorites" button
+  Widget _buildFavoritesView() {
+    return Stack(
+      children: [
+        ListView.builder(
+          itemCount: _favorites.length,
+          itemBuilder: (context, index) {
+            final favorite = _favorites[index];
+            return ListTile(
+              title: Text(favorite['name']),
+              subtitle: Text(favorite['address']),
+              trailing: const Icon(Icons.place, color: Colors.blue),
+              onTap: () {
+                _goToLocation(favorite['position']);
+                _tabController.animateTo(0); // Switch back to the map tab
+              },
+            );
+          },
+        ),
+        Positioned(
+          bottom: 20,
+          right: 20,
+          child: FloatingActionButton(
+            heroTag: 'addFavorite',
+            onPressed: _showAddFavoriteDialog,
+            backgroundColor: Colors.blue,
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Show dialog to add a new favorite location
+  void _showAddFavoriteDialog() {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController addressController = TextEditingController();
+    final TextEditingController latController = TextEditingController();
+    final TextEditingController lngController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Add Favorite Location'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(labelText: 'Name'),
+              ),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(labelText: 'Address'),
+              ),
+              TextField(
+                controller: latController,
+                decoration: const InputDecoration(labelText: 'Latitude'),
+                keyboardType: TextInputType.number,
+              ),
+              TextField(
+                controller: lngController,
+                decoration: const InputDecoration(labelText: 'Longitude'),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = nameController.text;
+                final address = addressController.text;
+                final double? lat = double.tryParse(latController.text);
+                final double? lng = double.tryParse(lngController.text);
+
+                if (name.isNotEmpty && address.isNotEmpty && lat != null && lng != null) {
+                  setState(() {
+                    _favorites.add({
+                      'name': name,
+                      'address': address,
+                      'position': LatLng(lat, lng),
+                    });
+                  });
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Autocomplete function to search for places
   Future<void> _performAutocomplete(String query) async {
     if (query.isEmpty) {
@@ -214,48 +318,48 @@ class _MapScreenState extends State<MapScreen>
 
   // Show a dialog with rating, details, and a Yelp watermark
   void _showRatingPopup(String? name, String? address, double? rating) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(
-                name ?? 'No Name Available',
-                style: const TextStyle(fontSize: 16),
-                overflow: TextOverflow.ellipsis, // Prevents overflow
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  name ?? 'No Name Available',
+                  style: const TextStyle(fontSize: 16),
+                  overflow: TextOverflow.ellipsis, // Prevents overflow
+                ),
               ),
-            ),
-            SizedBox(
-              height: 20,
-              width: 50, // Smaller size for the logo
-              child: Image.asset(
-                'assets/images/yelp_logo.jpg', // Corrected asset path
-                fit: BoxFit.contain,
+              SizedBox(
+                height: 20,
+                width: 50, // Smaller size for the logo
+                child: Image.asset(
+                  'assets/images/yelp_logo.jpg', // Corrected asset path
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(address ?? 'No Address Available'),
-            const SizedBox(height: 10),
-            Text('Rating: ${rating?.toStringAsFixed(1) ?? 'N/A'}⭐'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            ],
           ),
-        ],
-      );
-    },
-  );
-}
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(address ?? 'No Address Available'),
+              const SizedBox(height: 10),
+              Text('Rating: ${rating?.toStringAsFixed(1) ?? 'N/A'}⭐'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   // Navigate to the selected place on the map
   void _goToLocation(LatLng position) async {
