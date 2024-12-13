@@ -81,6 +81,7 @@ flutter:
     - assets/images/tshirt.jpg
     - assets/images/backpack.jpg
     - assets/images/headphones.jpg
+    - assets/images/yelp_logo.jpg
 
   fonts:
     - family: Montserrat
