@@ -26,6 +26,8 @@ import 'package:cup_companion/l10n/app_localizations.dart';
 
 // Import the SearchScreen
 import 'search_screen.dart';
+// Import TrendyDrinksScreen
+import 'package:cup_companion/screens/trendydrinks_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -50,6 +52,7 @@ class HomeScreenState extends State<HomeScreen>
 
   // List to hold the fetched drinks
   List<Drink> _drinks = [];
+  List<Drink> _recommendedDrinks = [];
 
   // Add a loading indicator
   bool _isLoading = true;
@@ -119,6 +122,37 @@ class HomeScreenState extends State<HomeScreen>
       fetchDrinks();
     }
   }
+  // Method to fetch recommendations for the user
+  void fetchRecommendations() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final recommendations = await _drinkService.fetchRecommendations(username); // Use username or userId
+      setState(() {
+        _recommendedDrinks = recommendations;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching recommendations: $e');
+      setState(() {
+        _errorMessage = 'Failed to load recommendations.';
+        _isLoading = false;
+      });
+    }
+  }
+
+    // Method to generate recommendations for the user
+  void generateRecommendations(Map<String, dynamic> surveyData) async {
+    try {
+      await _drinkService.generateRecommendations(username, surveyData); // Use username or userId
+      print('Recommendations generated successfully');
+      fetchRecommendations(); // Fetch the recommendations after generating
+    } catch (e) {
+      print('Error generating recommendations: $e');
+    }
+  }
 
   // Method to fetch user data
   void fetchUserData() async {
@@ -131,6 +165,7 @@ class HomeScreenState extends State<HomeScreen>
       // After fetching user data, get the location
       print('User data fetched. Username: $username, Zip Code: $zipCode');
       getUserLocation();
+      fetchRecommendations();
     } catch (e) {
       print('Error fetching user data: $e');
       setState(() {
@@ -271,6 +306,28 @@ class HomeScreenState extends State<HomeScreen>
               },
               children: screens,
             ),
+
+            // FloatingActionButton in bottom-left corner
+            Positioned(
+              bottom: 80,
+              left: 20,
+              child: FloatingActionButton(
+                heroTag: 'trendyDrinksBtn',
+                backgroundColor: themeNotifier.isNightMode
+                    ? Colors.amberAccent
+                    : Colors.blueAccent,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TrendyDrinksScreen(),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.trending_up),
+                tooltip: appLocalizations.trendyDrinks, 
+              ),
+            ),
           ],
         ),
       ),
@@ -310,84 +367,149 @@ class HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // Builds the main home screen content with GridView for drinks
-  Widget buildHomeScreenContent() {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-    final appLocalizations = AppLocalizations.of(context)!; // Null assertion
-    return AnimationLimiter(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            GradientHeader(
-              username: username,
-              location: location,
-              notificationsCount: _notificationsCount, // Pass the count
-              onProfileTap: () {
-                // Navigate to Profile Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProfileScreen(),
-                  ),
-                );
-              },
-              onNotificationTap: () {
-                // Navigate to Notifications Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationsScreen(),
-                  ),
-                ).then((_) {
-                  // Reset notifications count after viewing
-                  setState(() {
-                    _notificationsCount = 0;
-                  });
+ // Builds the main home screen content with GridView for drinks
+Widget buildHomeScreenContent() {
+  final themeNotifier = Provider.of<ThemeNotifier>(context);
+  final appLocalizations = AppLocalizations.of(context)!; // Null assertion
+  return AnimationLimiter(
+    child: SingleChildScrollView(
+      child: Column(
+        children: [
+          GradientHeader(
+            username: username,
+            location: location,
+            notificationsCount: _notificationsCount, // Pass the count
+            onProfileTap: () {
+              // Navigate to Profile Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileScreen(),
+                ),
+              );
+            },
+            onNotificationTap: () {
+              // Navigate to Notifications Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              ).then((_) {
+                // Reset notifications count after viewing
+                setState(() {
+                  _notificationsCount = 0;
                 });
-              },
-              onSettingsTap: () {
-                // Handle settings via PopupMenu
-                showMenu(
-                  context: context,
-                  position: const RelativeRect.fromLTRB(1000, 80, 0, 0),
-                  items: [
-                    PopupMenuItem<String>(
-                      value: MenuOptions.settings,
-                      child: Text(appLocalizations.settings),
-                    ),
-                    PopupMenuItem<String>(
-                      value: MenuOptions.signOut,
-                      child: Text(appLocalizations.signOut),
-                    ),
-                  ],
-                ).then((value) {
-                  if (value == MenuOptions.settings) {
-                    Navigator.pushNamed(context, '/settings');
-                  } else if (value == MenuOptions.signOut) {
-                    _authService.signOut();
-                    Navigator.pushReplacementNamed(context, '/signin');
-                  }
-                });
-              },
-              onSearchTap: () {
-                // Navigate to Search Screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SearchScreen(),
+              });
+            },
+            onSettingsTap: () {
+              // Handle settings via PopupMenu
+              showMenu(
+                context: context,
+                position: const RelativeRect.fromLTRB(1000, 80, 0, 0),
+                items: [
+                  PopupMenuItem<String>(
+                    value: MenuOptions.settings,
+                    child: Text(appLocalizations.settings),
                   ),
-                );
-              },
+                  PopupMenuItem<String>(
+                    value: MenuOptions.signOut,
+                    child: Text(appLocalizations.signOut),
+                  ),
+                ],
+              ).then((value) {
+                if (value == MenuOptions.settings) {
+                  Navigator.pushNamed(context, '/settings');
+                } else if (value == MenuOptions.signOut) {
+                  _authService.signOut();
+                  Navigator.pushReplacementNamed(context, '/signin');
+                }
+              });
+            },
+            onSearchTap: () {
+              // Navigate to Search Screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchScreen(),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 20),
+          RewardsSection(points: rewardPoints),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                appLocalizations.forYou, // Localized string for "Recommended Drinks"
+                style: GoogleFonts.montserrat(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                  color: themeNotifier.isNightMode
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+              ),
             ),
-            const SizedBox(height: 20),
-            RewardsSection(points: rewardPoints),
-            const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 10),
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontSize: 16,
+                        ),
+                      ),
+                    )
+                  : AnimationLimiter(
+                      child: GridView.builder(
+                        physics:
+                            const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
+                        shrinkWrap:
+                            true, // Let GridView take only the needed space
+                        itemCount: _recommendedDrinks.isNotEmpty
+                            ? _recommendedDrinks.length
+                            : _drinks.length, // Show recommendations first
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2, // 2 per row
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 3 / 4, // Adjust as needed
+                        ),
+                        itemBuilder: (context, index) {
+                          final drink = _recommendedDrinks.isNotEmpty
+                              ? _recommendedDrinks[index]
+                              : _drinks[index]; // Use recommended drinks if available
+                          return AnimationConfiguration.staggeredGrid(
+                            position: index,
+                            duration: const Duration(milliseconds: 375),
+                            columnCount: 2,
+                            child: ScaleAnimation(
+                              child: FadeInAnimation(
+                                child: buildDrinkCard(drink, index),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+          const SizedBox(height: 20),
+          if (_recommendedDrinks.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  appLocalizations.forYou, // Localized string
+                  appLocalizations.drinksFound, // Localized string for "Other Drinks"
                   style: GoogleFonts.montserrat(
                     fontSize: 24.0,
                     fontWeight: FontWeight.bold,
@@ -398,62 +520,44 @@ class HomeScreenState extends State<HomeScreen>
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            buildCategoryList(),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _errorMessage != null
-                      ? Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 16,
-                          ),
-                        )
-                      : AnimationLimiter(
-                          child: GridView.builder(
-                            physics:
-                                const NeverScrollableScrollPhysics(), // Prevent GridView from scrolling
-                            shrinkWrap:
-                                true, // Let GridView take only the needed space
-                            itemCount: _drinks.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2, // 2 per row
-                              mainAxisSpacing: 16,
-                              crossAxisSpacing: 16,
-                              childAspectRatio: 3 / 4, // Adjust as needed
-                            ),
-                            itemBuilder: (context, index) {
-                              final drink = _drinks[index];
-                              return AnimationConfiguration.staggeredGrid(
-                                position: index,
-                                duration: const Duration(milliseconds: 375),
-                                columnCount: 2,
-                                child: ScaleAnimation(
-                                  child: FadeInAnimation(
-                                    child: buildDrinkCard(drink, index),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
+          const SizedBox(height: 10),
+          if (_recommendedDrinks.isEmpty)
+            AnimationLimiter(
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: _drinks.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 3 / 4,
+                ),
+                itemBuilder: (context, index) {
+                  final drink = _drinks[index];
+                  return AnimationConfiguration.staggeredGrid(
+                    position: index,
+                    duration: const Duration(milliseconds: 375),
+                    columnCount: 2,
+                    child: ScaleAnimation(
+                      child: FadeInAnimation(
+                        child: buildDrinkCard(drink, index),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: MediaQuery.of(context)
-                  .padding
-                  .bottom, // Extra space to prevent overflow
-            ),
-          ],
-        ),
+          const SizedBox(height: 20),
+          SizedBox(
+            height: MediaQuery.of(context).padding.bottom, // Extra space to prevent overflow
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   // Builds individual drink cards in a grid
   Widget buildDrinkCard(Drink drink, int index) {
@@ -548,8 +652,7 @@ class HomeScreenState extends State<HomeScreen>
                             },
                             tooltip: isFavorite
                                 ? appLocalizations.removeFromFavorites
-                                : appLocalizations
-                                    .addToFavorites, // Localized tooltip
+                                : appLocalizations.addToFavorites,
                           ),
                         ),
                       ),
@@ -845,7 +948,7 @@ class GradientHeader extends StatelessWidget {
                       color: Colors.black87,
                     ),
                     onPressed: onSearchTap,
-                    tooltip: appLocalizations.search, // Localized tooltip
+                    tooltip: appLocalizations.search,
                   ),
                   // Notification Bell Icon with Badge
                   Stack(
@@ -856,8 +959,7 @@ class GradientHeader extends StatelessWidget {
                           color: Colors.black87,
                         ),
                         onPressed: onNotificationTap,
-                        tooltip:
-                            appLocalizations.notifications, // Localized tooltip
+                        tooltip: appLocalizations.notifications,
                       ),
                       if (notificationsCount > 0)
                         Positioned(
@@ -891,7 +993,7 @@ class GradientHeader extends StatelessWidget {
                       color: Colors.black87,
                     ),
                     onPressed: onSettingsTap,
-                    tooltip: appLocalizations.settings, // Localized tooltip
+                    tooltip: appLocalizations.settings,
                   ),
                 ],
               ),

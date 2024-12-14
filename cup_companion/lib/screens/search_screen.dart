@@ -1,5 +1,3 @@
-// lib/screens/search_screen.dart
-
 import 'dart:async';
 import 'package:cup_companion/models/review.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +8,6 @@ import 'package:cup_companion/theme/theme_notifier.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cup_companion/l10n/app_localizations.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -26,7 +23,7 @@ class SearchScreenState extends State<SearchScreen> {
   String? _errorMessage;
 
   List<String> _searchHistory = [];
-
+  String _selectedFilter = 'All'; // New filter variable
   Timer? _debounce;
 
   @override
@@ -43,7 +40,7 @@ class SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  // Method to fetch drinks based on the search query
+  // Method to fetch drinks based on the search query and filter
   void _searchDrinks(String query) async {
     setState(() {
       _isLoading = true;
@@ -60,6 +57,13 @@ class SearchScreenState extends State<SearchScreen> {
         queryRef = queryRef.where('searchKeywords', arrayContains: formattedQuery);
       }
 
+      // Apply filter
+      if (_selectedFilter == 'Alcoholic') {
+        queryRef = queryRef.where('isAlcoholic', isEqualTo: true);
+      } else if (_selectedFilter == 'Non-Alcoholic') {
+        queryRef = queryRef.where('isAlcoholic', isEqualTo: false);
+      }
+
       QuerySnapshot snapshot = await queryRef.get();
 
       // Mapping Firestore documents to Drink objects
@@ -74,8 +78,7 @@ class SearchScreenState extends State<SearchScreen> {
           description: data['description'] ?? '',
           price: (data['price'] as num?)?.toDouble() ?? 0.0,
           reviews: (data['reviews'] as List<dynamic>?)
-                  ?.map((reviewMap) =>
-                      Review.fromMap(reviewMap as Map<String, dynamic>))
+                  ?.map((reviewMap) => Review.fromMap(reviewMap as Map<String, dynamic>))
                   .toList() ??
               [],
         );
@@ -109,7 +112,7 @@ class SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         backgroundColor: themeNotifier.isNightMode
             ? Colors.black87
-            : const Color(0xFFFFC3A0), // Matching the gradient color
+            : const Color(0xFFFFC3A0),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -129,7 +132,7 @@ class SearchScreenState extends State<SearchScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)], // Same gradient as SignInScreen
+            colors: [Color(0xFFFFC3A0), Color(0xFFFDF3E7)],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
@@ -172,6 +175,27 @@ class SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              // Filter dropdown
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: DropdownButton<String>(
+                  value: _selectedFilter,
+                  items: ['All', 'Alcoholic', 'Non-Alcoholic']
+                      .map((filter) => DropdownMenuItem(
+                            value: filter,
+                            child: Text(filter),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedFilter = value!;
+                      _searchDrinks(_searchController.text);
+                    });
+                  },
+                  isExpanded: true,
                 ),
               ),
               const SizedBox(height: 16.0),
@@ -241,7 +265,6 @@ class SearchScreenState extends State<SearchScreen> {
                                     final drink = _searchResults[index];
                                     return GestureDetector(
                                       onTap: () {
-                                        // Navigate to DrinkDetailScreen
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
