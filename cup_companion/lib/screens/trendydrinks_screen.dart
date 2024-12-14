@@ -137,7 +137,7 @@ class _TrendyDrinksScreenState extends State<TrendyDrinksScreen>
           MaterialPageRoute(
             builder: (context) => DrinkDetailScreen(
               drink: drink,
-              heroTag: 'trendyDrinkImage$index',
+              heroTag: 'trendyDrinkImage$index', coffeeShopUrl: '',
             ),
           ),
         );
