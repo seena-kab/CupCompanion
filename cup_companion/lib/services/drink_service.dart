@@ -19,6 +19,20 @@ class DrinkService {
     }
   }
 
+  // Fetch drinks ordered by averageRating (highest first)
+  Future<List<Drink>> fetchDrinksByAverageRating() async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection('drinks')
+          .orderBy('averageRating', descending: true)
+          .get();
+      return snapshot.docs.map((doc) {
+        return Drink.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }).toList();
+    } catch (e) {
+      throw Exception('Failed to load drinks by average rating: $e');
+    }
+  }
 
   // Search drinks with filters
   Future<List<Drink>> searchDrinks({
@@ -103,6 +117,66 @@ class DrinkService {
       await _firestore.collection('drinks').doc(id).delete();
     } catch (e) {
       throw Exception('Failed to delete drink: $e');
+    }
+  }
+
+  // ---------------------------
+  // Additional Methods
+  // ---------------------------
+
+  // Fetch recommendations for a user
+  Future<List<Drink>> fetchRecommendations(String userId) async {
+    try {
+      final recommendationsSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('recommendations')
+          .get();
+
+      return recommendationsSnapshot.docs.map((doc) {
+        final data = doc.data();
+        return Drink.fromMap(data as Map<String, dynamic>, doc.id);
+      }).toList();
+    } catch (e) {
+      print('Error fetching recommendations: $e');
+      return [];
+    }
+  }
+
+  // Generate recommendations based on user survey data
+  Future<void> generateRecommendations(
+      String userId, Map<String, dynamic> surveyData) async {
+    try {
+      final drinksSnapshot = await _firestore.collection('drinks').get();
+      if (drinksSnapshot.docs.isEmpty) return;
+
+      final drinksList = drinksSnapshot.docs.map((doc) => doc.data()).toList();
+
+      final recommendations = drinksList.where((drink) {
+        final isAlcoholMatch = surveyData['alcoholChoice'] != null &&
+            (drink['name'] as String)
+                .toLowerCase()
+                .contains(surveyData['alcoholChoice'].toLowerCase());
+        final isCoffeeMatch = surveyData['coffeeChoice'] != null &&
+            (surveyData['coffeeChoice'] as List<dynamic>).any((coffee) =>
+                (drink['name'] as String)
+                    .toLowerCase()
+                    .contains(coffee.toLowerCase()) ||
+                (drink['description'] != null &&
+                    (drink['description'] as String)
+                        .toLowerCase()
+                        .contains(coffee.toLowerCase())));
+        return isAlcoholMatch || isCoffeeMatch;
+      }).toList();
+
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('recommendations')
+          .add({'recommendations': recommendations});
+    } catch (e) {
+      print('Error generating recommendations: $e');
+      throw Exception("Failed to generate recommendations.");
     }
   }
 }
