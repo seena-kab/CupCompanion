@@ -260,19 +260,18 @@ class _TrendyDrinksScreenState extends State<TrendyDrinksScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (drink.averageRating != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        '${appLocalizations.averageRating}: ${drink.averageRating!.toStringAsFixed(1)}',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 14,
-                          color: themeNotifier.isNightMode
-                              ? Colors.white70
-                              : Colors.grey[600],
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      '${appLocalizations.averageRating}: ${drink.averageRating!.toStringAsFixed(1)}',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        color: themeNotifier.isNightMode
+                            ? Colors.white70
+                            : Colors.grey[600],
                       ),
                     ),
+                  ),
                 ],
               ),
             ),

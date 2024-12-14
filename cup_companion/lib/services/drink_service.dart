@@ -135,7 +135,7 @@ class DrinkService {
 
       return recommendationsSnapshot.docs.map((doc) {
         final data = doc.data();
-        return Drink.fromMap(data as Map<String, dynamic>, doc.id);
+        return Drink.fromMap(data, doc.id);
       }).toList();
     } catch (e) {
       print('Error fetching recommendations: $e');
