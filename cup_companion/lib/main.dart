@@ -72,6 +72,9 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+    // Flag to skip authentication for development purposes
+  final bool skipAuth = true;  // Set to false when auth is ready
+
   @override
   Widget build(BuildContext context) {
     // Access the ThemeNotifier

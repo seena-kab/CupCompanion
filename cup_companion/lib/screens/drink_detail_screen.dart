@@ -8,18 +8,20 @@ import '../providers/cart_provider.dart';
 import '../models/review.dart';
 import '../providers/user_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 // Import localization packages
 import 'package:cup_companion/l10n/app_localizations.dart'; // Adjust the import path if necessary
 
 class DrinkDetailScreen extends StatefulWidget {
   final Drink drink;
   final String heroTag; // Ensure heroTag is used correctly
+  final String coffeeShopUrl;
 
   const DrinkDetailScreen({
     super.key,
     required this.drink,
     required this.heroTag,
+    required this.coffeeShopUrl,
   });
 
   @override
@@ -30,6 +32,58 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
   final _formKey = GlobalKey<FormState>();
   double _userRating = 5.0;
   String _userReview = '';
+
+
+  // Function to show coffee shop options and launch the selected URL
+  void showCoffeeShopOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Choose a Coffee Shop"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.local_cafe),
+                title: Text("Starbucks"),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                  _launchURL("https://www.starbucks.com");
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.local_cafe),
+                title: Text("Peet's Coffee"),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                  _launchURL("https://www.peets.com");
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.local_cafe),
+                title: Text("Coffee Bean"),
+                onTap: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                  _launchURL("https://www.coffeebean.com");
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+// Function to launch the coffee shop URL
+Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,8 +117,8 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
             Hero(
               tag: widget.heroTag, // Updated Hero tag
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(30)),
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(30)),
                 child: Image.network(
                   widget.drink.imageUrl,
                   width: double.infinity,
@@ -132,6 +186,24 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: ElevatedButton.icon(
+                onPressed: () => showCoffeeShopOptions(context),
+                icon: Icon(Icons.launch),
+                label: Text("Visit Coffee Shop"),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: themeNotifier.isNightMode
+                      ? Colors.tealAccent[700]
+                      : Colors.teal,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
             // Drink Description
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -147,6 +219,8 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                 textAlign: TextAlign.justify,
               ),
             ),
+            const SizedBox(height: 24),
+
             const SizedBox(height: 24),
             // Add to Cart Button
             Padding(
@@ -391,8 +465,7 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
 
                                 try {
                                   // Check if the drink document exists
-                                  final drinkSnapshot =
-                                      await drinkDocRef.get();
+                                  final drinkSnapshot = await drinkDocRef.get();
 
                                   if (drinkSnapshot.exists) {
                                     // If the document exists, update it with the new review
@@ -408,15 +481,15 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                                       'price': widget.drink.price,
                                       'description': widget.drink.description,
                                       'imageUrl': widget.drink.imageUrl,
-                                      'averageRating':
-                                          newReview.rating, // Initial average rating
+                                      'averageRating': newReview
+                                          .rating, // Initial average rating
                                     });
                                   }
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(
-                                          appLocalizations.reviewAdded),
+                                      content:
+                                          Text(appLocalizations.reviewAdded),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -428,7 +501,8 @@ class _DrinkDetailScreenState extends State<DrinkDetailScreen> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        appLocalizations.failedToAddReview(e.toString()),
+                                        appLocalizations
+                                            .failedToAddReview(e.toString()),
                                       ),
                                       backgroundColor: Colors.red,
                                     ),

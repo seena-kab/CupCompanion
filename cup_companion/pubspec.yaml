@@ -49,6 +49,7 @@ dependencies:
   http: ^0.13.5
   file_picker: ^8.1.2
   csv: ^6.0.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +81,7 @@ flutter:
     - assets/images/tshirt.jpg
     - assets/images/backpack.jpg
     - assets/images/headphones.jpg
+    - assets/images/yelp_logo.jpg
 
   fonts:
     - family: Montserrat
