@@ -185,7 +185,7 @@ class _MapScreenState extends State<MapScreen>
       final LatLng selectedPosition = LatLng(location.lat, location.lng);
       final String? name = placeDetails.result.name;
       final String? address = placeDetails.result.formattedAddress;
-      final double? rating = (placeDetails.result.rating as num?)?.toDouble();
+      final double? rating = (placeDetails.result.rating)?.toDouble();
 
       _goToLocation(selectedPosition);
 
