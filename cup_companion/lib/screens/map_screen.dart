@@ -3,6 +3,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:async';
 import 'package:google_maps_webservice/places.dart';
 import 'package:location/location.dart';
+import 'package:google_maps_webservice/places.dart' as gmaps; 
+import 'package:location/location.dart' as loc;
+
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -14,7 +17,10 @@ class MapScreen extends StatefulWidget {
 class _MapScreenState extends State<MapScreen>
     with SingleTickerProviderStateMixin {
   final Completer<GoogleMapController> _controller = Completer();
-  static const LatLng _center = LatLng(45.5231, -122.6765); // Center on Portland
+  static const LatLng _defaultCenter = LatLng(45.5231, -122.6765); // Default center on Portland
+
+  // Current user location
+  LatLng? _userLocation;
 
   // Current zoom level
   double _currentZoom = 12.0;
@@ -31,6 +37,25 @@ class _MapScreenState extends State<MapScreen>
   // Google Places API instance
   final places = GoogleMapsPlaces(apiKey: 'AIzaSyAlx5sC50RFziKxX94fMe6sphvIJ_XIM7E'); // Replace with your API key
 
+  // List of map types
+  final List<MapType> _mapTypes = [
+    MapType.normal,
+    MapType.satellite,
+    MapType.terrain,
+    MapType.hybrid,
+  ];
+
+  // Map type names for display
+  final List<String> _mapTypeNames = [
+    'Normal',
+    'Satellite',
+    'Terrain',
+    'Hybrid',
+  ];
+
+  // Currently selected map type
+  String _selectedMapType = 'Normal';
+
   // List to hold autocomplete results
   List<Prediction> _searchResults = [];
 
@@ -41,12 +66,48 @@ class _MapScreenState extends State<MapScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _initializeUserLocation(); // Fetch user location when the screen loads
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Fetch the user's current location
+  Future<void> _initializeUserLocation() async {
+    final location = loc.Location();
+
+
+    // Check and request permission
+    PermissionStatus permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) return;
+    }
+
+    // Get the current location
+    final currentLocation = await location.getLocation();
+
+    setState(() {
+      _userLocation = LatLng(currentLocation.latitude!, currentLocation.longitude!);
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('userLocation'),
+          position: _userLocation!,
+          infoWindow: const InfoWindow(title: 'You are here'),
+        ),
+      );
+    });
+
+    // Move the map camera to the user's location
+    if (_controller.isCompleted) {
+      final GoogleMapController controller = await _controller.future;
+      controller.animateCamera(
+        CameraUpdate.newLatLngZoom(_userLocation!, 15.0),
+      );
+    }
   }
 
   @override
@@ -84,15 +145,72 @@ class _MapScreenState extends State<MapScreen>
             }
           },
           initialCameraPosition: CameraPosition(
-            target: _center,
+            target: _userLocation ?? _defaultCenter, // Use user's location if available
             zoom: _currentZoom,
           ),
           mapType: _currentMapType,
           markers: _markers,
           myLocationEnabled: true, // Enable user location
           myLocationButtonEnabled: true,
-          zoomControlsEnabled: false,
+          zoomControlsEnabled: false, // Disable default zoom controls
         ),
+        // Map type selector
+        Positioned(
+          top: 20,
+          right: 10,
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 5,
+                ),
+              ],
+            ),
+            child: DropdownButton<String>(
+              value: _selectedMapType,
+              icon: const Icon(Icons.map, color: Colors.blue),
+              items: _mapTypeNames.map((String mapTypeName) {
+                return DropdownMenuItem<String>(
+                  value: mapTypeName,
+                  child: Text(mapTypeName),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedMapType = newValue!;
+                  _currentMapType = _mapTypes[_mapTypeNames.indexOf(_selectedMapType)];
+                });
+              },
+            ),
+          ),
+        ),
+        // Zoom buttons
+        Positioned(
+          bottom: 100,
+          right: 10,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                heroTag: 'zoomIn',
+                onPressed: _zoomIn,
+                backgroundColor: Colors.blue,
+                child: const Icon(Icons.zoom_in),
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                heroTag: 'zoomOut',
+                onPressed: _zoomOut,
+                backgroundColor: Colors.blue,
+                child: const Icon(Icons.zoom_out),
+              ),
+            ],
+          ),
+        ),
+        // Search bar
         Positioned(
           bottom: 20,
           left: 10,
@@ -161,7 +279,25 @@ class _MapScreenState extends State<MapScreen>
     );
   }
 
-  // Build the Favorites View with "Add Favorites" button
+  // Add Zoom In functionality
+  Future<void> _zoomIn() async {
+    final GoogleMapController controller = await _controller.future;
+    setState(() {
+      _currentZoom++;
+    });
+    controller.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  // Add Zoom Out functionality
+  Future<void> _zoomOut() async {
+    final GoogleMapController controller = await _controller.future;
+    setState(() {
+      _currentZoom--;
+    });
+    controller.animateCamera(CameraUpdate.zoomOut());
+  }
+
+  // Build the Favorites View
   Widget _buildFavoritesView() {
     return Stack(
       children: [
@@ -289,7 +425,7 @@ class _MapScreenState extends State<MapScreen>
       final LatLng selectedPosition = LatLng(location.lat, location.lng);
       final String? name = placeDetails.result.name;
       final String? address = placeDetails.result.formattedAddress;
-      final double? rating = (placeDetails.result.rating as num?)?.toDouble();
+      final double? rating = (placeDetails.result.rating)?.toDouble();
 
       _goToLocation(selectedPosition);
 
