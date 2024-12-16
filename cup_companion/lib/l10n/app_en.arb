@@ -83,6 +83,8 @@
   "profile": "Profile",
   "favorites": "Favorites",
   "addDrink": "Add Drink",
+  "averageRating": "Average Rating",
+  "trendyDrinks": "Trendy Drinks",
 
   "@failedToAddReview": {
     "description": "Error message when adding a review fails",

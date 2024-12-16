@@ -582,6 +582,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Drink'**
   String get addDrink;
+
+  /// No description provided for @averageRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Average Rating'**
+  String get averageRating;
+
+  /// No description provided for @trendyDrinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Trendy Drinks'**
+  String get trendyDrinks;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
