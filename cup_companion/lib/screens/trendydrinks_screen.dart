@@ -263,7 +263,7 @@ class _TrendyDrinksScreenState extends State<TrendyDrinksScreen>
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
-                      '${appLocalizations.averageRating}: ${drink.averageRating!.toStringAsFixed(1)}',
+                      '${appLocalizations.averageRating}: ${drink.averageRating.toStringAsFixed(1)}',
                       style: GoogleFonts.montserrat(
                         fontSize: 14,
                         color: themeNotifier.isNightMode
